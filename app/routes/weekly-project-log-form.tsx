@@ -9,20 +9,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   return {};
 };
 
-// Loading component for the form
-const ProjectLogFormLoader = () => (
-  <div className="w-full h-screen flex items-center justify-center">
-    <LoadingSpinner className="bg-white/50" />
-    <>Weekly Project Log Form Loading...</>
-  </div>
-);
-
 export default function WeeklyProjectLogForm() {
+  const { mondayProfile } = useSession();
+  if (mondayProfile === null) {
+    return <LoadingSpinner />;
+  }
+  if (mondayProfile?.businessFunction === "coach/facilitator") {
+    return <AccessDeniedState errorMessage="This form is only accessible to FTE/PTE employees. If you believe this is an error, please contact your administrator." />;
+  }
   return (
     <div className="min-h-screen w-full overflow-auto">
-      <Suspense fallback={<ProjectLogFormLoader />}>
-        <ProjectLogForm />
-      </Suspense>
+      <ProjectLogForm />
     </div>
   );
 }

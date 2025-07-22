@@ -2,6 +2,7 @@ import { ActionFunctionArgs, json } from "@remix-run/node";
 import { vendorPaymentService } from "~/domains/vendor-payment/service";
 import { vendorPaymentRepository } from "~/domains/vendor-payment/repository";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
+import { formatTierData } from "~/utils/utils";
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
@@ -10,6 +11,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const entries = JSON.parse(formData.get("entries") as string);
     const cfDetails = JSON.parse(formData.get("cfDetails") as string);
     const totalPay = parseFloat(formData.get("totalPay") as string);
+    const workDateIso = formData.get("workDate") as string;
 
     // Validate form data
     if (!entries || !Array.isArray(entries) || entries.length === 0) {
@@ -23,30 +25,30 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
+    if (!workDateIso) {
+      return json({ error: "Work date is required" }, { status: 400 });
+    }
+    
+    // Extract just the YYYY-MM-DD portion to avoid timezone issues
+    const workDate = workDateIso.split('T')[0] || workDateIso;
+
+    // Transform cf_tier into human-readable format
+    const humanReadableTier = formatTierData(cfDetails.tier);
+
     // Transform entries into submission format
     const transformedEntries = entries.map((entry) => {
       const taskData = JSON.parse(entry.task);
       const hours = parseFloat(entry.workHours);
-      let rate = 0;
 
-      switch (cfDetails.tier) {
-        case "Tier 1":
-          rate = taskData["Tier 1"];
-          break;
-        case "Tier 2":
-          rate = taskData["Tier 2"];
-          break;
-        case "Tier 3":
-          rate = taskData["Tier 3"];
-          break;
-      }
+     
 
       return {
         task_name: taskData.taskName,
         project_name: entry.project,
         work_hours: hours,
-        rate: rate,
-        entry_pay: rate * hours,
+        rate: taskData.rate,
+        entry_pay: taskData.rate * hours,
+        submission_date: workDate,
       };
     });
 
@@ -54,8 +56,9 @@ export async function action({ request }: ActionFunctionArgs) {
     const submission = {
       cf_email: cfDetails.email,
       cf_name: cfDetails.name,
-      cf_tier: cfDetails.tier,
+      cf_tier: humanReadableTier,
       total_pay: totalPay,
+      submission_date: workDate,
       entries: transformedEntries,
     };
 

@@ -2,7 +2,7 @@ import { Button, Select, Text, TextInput, NumberInput } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { cn } from "../../utils/utils";
 import { IconX } from "@tabler/icons-react";
-import { taskOptions, Tier } from "./utils";
+import { contentDeveloperTaskOptions, copyEditorTaskOptions, copyRightPermissionsTaskOptions, dataEvaluationTaskOptions, facilitationTaskOptions, presentationDesignTaskOptions, TaskDetails, Tier, filterVendorPaymentProjects } from "./utils";
 
 type VendorPaymentRowKeys = keyof {
   task: string;
@@ -10,12 +10,19 @@ type VendorPaymentRowKeys = keyof {
   workHours: string;
 };
 
+type taskOptions = {
+  taskName: string;
+  rate: number;
+  maxHours: number | null;
+}
+
 export const VendorPaymentWidget = ({
   isValidated,
   vendorPaymentEntries,
   setVendorPaymentEntries,
   setTotalWorkHours,
   cfTier,
+  projects,
 }: {
   isValidated: boolean | null;
   vendorPaymentEntries: {
@@ -33,48 +40,117 @@ export const VendorPaymentWidget = ({
     >
   >;
   setTotalWorkHours: React.Dispatch<React.SetStateAction<number>>;
-  cfTier: string;
+  cfTier: {
+    type: string;
+    value: string;
+  }[];
+  projects: string[] | undefined;
 }) => {
-  // TODO: Add project options from loader data
-  const projectOptions = ["Project 1", "Project 2", "Project 3"];
+  const programProjects = new Set(projects || []);
+  const filteredProjects = filterVendorPaymentProjects(Array.from(programProjects));
+  
+  const projectOptions = filteredProjects.map((project) => ({
+    value: project,
+    label: project,
+  }));
+
+  
 
   // Filter tasks based on tier and rate availability
   const getAvailableTasks = () => {
-    return taskOptions.filter((task) => {
-      switch (cfTier) {
-        case Tier.TIER_1:
-          return task["Tier 1"] !== null && task["Tier 1"] > 0;
-        case Tier.TIER_2:
-          return task["Tier 2"] !== null && task["Tier 2"] > 0;
-        case Tier.TIER_3:
-          return task["Tier 3"] !== null && task["Tier 3"] > 0;
-        default:
-          return false;
+    let availableTasks: taskOptions[] = [];
+    if(cfTier.length === 0){
+     return availableTasks;
+    }
+    
+    for(const tier of cfTier){
+      if(tier.type === "facilitator"){
+        //add all tasks that has a not null and greater than 0 rate
+        facilitationTaskOptions.forEach((task) => {
+          const rateValue = task[tier.value as keyof TaskDetails];
+          if(rateValue !== null && typeof rateValue === 'number' && rateValue > 0){
+            availableTasks.push({
+              taskName: task.taskName,
+              rate: rateValue,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+            });
+          }
+        });
       }
-    });
+      else if(tier.type === "copyRightPermissions"){
+        copyRightPermissionsTaskOptions.forEach((task: TaskDetails) => {
+          const rateValue = task[tier.value as keyof TaskDetails];
+          if(rateValue !== null && typeof rateValue === 'number' && rateValue > 0){
+            availableTasks.push({
+              taskName: task.taskName,
+              rate: rateValue,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+            });
+          }
+        });
+      }
+      else if(tier.type === "copyEditor"){
+        copyEditorTaskOptions.forEach((task) => {
+          const rateValue = task[tier.value as keyof TaskDetails];
+          if(rateValue !== null && typeof rateValue === 'number' && rateValue > 0){
+            availableTasks.push({
+              taskName: task.taskName,
+              rate: rateValue,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+            });
+          }
+        });
+      }
+      else if(tier.type === "presentationDesign"){
+        presentationDesignTaskOptions.forEach((task) => { 
+          const rateValue = task[tier.value as keyof TaskDetails];
+          if(rateValue !== null && typeof rateValue === 'number' && rateValue > 0){
+            availableTasks.push({
+              taskName: task.taskName,
+              rate: rateValue,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+            }); 
+          }
+        });
+      }
+      else if(tier.type === "contentDeveloper"){
+        contentDeveloperTaskOptions.forEach((task) => {
+          const rateValue = task[tier.value as keyof TaskDetails];
+          if(rateValue !== null && typeof rateValue === 'number' && rateValue > 0){
+            availableTasks.push({
+              taskName: task.taskName,
+              rate: rateValue,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+            });
+          } 
+        });
+      }
+      else if(tier.type === "dataEvaluation"){
+        dataEvaluationTaskOptions.forEach((task) => {
+          const rateValue = task[tier.value as keyof TaskDetails];
+          if(rateValue !== null && typeof rateValue === 'number' && rateValue > 0){
+            availableTasks.push({
+              taskName: task.taskName,
+              rate: rateValue,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+            });
+          }
+        });
+      }
+    }
+    return availableTasks;
   };
 
-  const calculateTotalPay = (task: string, workHours: string): number => {
+  const calculateTaskTotalPay = (task: string, workHours: string): number => {
+    if (!task || !workHours) {
+      return 0;
+    }
     try {
       const taskData = JSON.parse(task);
       const hours = parseFloat(workHours) || 0;
 
       // Get rate based on tier
-      let rate = 0;
-      switch (cfTier) {
-        case Tier.TIER_1:
-          rate = taskData["Tier 1"];
-          break;
-        case Tier.TIER_2:
-          rate = taskData["Tier 2"];
-          break;
-        case Tier.TIER_3:
-          rate = taskData["Tier 3"];
-          break;
-        default:
-          rate = 0;
-      }
-
+      let rate = taskData.rate || 0;
       return rate * hours;
     } catch (error) {
       console.error("Error calculating total pay:", error);
@@ -133,13 +209,13 @@ export const VendorPaymentWidget = ({
   };
 
   // Get available tasks for the current tier
-  const availableTasks = getAvailableTasks();
+  const listOfAvailableTasks = getAvailableTasks() || [];
 
   return (
     <div className="grid grid-rows gap-4">
       <div
-        className={cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr]", {
-          "grid-cols-[2fr_2fr_1fr_1fr_0.5fr]": vendorPaymentEntries.length > 1,
+        className={cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
+          "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]": vendorPaymentEntries.length > 1,
         })}
       >
         <div className="">
@@ -159,6 +235,11 @@ export const VendorPaymentWidget = ({
         </div>
         <div className="">
           <Text fw={500} size="md">
+            Rate
+          </Text>
+        </div>
+        <div className="">
+          <Text fw={500} size="md">
             Total Pay
           </Text>
         </div>
@@ -167,17 +248,17 @@ export const VendorPaymentWidget = ({
       {vendorPaymentEntries.map((row, index) => (
         <div
           key={index}
-          className={cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr]", {
-            "grid-cols-[2fr_2fr_1fr_1fr_0.5fr]":
+          className={cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
+            "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]":
               vendorPaymentEntries.length > 1,
           })}
         >
           <div>
             <Select
-              value={row.task}
+              value={row.task || null}
               onChange={(value) => handleChange(index, "task", value)}
               placeholder="Select a task"
-              data={availableTasks.map((option) => ({
+              data={listOfAvailableTasks.map((option) => ({
                 value: JSON.stringify(option),
                 label: option.taskName,
               }))}
@@ -189,7 +270,7 @@ export const VendorPaymentWidget = ({
           </div>
           <div>
             <Select
-              value={row.project}
+              value={row.project || null}
               onChange={(value) => handleChange(index, "project", value)}
               placeholder="Select a project"
               data={projectOptions}
@@ -209,8 +290,7 @@ export const VendorPaymentWidget = ({
               }
               placeholder="Enter work hours"
               max={
-                taskOptions.find((option) => option.taskName === row.task)
-                  ?.maxHours || undefined
+                JSON.parse(row.task || "{}").maxHours || undefined
               }
               min={0}
               error={
@@ -223,7 +303,14 @@ export const VendorPaymentWidget = ({
           </div>
           <div>
             <TextInput
-              value={`$${calculateTotalPay(
+              value={row.task ? `$${JSON.parse(row.task).rate.toFixed(2)}` : "$0.00"}
+              readOnly
+              placeholder="Rate"
+            />
+          </div>
+          <div>
+            <TextInput
+              value={`$${calculateTaskTotalPay(
                 row.task || "",
                 row.workHours || ""
               ).toFixed(2)}`}

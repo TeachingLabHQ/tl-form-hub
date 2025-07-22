@@ -25,7 +25,7 @@ import BackgroundImg from "./assets/background.png";
 export const meta: MetaFunction = () => {
   return [
     { charSet: "utf-8" },
-    { title: "Weekly Project Log" },
+    { title: "TL Form Hub" },
     { name: "viewport", content: "width=device-width, initial-scale=1" },
   ];
 };

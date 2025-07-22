@@ -43,7 +43,7 @@ export const Reminders = ({
                 <Text size="lg" fw={700}>
                   {item.title}
                 </Text>
-                <Text size="md" fw={500}>
+                <Text size="md" fw={500} style={{ whiteSpace: "pre-line" }}>
                   {item.content}
                 </Text>
               </div>

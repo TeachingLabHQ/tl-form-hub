@@ -1,0 +1,9 @@
+{
+  "version": "5",
+  "redirects": {
+    "https://esm.sh/@types/react@~19.0.7/index.d.ts": "https://esm.sh/@types/react@19.0.14/index.d.ts"
+  },
+  "remote": {
+    "https://esm.sh/resend@2.0.0": "b222433340dc6655ed294a343815916b5a5ceeac999f07f627a5614a87cd9fe4"
+  }
+}

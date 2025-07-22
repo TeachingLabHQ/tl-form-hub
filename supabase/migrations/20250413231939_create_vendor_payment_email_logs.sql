@@ -28,7 +28,7 @@ create policy "Service role can access all email logs"
   using (true)
   with check (true);
 
--- Allow authenticated users to read their own email logs
+  -- Allow authenticated users to read their own email logs
 create policy "Users can read their own email logs"
   on public.vendor_payment_email_logs
   for select

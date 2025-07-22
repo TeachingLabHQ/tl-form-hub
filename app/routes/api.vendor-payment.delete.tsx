@@ -10,19 +10,16 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   const body = await request.json();
-  const { submissionId } = body;
+  const { paymentRequestId } = body;
 
-  if (!submissionId) {
-    return json({ error: "Submission ID is required" }, { status: 400 });
+  if (!paymentRequestId) {
+    return json({ error: "paymentRequestId is required" }, { status: 400 });
   }
 
   try {
     const { supabaseClient } = createSupabaseServerClient(request);
-    const repository = vendorPaymentRepository(supabaseClient);
-    const service = vendorPaymentService(repository);
-
-    const { error } = await service.deleteSubmission(submissionId);
-
+    const service = vendorPaymentService(vendorPaymentRepository(supabaseClient));
+    const { error } = await service.deleteSubmission(paymentRequestId);
     if (error) {
       throw error;
     }

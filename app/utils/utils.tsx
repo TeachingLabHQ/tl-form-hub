@@ -17,3 +17,16 @@ export const formatDate = (date: string) => {
   // Fallback if parts are missing
   return date.substring(0, 10);
 };
+
+export const formatTierData = (tiers: { type: string; value: string }[]): string => {
+  return tiers
+    .map((tier) => {
+      // Capitalize and format the type name
+      const formattedType = tier.type
+        .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+        .replace(/^./, (str: string) => str.toUpperCase()) // Capitalize first letter
+        .trim();
+      return `${formattedType}: ${tier.value}`;
+    })
+    .join(', ');
+};

@@ -80,12 +80,7 @@ export const Navbar = () => {
         </Link>
         {isAuthenticated && (
           <div className="flex gap-4">
-            <Link to="/weekly-project-log-form">
-              <p>Weekly Project Log</p>
-            </Link>
-            <Link to="/staffing-dashboard">
-              <p>Staffing Dashboard</p>
-            </Link>
+          
           </div>
         )}
       </div>

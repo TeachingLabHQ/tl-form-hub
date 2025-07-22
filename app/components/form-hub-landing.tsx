@@ -52,7 +52,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
       </Card>
 
       <Grid>
-        <Grid.Col span={{ base: 12, md: 6 }}>
+        {/* <Grid.Col span={{ base: 12, md: 6 }}>
           <Card
             shadow="sm"
             p="xl"
@@ -91,9 +91,9 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               </Button>
             </Flex>
           </Card>
-        </Grid.Col>
+        </Grid.Col> */}
 
-        <Grid.Col span={{ base: 12, md: 6 }}>
+        {/* <Grid.Col span={{ base: 12, md: 6 }}>
           <Card
             shadow="sm"
             p="xl"
@@ -125,9 +125,9 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               </Button>
             </Flex>
           </Card>
-        </Grid.Col>
+        </Grid.Col> */}
 
-        {/* <Grid.Col span={{ base: 12, md: 6 }}>
+        <Grid.Col span={{ base: 12, md: 6 }}>
           <Card
             shadow="sm"
             p="xl"
@@ -142,11 +142,11 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
                 style={{ marginBottom: 16 }}
               />
               <Title order={3} mb="xs">
-                Vendor Payment Form
+                Project Consultant Payment Form
               </Title>
               <Text mb="md" style={{ flex: 1 }}>
-                Submit vendor payment requests and track payment status. This
-                form helps streamline the vendor payment process and ensures
+                Submit coach/facilitator payment requests and track payment status. This
+                form helps streamline the coach/facilitator payment process and ensures
                 proper documentation.
               </Text>
               <Button
@@ -159,7 +159,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               </Button>
             </Flex>
           </Card>
-        </Grid.Col> */}
+        </Grid.Col>
       </Grid>
 
       <Card

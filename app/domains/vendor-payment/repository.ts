@@ -20,7 +20,7 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
   return {
     createSubmission: async (submission) => {
       try {
-        // Start a transaction
+        // Insert the submission
         const { data: submissionData, error: submissionError } = await supabase
           .from('vendor_payment_submissions')
           .insert({
@@ -28,6 +28,9 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
             cf_name: submission.cf_name,
             cf_tier: submission.cf_tier,
             total_pay: submission.total_pay,
+            submission_date: submission.submission_date instanceof Date 
+              ? submission.submission_date.toISOString() 
+              : submission.submission_date,
           })
           .select()
           .single();
@@ -38,6 +41,9 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
         const entries = submission.entries.map(entry => ({
           ...entry,
           submission_id: submissionData.id,
+          submission_date: submission.submission_date instanceof Date 
+            ? submission.submission_date.toISOString() 
+            : submission.submission_date,
         }));
 
         const { error: entriesError } = await supabase
@@ -92,6 +98,10 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
 
     getSubmissionsByEmail: async (email) => {
       try {
+        const now = new Date();
+        const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+
         const { data, error } = await supabase
           .from('vendor_payment_submissions')
           .select(`
@@ -99,6 +109,8 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
             entries:vendor_payment_entries(*)
           `)
           .eq('cf_email', email)
+          .gte('submission_date', firstDayCurrentMonth)
+          .lt('submission_date', firstDayNextMonth)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -114,11 +126,13 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
 
     deleteSubmission: async (id) => {
       try {
-        const { error } = await supabase
+        console.log("id", id);
+        const { data, error } = await supabase
           .from('vendor_payment_submissions')
           .delete()
           .eq('id', id);
-
+        console.log("data", data);
+        console.log("error", error);
         if (error) throw error;
         return { data: undefined, error: null };
       } catch (e) {

@@ -34,6 +34,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      vendor_payment_email_logs: {
+        Row: {
+          cf_email: string | null
+          created_at: string | null
+          error_message: string | null
+          id: number
+          month: string
+          project_name: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          cf_email?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: never
+          month: string
+          project_name?: string | null
+          sent_at?: string | null
+          status: string
+          updated_at?: string | null
+        }
+        Update: {
+          cf_email?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: never
+          month?: string
+          project_name?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       vendor_payment_entries: {
         Row: {
           created_at: string | null
@@ -41,6 +77,7 @@ export type Database = {
           id: number
           project_name: string
           rate: number
+          submission_date: string | null
           submission_id: number
           task_name: string
           updated_at: string | null
@@ -52,6 +89,7 @@ export type Database = {
           id?: number
           project_name: string
           rate: number
+          submission_date?: string | null
           submission_id: number
           task_name: string
           updated_at?: string | null
@@ -63,6 +101,7 @@ export type Database = {
           id?: number
           project_name?: string
           rate?: number
+          submission_date?: string | null
           submission_id?: number
           task_name?: string
           updated_at?: string | null
@@ -85,6 +124,7 @@ export type Database = {
           cf_tier: string
           created_at: string | null
           id: number
+          submission_date: string | null
           total_pay: number
           updated_at: string | null
         }
@@ -94,6 +134,7 @@ export type Database = {
           cf_tier: string
           created_at?: string | null
           id?: number
+          submission_date?: string | null
           total_pay: number
           updated_at?: string | null
         }
@@ -103,6 +144,7 @@ export type Database = {
           cf_tier?: string
           created_at?: string | null
           id?: number
+          submission_date?: string | null
           total_pay?: number
           updated_at?: string | null
         }

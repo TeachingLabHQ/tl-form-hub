@@ -5,6 +5,8 @@ import { employeeService } from "~/domains/employee/service";
 import { useNavigate } from "@remix-run/react";
 import { EmployeeProfile } from "~/domains/employee/model";
 import { supabase } from "../../../../supabase/supabase.client";
+import { coachFacilitatorRepository } from "~/domains/coachFacilitator/repository";
+import { coachFacilitatorService } from "~/domains/coachFacilitator/service";
 
 const MONDAY_PROFILE_KEY = "mondayProfile";
 
@@ -64,11 +66,30 @@ export const useSession = () => {
           await newEmployeeService.fetchMondayEmployee(session.user.email);
 
         if (error || !employee) {
-          setErrorMessage(
-            "You are not authorized to access this page. Please contact the operations team."
+          // If employee is not found, check if they are a coach or facilitator
+          const newCoachFacilitatorService = coachFacilitatorService(
+            coachFacilitatorRepository()
           );
-          await supabase.auth.signOut();
-          setIsAuthenticated(false);
+          const { data: coachFacilitatorData, error: coachFacilitatorError } =
+            await newCoachFacilitatorService.fetchCoachFacilitatorDetails(
+              session.user.email
+            );
+          if (coachFacilitatorError || !coachFacilitatorData) {
+            setErrorMessage(
+              "You are not authorized to access this page. Please contact the operations team."
+            );
+            await supabase.auth.signOut();
+            setIsAuthenticated(false);
+            return;
+          }
+          const coachFacilitatorProfile = {
+            name: coachFacilitatorData?.name,
+            email: coachFacilitatorData?.email,
+            businessFunction: "contractor",
+          };
+        setMondayProfile(coachFacilitatorProfile);
+          localStorage.setItem(MONDAY_PROFILE_KEY, JSON.stringify(coachFacilitatorProfile));
+          setIsAuthenticated(true);
           return;
         }
 
@@ -79,14 +100,7 @@ export const useSession = () => {
           mondayProfileId: employee.mondayProfileId,
           employeeId: employee.employeeId,
         };
-
-        setMondayProfile({
-          name: employee.name,
-          email: employee.email,
-          businessFunction: employee.businessFunction,
-          mondayProfileId: employee.mondayProfileId,
-          employeeId: employee.employeeId,
-        });
+        setMondayProfile(newProfile);
         localStorage.setItem(MONDAY_PROFILE_KEY, JSON.stringify(newProfile));
         setIsAuthenticated(true);
       } catch (error) {

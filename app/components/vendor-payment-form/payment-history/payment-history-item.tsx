@@ -1,20 +1,25 @@
-import { Accordion, ActionIcon } from "@mantine/core";
+import { Accordion, ActionIcon, Group, Text } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useRevalidator } from "@remix-run/react";
 import { VendorPaymentSubmissionWithEntries } from "~/domains/vendor-payment/model";
+import { notifications } from "@mantine/notifications";
+import { useEffect } from 'react';
+
+type PaymentHistoryItemProps = {
+  paymentRequest: VendorPaymentSubmissionWithEntries;
+};
 
 export const PaymentHistoryItem = ({
-  submission,
-}: {
-  submission: VendorPaymentSubmissionWithEntries;
-}) => {
-  const fetcher = useFetcher();
+  paymentRequest,
+}: PaymentHistoryItemProps) => {
+  const fetcher = useFetcher<{ success?: boolean; error?: string; message?: string }>();
+  const { revalidate } = useRevalidator();
 
   const handleDelete = async () => {
     if (window.confirm("Are you sure you want to delete this submission?")) {
       fetcher.submit(
-        { submissionId: submission.id },
+        { paymentRequestId: paymentRequest.id },
         {
           method: "DELETE",
           action: "/api/vendor-payment/delete",
@@ -24,13 +29,34 @@ export const PaymentHistoryItem = ({
     }
   };
 
+  useEffect(() => {
+    if (fetcher.data) {
+      if (fetcher.data.success) {
+        notifications.show({
+          title: 'Submission Deleted',
+          message: 'The payment submission has been successfully deleted.',
+          color: 'green',
+        });
+        console.log("Submission successful, revalidating...");
+        revalidate();
+      } else if (fetcher.data.error) {
+        notifications.show({
+          title: 'Deletion Failed',
+          message: fetcher.data.error || 'Could not delete the submission. Please try again.',
+          color: 'red',
+        });
+        console.log("Deletion failed, server error:", fetcher.data.error);
+      }
+    }
+  }, [fetcher.state, fetcher.data, revalidate]);
+
   return (
-    <Accordion.Item value={submission.id.toString()}>
+    <Accordion.Item value={paymentRequest.id.toString()}>
       <Accordion.Control className="hover:bg-white/10">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <span className="text-white">
-              {dayjs(submission.created_at).format("MMM D, YYYY")}
+              {dayjs(paymentRequest.submission_date).format("MMM D, YYYY")}
             </span>
             <ActionIcon
               variant="subtle"
@@ -46,7 +72,7 @@ export const PaymentHistoryItem = ({
             </ActionIcon>
           </div>
           <span className="text-white font-bold">
-            ${submission.total_pay.toFixed(2)}
+            ${paymentRequest.total_pay.toFixed(2)}
           </span>
         </div>
       </Accordion.Control>
@@ -63,7 +89,7 @@ export const PaymentHistoryItem = ({
               </tr>
             </thead>
             <tbody>
-              {submission.entries.map((entry, index) => (
+              {paymentRequest.entries.map((entry, index) => (
                 <tr
                   key={index}
                   className="border-b border-white/10 last:border-0"
@@ -84,7 +110,7 @@ export const PaymentHistoryItem = ({
                   Total:
                 </td>
                 <td className="py-2 px-4 text-right font-bold">
-                  ${submission.total_pay.toFixed(2)}
+                  ${paymentRequest.total_pay.toFixed(2)}
                 </td>
               </tr>
             </tfoot>
