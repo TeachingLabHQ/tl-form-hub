@@ -203,6 +203,7 @@ export const ProjectLogForm: React.FC = () => {
         },
         body: JSON.stringify({
           name: submissionUser.name,
+          employeeId: mondayProfile?.employeeId,
           //send the date in iso format to avoid timezone issues in the server
           date: selectedDate
             ? new Date(

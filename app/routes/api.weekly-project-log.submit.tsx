@@ -4,7 +4,7 @@ import { formatDate } from "~/utils/utils";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const body = await request.json();
-  const { name, date, projectLogEntries, comment } = body;
+  const { name, date, projectLogEntries, comment, employeeId } = body;
 
   //validate Inputs
   if (!name || !date || !Array.isArray(projectLogEntries)) {
@@ -31,6 +31,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         date4: { date: formattedDate },
         numbers8: totalHours,
         notes: comment,
+        numeric_mkq25pjh: employeeId,
       }),
     };
     const response = await insertMondayData(queryParentItem, varsParentItem);

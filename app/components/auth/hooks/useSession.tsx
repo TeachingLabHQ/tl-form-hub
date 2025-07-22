@@ -86,9 +86,14 @@ export const useSession = () => {
             name: coachFacilitatorData?.name,
             email: coachFacilitatorData?.email,
             businessFunction: "contractor",
+            mondayProfileId: "",
+            employeeId: "",
           };
-        setMondayProfile(coachFacilitatorProfile);
-          localStorage.setItem(MONDAY_PROFILE_KEY, JSON.stringify(coachFacilitatorProfile));
+          setMondayProfile(coachFacilitatorProfile);
+          localStorage.setItem(
+            MONDAY_PROFILE_KEY,
+            JSON.stringify(coachFacilitatorProfile)
+          );
           setIsAuthenticated(true);
           return;
         }

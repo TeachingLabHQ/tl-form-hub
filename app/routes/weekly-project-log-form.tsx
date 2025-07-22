@@ -1,7 +1,8 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
+import { useSession } from "~/components/auth/hooks/useSession";
+import { AccessDeniedState } from "~/components/vendor-payment-form/access-denied-state";
 import { ProjectLogForm } from "~/components/weekly-project-log/project-log-form";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
-import { Suspense } from "react";
 
 // We can make this even simpler since we don't need server-side data anymore
 export const loader = async ({ request }: LoaderFunctionArgs) => {
