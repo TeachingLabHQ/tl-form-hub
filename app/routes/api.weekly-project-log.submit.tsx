@@ -4,7 +4,7 @@ import { formatDate } from "~/utils/utils";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const body = await request.json();
-  const { name, date, projectLogEntries, comment } = body;
+  const { name, date, projectLogEntries, comment, employeeId } = body;
 
   //validate Inputs
   if (!name || !date || !Array.isArray(projectLogEntries)) {
@@ -31,6 +31,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         date4: { date: formattedDate },
         numbers8: totalHours,
         notes: comment,
+        numeric_mkq25pjh: employeeId,
       }),
     };
     const response = await insertMondayData(queryParentItem, varsParentItem);
@@ -41,16 +42,17 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const querySubItems =
       "mutation ($myItemName: String!,$parentID: ID!, $columnVals: JSON! ) { create_subitem (parent_item_id:$parentID, item_name:$myItemName, column_values:$columnVals) { id } }";
     const subitemPromises = projectLogEntries.map((project) => {
-      const { projectName, projectType, projectRole, workHours } = project;
+      const { projectName, projectRole, workHours, activity } = project;
       const varsSubItems = {
         myItemName: name,
         parentID: String(parentItemId),
         columnVals: JSON.stringify({
           date: { date: formattedDate },
           project_role: projectRole,
-          project_type: projectType,
           name6: projectName,
           numbers: parseFloat(workHours),
+          numeric_mkq2d9jn: employeeId,
+          text_mkt4atja: activity,
         }),
       };
       // Return the promise for each subitem creation

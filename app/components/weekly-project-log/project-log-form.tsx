@@ -3,18 +3,18 @@ import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
+import { LoadingSpinner } from "~/utils/LoadingSpinner";
 import { useSession } from "../auth/hooks/useSession";
 import { ExecutiveAssistantSelector } from "./executive-assistant-selector";
 import { ProjectLogsWidget } from "./project-logs-widget";
-import { Reminders, ReminderItem } from "./reminders";
+import { Reminders } from "./reminders";
 import {
+  compareTwoStrings,
   executiveAssistantMappings,
   getClosestMonday,
-  compareTwoStrings,
   REMINDER_ITEMS,
 } from "./utils";
-import BackgroundImg from "~/assets/background.png";
-import { Link } from "react-router-dom";
+import { ProjectLogRows } from "~/domains/project/model";
 
 export type FormValues = {
   email: string;
@@ -33,19 +33,28 @@ export type SubmissionUser = {
   };
 };
 
-export const ProjectLogForm = () => {
+export const ProjectLogForm: React.FC = () => {
   const { mondayProfile } = useSession();
+  
+  // Client-side data state
+  const [projectData, setProjectData] = useState<{
+    programProjectsStaffing: any;
+    allProjects: any;
+    allBudgetedHours: any;
+  } | null>(null);
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  
   const [totalWorkHours, setTotalWorkHours] = useState<number>(0);
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSuccessful, setIsSuccessful] = useState<boolean | null>(null);
-  const [projectWorkEntries, setProjectWorkEntries] = useState([
+  const [projectWorkEntries, setProjectWorkEntries] = useState<ProjectLogRows[]>([
     {
-      projectType: "",
       projectName: "",
       projectRole: "",
       workHours: "",
       budgetedHours: "N/A",
+      activity: "",
     },
   ]);
   const xIcon = <IconX size={20} />;
@@ -70,6 +79,36 @@ export const ProjectLogForm = () => {
     isExecutiveAssistant: false,
     submittedForYourself: null,
   }));
+
+  // Client-side data fetching
+  useEffect(() => {
+    const fetchProjectData = async () => {
+      try {
+        setIsLoadingData(true);
+        
+        // This would be an API endpoint that returns the same data the loader used to return
+        const response = await fetch('/api/weekly-project-log/data');
+        if (!response.ok) {
+          throw new Error('Failed to fetch project data');
+        }
+        
+        const data = await response.json();
+        setProjectData(data);
+      } catch (error) {
+        console.error('Error fetching project data:', error);
+        // Set empty data as fallback
+        setProjectData({
+          programProjectsStaffing: null,
+          allProjects: null,
+          allBudgetedHours: null,
+        });
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    fetchProjectData();
+  }, []);
 
   useEffect(() => {
     if (mondayProfile?.email) {
@@ -141,9 +180,9 @@ export const ProjectLogForm = () => {
     // Check if all project logs are complete
     const areAllLogsComplete = projectWorkEntries.every(
       (entry) =>
-        entry.projectType &&
         entry.projectName &&
         entry.projectRole &&
+        entry.activity &&
         entry.workHours &&
         Number(entry.workHours) !== 0
     );
@@ -165,6 +204,7 @@ export const ProjectLogForm = () => {
         },
         body: JSON.stringify({
           name: submissionUser.name,
+          employeeId: mondayProfile?.employeeId,
           //send the date in iso format to avoid timezone issues in the server
           date: selectedDate
             ? new Date(
@@ -202,6 +242,13 @@ export const ProjectLogForm = () => {
       setIsValidated(null);
     }
   };
+
+  // Show loading state while data is being fetched
+  if (isLoadingData) {
+    return (
+      <LoadingSpinner />
+    );
+  }
 
   return (
     <div className="w-full h-full grid grid-cols-12 grid-rows-[auto_auto] gap-8 py-8">
@@ -249,6 +296,7 @@ export const ProjectLogForm = () => {
               projectWorkEntries={projectWorkEntries}
               setProjectWorkEntries={setProjectWorkEntries}
               setTotalWorkHours={setTotalWorkHours}
+              projectData={projectData}
             />
           </div>
           <div className="flex flex-col gap-1">

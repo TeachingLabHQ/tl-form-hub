@@ -9,13 +9,13 @@ import {
 
 export interface ProjectRepository {
   fetchAllProjects(): Promise<Errorable<projectsByTypes[]>>;
-  fetchProgramProjects(): Promise<Errorable<ProgramProject[]>>;
+  fetchProgramProjects(mondayProfileId: string): Promise<Errorable<ProgramProject[]>>;
   fetchBudgetedHours(
     employeeEmail: string,
     projectName: string,
     projectRole: string
   ): Promise<Errorable<number>>;
-  fetchAllBudgetedHours(): Promise<Errorable<any>>;
+  fetchAllBudgetedHours(employeeId: string): Promise<Errorable<any>>;
 }
 
 export function projectRepository(): ProjectRepository {
@@ -52,10 +52,13 @@ export function projectRepository(): ProjectRepository {
       }
     },
 
-    fetchProgramProjects: async () => {
+    fetchProgramProjects: async (mondayProfileId: string) => {
       try {
         // Define the query to fetch staffing data from Monday
-        const firstQuery = `{
+        let firstQuery = "";
+        // if mondayProfileId is empty, fetch all program projects
+        if (mondayProfileId === "") {
+         firstQuery = `{
                      boards(ids: 6902955796) {
                       items_page(limit: 500) {
                         cursor 
@@ -74,6 +77,33 @@ export function projectRepository(): ProjectRepository {
                       }
                     }
                   }`;
+        } else {
+          // if mondayProfileId is not empty, fetch the program projects for the given mondayProfileId
+          firstQuery = `{
+  boards(ids: 6902955796) {
+    items_page(
+      query_params: {rules: [{column_id: "people0", compare_value: ["person-${mondayProfileId}"], operator: any_of}]}
+    ) {
+      cursor
+      items {
+        id
+        name
+        group {
+          id
+        }
+        column_values(
+          ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "multiple_person3", "people9"]
+        ) {
+          column {
+            title
+          }
+          text
+        }
+      }
+    }
+  }
+}`;
+        }
 
         let rawStaffingList = await fetchMondayData(firstQuery);
 
@@ -90,7 +120,7 @@ export function projectRepository(): ProjectRepository {
                           group {
                             id
                           } 
-                          column_values(ids: ["dropdown7", "project_lead2"]) {
+                          column_values(ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "multiple_person3", "people9"]) {
                             column {
                               title
                             } 
@@ -119,7 +149,7 @@ export function projectRepository(): ProjectRepository {
             projectName: "",
             projectMembers: [],
           };
-          //use the projecet name from the Project Log Name column
+          //use the project name from the Project Log Name column
           programProject.projectName = staffedProject["column_values"].find(
             (c: { column: { title: string }; title: string }) =>
               c.column.title === "Project Log Name"
@@ -235,16 +265,100 @@ export function projectRepository(): ProjectRepository {
         };
       }
     },
-    fetchAllBudgetedHours: async (): Promise<Errorable<number>> => {
+    fetchAllBudgetedHours: async (employeeId: string): Promise<Errorable<any>> => {
       try {
-        const query = `{
-          boards(ids: 8577820151) {
-            items_page(limit: 500) {
+        let query = "";
+        //if employeeId is empty, fetch all budgeted hours
+        // if (employeeId === "") {
+           query = `{
+            boards(ids: 8577820151) {
+             items_page(
+              limit: 500
+            ) {
+                cursor
+                items {
+                  id
+                  name
+                  column_values(ids: [
+                    "lookup_mksmfdnr", 
+                    "lookup_mkpvs1wj",
+                    "numeric_mknhqm6d", 
+                    "dropdown_mknk8zwg", 
+                    "color_mknhq0s3"
+                  ]) {
+                    id
+                    text
+                    ... on StatusValue {
+                      label
+                    }
+                    ... on MirrorValue {
+                      display_value
+                      id
+                    }
+                    column {
+                      title
+                    }
+                  }
+                }
+              }
+            }
+          }`;
+        // disabling this for since mirror column (id) lookup is not supported in the API yet
+        // }else{
+        //   console.log("employeeId", employeeId);
+        //   //if employeeId is not empty, fetch the budgeted hours for the given employeeId
+        //   query = `{
+        //     boards(ids: 8577820151) {
+        //      items_page(
+        //       limit: 500
+        //       query_params: {rules: [{column_id: "text_mkrh19y1", compare_value: ["${employeeId}"]}]}
+        //     ) {
+        //         cursor
+        //         items {
+        //           id
+        //           name
+        //           column_values(ids: [
+        //             "lookup_mkpvs1wj", 
+        //             "lookup_mksmfdnr", 
+        //             "numeric_mknhqm6d", 
+        //             "dropdown_mknk8zwg", 
+        //             "color_mknhq0s3"
+        //           ]) {
+        //             id
+        //             text
+        //             ... on StatusValue {
+        //               label
+        //             }
+        //             ... on MirrorValue {
+        //               display_value
+        //               id
+        //             }
+        //             column {
+        //               title
+        //             }
+        //           }
+        //         }
+        //       }
+        //     }
+        //   }`;
+        // }
+
+
+        let rawMondayData = await fetchMondayData(query);
+        let cursor: string | null =
+          rawMondayData.data.boards[0].items_page.cursor;
+        let allItems = rawMondayData.data.boards[0].items_page.items;
+
+        while (cursor) {
+          const cursorQuery = `{
+            next_items_page(limit: 500, cursor: "${cursor}") {
+              cursor
               items {
                 id
                 name
                 column_values(ids: [
-                  "email_mknhbhe0", 
+                  "lookup_mksmfdnr", 
+                  "lookup_mkpvs1wj",
                   "numeric_mknhqm6d", 
                   "dropdown_mknk8zwg", 
                   "color_mknhq0s3"
@@ -254,20 +368,25 @@ export function projectRepository(): ProjectRepository {
                   ... on StatusValue {
                     label
                   }
+                  ... on MirrorValue {
+                    display_value
+                    id
+                  }
                   column {
                     title
                   }
                 }
               }
             }
-          }
-        }`;
+          }`;
 
-        const rawMondayData = await fetchMondayData(query);
-        const items = rawMondayData.data.boards[0].items_page.items;
-        
+          const rawAdditionalData = await fetchMondayData(cursorQuery);
+          // Add the additional Monday data to the list
+          allItems.push(...rawAdditionalData.data.next_items_page.items);
 
-        return { data: items, error: null };
+          cursor = rawAdditionalData.data.next_items_page.cursor;
+        }
+        return { data: allItems, error: null };
       } catch (e) {
         console.error(e);
         return {

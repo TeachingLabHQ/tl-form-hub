@@ -11,11 +11,11 @@ export type projectsByTypes = {
 };
 
 export type ProjectLogRows = {
-  projectType: string;
   projectName: string;
   projectRole: string;
   workHours: string;
   budgetedHours: string;
+  activity: string;
 };
 export type ProgramProject = {
   projectName: string;
