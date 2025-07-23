@@ -120,7 +120,7 @@ export function projectRepository(): ProjectRepository {
                           group {
                             id
                           } 
-                          column_values(ids: ["dropdown7", "project_lead2"]) {
+                          column_values(ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "multiple_person3", "people9"]) {
                             column {
                               title
                             } 
@@ -149,7 +149,7 @@ export function projectRepository(): ProjectRepository {
             projectName: "",
             projectMembers: [],
           };
-          //use the projecet name from the Project Log Name column
+          //use the project name from the Project Log Name column
           programProject.projectName = staffedProject["column_values"].find(
             (c: { column: { title: string }; title: string }) =>
               c.column.title === "Project Log Name"
@@ -269,7 +269,7 @@ export function projectRepository(): ProjectRepository {
       try {
         let query = "";
         //if employeeId is empty, fetch all budgeted hours
-        if (employeeId === "") {
+        // if (employeeId === "") {
            query = `{
             boards(ids: 8577820151) {
              items_page(
@@ -281,6 +281,7 @@ export function projectRepository(): ProjectRepository {
                   name
                   column_values(ids: [
                     "lookup_mksmfdnr", 
+                    "lookup_mkpvs1wj",
                     "numeric_mknhqm6d", 
                     "dropdown_mknk8zwg", 
                     "color_mknhq0s3"
@@ -302,43 +303,45 @@ export function projectRepository(): ProjectRepository {
               }
             }
           }`;
-        }else{
-          console.log("employeeId", employeeId);
-          //if employeeId is not empty, fetch the budgeted hours for the given employeeId
-          query = `{
-            boards(ids: 8577820151) {
-             items_page(
-              limit: 500
-              query_params: {rules: [{column_id: "text_mkrh19y1", compare_value: ["${employeeId}"]}]}
-            ) {
-                cursor
-                items {
-                  id
-                  name
-                  column_values(ids: [
-                    "lookup_mksmfdnr", 
-                    "numeric_mknhqm6d", 
-                    "dropdown_mknk8zwg", 
-                    "color_mknhq0s3"
-                  ]) {
-                    id
-                    text
-                    ... on StatusValue {
-                      label
-                    }
-                    ... on MirrorValue {
-                      display_value
-                      id
-                    }
-                    column {
-                      title
-                    }
-                  }
-                }
-              }
-            }
-          }`;
-        }
+        // disabling this for since mirror column (id) lookup is not supported in the API yet
+        // }else{
+        //   console.log("employeeId", employeeId);
+        //   //if employeeId is not empty, fetch the budgeted hours for the given employeeId
+        //   query = `{
+        //     boards(ids: 8577820151) {
+        //      items_page(
+        //       limit: 500
+        //       query_params: {rules: [{column_id: "text_mkrh19y1", compare_value: ["${employeeId}"]}]}
+        //     ) {
+        //         cursor
+        //         items {
+        //           id
+        //           name
+        //           column_values(ids: [
+        //             "lookup_mkpvs1wj", 
+        //             "lookup_mksmfdnr", 
+        //             "numeric_mknhqm6d", 
+        //             "dropdown_mknk8zwg", 
+        //             "color_mknhq0s3"
+        //           ]) {
+        //             id
+        //             text
+        //             ... on StatusValue {
+        //               label
+        //             }
+        //             ... on MirrorValue {
+        //               display_value
+        //               id
+        //             }
+        //             column {
+        //               title
+        //             }
+        //           }
+        //         }
+        //       }
+        //     }
+        //   }`;
+        // }
 
 
         let rawMondayData = await fetchMondayData(query);
@@ -354,7 +357,8 @@ export function projectRepository(): ProjectRepository {
                 id
                 name
                 column_values(ids: [
-                  "email_mknhbhe0", 
+                  "lookup_mksmfdnr", 
+                  "lookup_mkpvs1wj",
                   "numeric_mknhqm6d", 
                   "dropdown_mknk8zwg", 
                   "color_mknhq0s3"
@@ -363,6 +367,10 @@ export function projectRepository(): ProjectRepository {
                   text
                   ... on StatusValue {
                     label
+                  }
+                  ... on MirrorValue {
+                    display_value
+                    id
                   }
                   column {
                     title

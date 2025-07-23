@@ -17,38 +17,12 @@ export const projectRolesList = [
   "Other",
 ];
 
-export const isProjectLogComplete = (log: {
-  projectType: string;
-  projectRole: string;
-  projectName: string;
-  workHours: string;
-}) => {
-  return (
-    log.projectType !== "" &&
-    log.projectRole !== "" &&
-    log.projectName !== "" &&
-    log.workHours !== ""
-  );
-};
-
 export const getPreAssignedProgramProjects = (
   programProjectsStaffing: any,
-  rows: {
-    projectType: string;
-    projectName: string;
-    projectRole: string;
-    workHours: string;
-    budgetedHours: string;
-  }[],
+  rows: ProjectLogRows[],
   setRows: React.Dispatch<
     React.SetStateAction<
-      {
-        projectType: string;
-        projectName: string;
-        projectRole: string;
-        workHours: string;
-        budgetedHours: string;
-      }[]
+      ProjectLogRows[]
     >
   >,
   mondayProfile: EmployeeProfile | null,
@@ -56,6 +30,7 @@ export const getPreAssignedProgramProjects = (
 ) => {
   let projectMembersInfo: ProjectLogRows[] = [];
   if (programProjectsStaffing) {
+    //loop through the staffed projects and make sure the current user is in the project
     for (const project of programProjectsStaffing) {
       const { projectName, projectMembers } = project;
       const member = projectMembers.find((member: any) =>
@@ -63,7 +38,6 @@ export const getPreAssignedProgramProjects = (
       );
       if (member) {
         projectMembersInfo.push({
-          projectType: "Program-related Project",
           projectRole: member.role,
           projectName: projectName,
           workHours: "",
@@ -78,6 +52,7 @@ export const getPreAssignedProgramProjects = (
       member.projectName,
       member.projectRole,
       mondayProfile?.email || "",
+      mondayProfile?.employeeId || "",
       allBudgetedHours
     );
     member.budgetedHours = budgetedHours;
@@ -92,6 +67,7 @@ export const getBudgetedHoursFromMonday = (
   projectName: string,
   projectRole: string,
   email: string,
+  employeeId: string,
   allBudgetedHours: any
 ) => {
   for (let item of allBudgetedHours) {
@@ -108,8 +84,12 @@ export const getBudgetedHoursFromMonday = (
     let itemProjectRole = item.column_values.find(
       (col: any) => col.column.title === "Project Role"
     )?.text;
+    let itemEmployeeId = item.column_values.find(
+      (col: any) => col.column.title === "Employee ID"
+    )?.display_value;
+
     if (
-      compareTwoStrings(itemEmail, email) &&
+      (compareTwoStrings(itemEmail, email) || compareTwoStrings(itemEmployeeId, employeeId)) &&
       compareTwoStrings(itemProjectName, projectName) &&
       compareTwoStrings(projectRole, itemProjectRole)
     ) {

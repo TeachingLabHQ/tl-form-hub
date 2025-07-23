@@ -14,6 +14,7 @@ import {
   getClosestMonday,
   REMINDER_ITEMS,
 } from "./utils";
+import { ProjectLogRows } from "~/domains/project/model";
 
 export type FormValues = {
   email: string;
@@ -47,9 +48,8 @@ export const ProjectLogForm: React.FC = () => {
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSuccessful, setIsSuccessful] = useState<boolean | null>(null);
-  const [projectWorkEntries, setProjectWorkEntries] = useState([
+  const [projectWorkEntries, setProjectWorkEntries] = useState<ProjectLogRows[]>([
     {
-      projectType: "",
       projectName: "",
       projectRole: "",
       workHours: "",
@@ -179,7 +179,6 @@ export const ProjectLogForm: React.FC = () => {
     // Check if all project logs are complete
     const areAllLogsComplete = projectWorkEntries.every(
       (entry) =>
-        entry.projectType &&
         entry.projectName &&
         entry.projectRole &&
         entry.workHours &&

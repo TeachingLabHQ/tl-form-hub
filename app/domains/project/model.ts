@@ -11,7 +11,6 @@ export type projectsByTypes = {
 };
 
 export type ProjectLogRows = {
-  projectType: string;
   projectName: string;
   projectRole: string;
   workHours: string;
