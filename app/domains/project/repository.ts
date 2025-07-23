@@ -280,7 +280,7 @@ export function projectRepository(): ProjectRepository {
                   id
                   name
                   column_values(ids: [
-                    "email_mknhbhe0", 
+                    "lookup_mksmfdnr", 
                     "numeric_mknhqm6d", 
                     "dropdown_mknk8zwg", 
                     "color_mknhq0s3"
@@ -289,6 +289,10 @@ export function projectRepository(): ProjectRepository {
                     text
                     ... on StatusValue {
                       label
+                    }
+                    ... on MirrorValue {
+                      display_value
+                      id
                     }
                     column {
                       title
@@ -312,7 +316,7 @@ export function projectRepository(): ProjectRepository {
                   id
                   name
                   column_values(ids: [
-                    "email_mknhbhe0", 
+                    "lookup_mksmfdnr", 
                     "numeric_mknhqm6d", 
                     "dropdown_mknk8zwg", 
                     "color_mknhq0s3"
@@ -321,6 +325,10 @@ export function projectRepository(): ProjectRepository {
                     text
                     ... on StatusValue {
                       label
+                    }
+                    ... on MirrorValue {
+                      display_value
+                      id
                     }
                     column {
                       title

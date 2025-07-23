@@ -97,7 +97,8 @@ export const getBudgetedHoursFromMonday = (
   for (let item of allBudgetedHours) {
     let itemEmail = item.column_values.find(
       (col: any) => col.column.title === "Email"
-    )?.text;
+      //access the display_value of the mirror column
+    )?.display_value;
     let itemProjectName = item.column_values.find(
       (col: any) => col.column.title === "Project Name"
     )?.text;
