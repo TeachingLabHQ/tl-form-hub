@@ -42,7 +42,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const querySubItems =
       "mutation ($myItemName: String!,$parentID: ID!, $columnVals: JSON! ) { create_subitem (parent_item_id:$parentID, item_name:$myItemName, column_values:$columnVals) { id } }";
     const subitemPromises = projectLogEntries.map((project) => {
-      const { projectName, projectRole, workHours } = project;
+      const { projectName, projectRole, workHours, activity } = project;
       const varsSubItems = {
         myItemName: name,
         parentID: String(parentItemId),
@@ -52,6 +52,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           name6: projectName,
           numbers: parseFloat(workHours),
           numeric_mkq2d9jn: employeeId,
+          text_mkt4atja: activity,
         }),
       };
       // Return the promise for each subitem creation

@@ -17,6 +17,12 @@ export const projectRolesList = [
   "Other",
 ];
 
+export const activityList = [
+  "Project Execution",
+  "Content Development",
+  "Business Development",
+  "PTO/Leave(Paid Time Off)",
+];
 export const getPreAssignedProgramProjects = (
   programProjectsStaffing: any,
   rows: ProjectLogRows[],
@@ -40,6 +46,7 @@ export const getPreAssignedProgramProjects = (
         projectMembersInfo.push({
           projectRole: member.role,
           projectName: projectName,
+          activity: "",
           workHours: "",
           budgetedHours: "N/A",
         });

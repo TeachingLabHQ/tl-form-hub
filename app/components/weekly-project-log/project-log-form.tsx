@@ -54,6 +54,7 @@ export const ProjectLogForm: React.FC = () => {
       projectRole: "",
       workHours: "",
       budgetedHours: "N/A",
+      activity: "",
     },
   ]);
   const xIcon = <IconX size={20} />;
@@ -181,6 +182,7 @@ export const ProjectLogForm: React.FC = () => {
       (entry) =>
         entry.projectName &&
         entry.projectRole &&
+        entry.activity &&
         entry.workHours &&
         Number(entry.workHours) !== 0
     );

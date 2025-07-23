@@ -8,6 +8,7 @@ import {
   getBudgetedHoursFromMonday,
   getPreAssignedProgramProjects,
   handleKeyDown,
+  activityList,
   projectRolesList,
   updateTotalWorkHours
 } from "./utils";
@@ -54,6 +55,7 @@ export const ProjectLogsWidget = ({
       {
         projectName: "",
         projectRole: "",
+        activity: "",
         workHours: "",
         budgetedHours: "N/A",
       },
@@ -129,8 +131,8 @@ export const ProjectLogsWidget = ({
   return (
     <div className="grid grid-rows gap-4">
       <div
-        className={cn("grid gap-4 grid-cols-[1fr_2fr_1.3fr_1fr_1fr]", {
-          "grid-cols-[1fr_2fr_1.3fr_1fr_1fr_0.5fr]":
+        className={cn("grid gap-4 grid-cols-[2fr_1.3fr_1fr_1fr_1fr]", {
+          "grid-cols-[2fr_1.3fr_1fr_1fr_1fr_0.5fr]":
             projectWorkEntries.length > 1,
         })}
       >
@@ -142,6 +144,11 @@ export const ProjectLogsWidget = ({
         <div className="">
           <Text fw={500} size="md">
             Project Role
+          </Text>
+        </div>
+        <div className="">
+          <Text fw={500} size="md">
+            Activity
           </Text>
         </div>
         <div className="">
@@ -159,8 +166,8 @@ export const ProjectLogsWidget = ({
       {projectWorkEntries.map((row, index) => (
         <div
           key={index}
-          className={cn("grid gap-4 grid-cols-[1fr_2fr_1.3fr_1fr_1fr]", {
-            "grid-cols-[1fr_2fr_1.3fr_1fr_1fr_0.5fr]":
+          className={cn("grid gap-4 grid-cols-[2fr_1.3fr_1fr_1fr_1fr]", {
+            "grid-cols-[2fr_1.3fr_1fr_1fr_1fr_0.5fr]":
               projectWorkEntries.length > 1,
           })}
         >
@@ -193,6 +200,21 @@ export const ProjectLogsWidget = ({
               error={
                 isValidated === false && !row.projectRole
                   ? "Project Role is required"
+                  : null
+              }
+            />
+          </div>
+          <div>
+            <Select
+              value={row.activity}
+              onChange={(value) => handleChange(index, "activity", value)}
+              placeholder="Select an activity"
+              data={activityList}
+              searchable
+              onKeyDown={handleKeyDown}
+              error={
+                isValidated === false && !row.activity
+                  ? "Activity is required"
                   : null
               }
             />

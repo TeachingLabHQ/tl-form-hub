@@ -15,6 +15,7 @@ export type ProjectLogRows = {
   projectRole: string;
   workHours: string;
   budgetedHours: string;
+  activity: string;
 };
 export type ProgramProject = {
   projectName: string;
