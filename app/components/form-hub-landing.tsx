@@ -52,7 +52,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
       </Card>
 
       <Grid>
-        {/* <Grid.Col span={{ base: 12, md: 6 }}>
+        <Grid.Col span={{ base: 12, md: 6 }}>
           <Card
             shadow="sm"
             p="xl"
@@ -91,9 +91,9 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               </Button>
             </Flex>
           </Card>
-        </Grid.Col> */}
+        </Grid.Col>
 
-        {/* <Grid.Col span={{ base: 12, md: 6 }}>
+        <Grid.Col span={{ base: 12, md: 6 }}>
           <Card
             shadow="sm"
             p="xl"
@@ -125,7 +125,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               </Button>
             </Flex>
           </Card>
-        </Grid.Col> */}
+        </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Card
