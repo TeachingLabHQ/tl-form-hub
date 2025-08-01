@@ -99,8 +99,24 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
     getSubmissionsByEmail: async (email) => {
       try {
         const now = new Date();
-        const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-        const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString();
+        const currentDay = now.getDate();
+        
+        let startDate: string;
+        let endDate: string;
+        
+        if (currentDay < 5) {
+          // Before the 5th: show submissions from previous month to 5th of current month
+          const firstDayPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+          const fifthDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 5).toISOString();
+          startDate = firstDayPreviousMonth;
+          endDate = fifthDayCurrentMonth;
+        } else {
+          // On or after the 5th: show submissions from current month to 5th of next month
+          const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+          const fifthDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 5).toISOString();
+          startDate = firstDayCurrentMonth;
+          endDate = fifthDayNextMonth;
+        }
 
         const { data, error } = await supabase
           .from('vendor_payment_submissions')
@@ -109,8 +125,8 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
             entries:vendor_payment_entries(*)
           `)
           .eq('cf_email', email)
-          .gte('submission_date', firstDayCurrentMonth)
-          .lt('submission_date', firstDayNextMonth)
+          .gte('submission_date', startDate)
+          .lt('submission_date', endDate)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
