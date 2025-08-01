@@ -104,14 +104,14 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
         let startDate: string;
         let endDate: string;
         
-        if (currentDay < 5) {
-          // Before the 5th: show submissions from previous month to 5th of current month
+        if (currentDay <= 5) {
+          // Before or on the 5th: show submissions from previous month to 5th of current month
           const firstDayPreviousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
           const fifthDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 5).toISOString();
           startDate = firstDayPreviousMonth;
           endDate = fifthDayCurrentMonth;
         } else {
-          // On or after the 5th: show submissions from current month to 5th of next month
+          //  after the 5th: show submissions from current month to 5th of next month
           const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
           const fifthDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 5).toISOString();
           startDate = firstDayCurrentMonth;
