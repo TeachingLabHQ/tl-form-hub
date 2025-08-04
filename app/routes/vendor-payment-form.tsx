@@ -90,7 +90,7 @@ export default function VendorPaymentFormRoute() {
             },
             {
               type: "contentDeveloper",
-              value: "Tier 2",
+              value: "Tier 4",
             },
             
             ],

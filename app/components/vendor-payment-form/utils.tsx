@@ -4,6 +4,7 @@ export enum Tier {
   TIER_1 = "Tier 1",
   TIER_2 = "Tier 2",
   TIER_3 = "Tier 3",
+  TIER_4 = "Tier 4",
 }
 
 export type TaskDetails = {
@@ -11,10 +12,12 @@ export type TaskDetails = {
   "Tier 1": number | null;
   "Tier 2": number | null;
   "Tier 3": number | null;
+  "Tier 4": number | null;
   maxHours: {
     "Tier 1": number | null;
     "Tier 2": number | null;
     "Tier 3": number | null;
+    "Tier 4": number | null;
   }|null;
 };
 
@@ -24,10 +27,12 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 500,
     "Tier 2": null,
     "Tier 3": null,
+    "Tier 4": null,
     maxHours: {
       "Tier 1": 1,
       "Tier 2": null,
       "Tier 3": null,
+      "Tier 4": null,
     },
   },
   {
@@ -36,10 +41,12 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 110,
     "Tier 2": 125,
     "Tier 3": 140,
+    "Tier 4": null,
     maxHours: {
       "Tier 1": 6,
       "Tier 2": 6,
       "Tier 3": 6,
+      "Tier 4": null,
     },
   },
   {
@@ -48,10 +55,12 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: {
       "Tier 1": 1.5,
       "Tier 2": 1.5,
       "Tier 3": 1.5,
+      "Tier 4": null,
     },
   },
   {
@@ -59,10 +68,12 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 150,
     "Tier 2": 165,
     "Tier 3": 180,
+    "Tier 4": null,
     maxHours: {
       "Tier 1": 6,
       "Tier 2": 6,
       "Tier 3": 6,
+      "Tier 4": null,
     },
   },
   {
@@ -71,6 +82,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: null,
   },
   {
@@ -78,10 +90,12 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 100,
     "Tier 2": null,
     "Tier 3": null,
+    "Tier 4": null,
     maxHours: {
       "Tier 1": 6,
       "Tier 2": null,
       "Tier 3": null,
+      "Tier 4": null,
     },
   },
   {
@@ -89,6 +103,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": null,
     "Tier 2": 80,
     "Tier 3": 80,
+    "Tier 4": null,
     maxHours: null,
   },
   {
@@ -96,6 +111,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: null,
   },
   {
@@ -103,6 +119,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: null,
   },
   {
@@ -110,6 +127,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: null,
   },
   {
@@ -117,6 +135,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: null,
   },
   {
@@ -124,17 +143,20 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 25,
     "Tier 2": 25,
     "Tier 3": 25,
+    "Tier 4": null,
     maxHours: null,
-  },
+    },
   {
     taskName: "Local Travel",
     "Tier 1": 20,
     "Tier 2": 20,
     "Tier 3": 20,
+    "Tier 4": null,
     maxHours: {
       "Tier 1": 3,
       "Tier 2": 3,
       "Tier 3": 3,
+      "Tier 4": null,
     },
   },
   {
@@ -142,10 +164,12 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 1": 20,
     "Tier 2": 20,
     "Tier 3": 20,
+    "Tier 4": null,
     maxHours: {
       "Tier 1": 16,
       "Tier 2": 16,
       "Tier 3": 16,
+      "Tier 4": null,
     },
   },
 ];
@@ -156,6 +180,7 @@ export const copyEditorTaskOptions: TaskDetails[] = [
     "Tier 1": 40,
     "Tier 2": 45,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: null,
   },
 ]
@@ -166,6 +191,7 @@ export const copyRightPermissionsTaskOptions: TaskDetails[] = [
     "Tier 1": 30,
     "Tier 2": 35,
     "Tier 3": 40,
+    "Tier 4": null,
     maxHours: null,
   },
 ]
@@ -176,6 +202,7 @@ export const presentationDesignTaskOptions: TaskDetails[] = [
     "Tier 1": 40,
     "Tier 2": 45,
     "Tier 3": 50,
+    "Tier 4": null,
     maxHours: null,
   },
 ]
@@ -185,6 +212,7 @@ export const contentDeveloperTaskOptions: TaskDetails[] = [
     "Tier 1": 70,
     "Tier 2": 85,
     "Tier 3": 100,
+    "Tier 4": 125,
     maxHours: null,
   },
 ]
@@ -195,6 +223,7 @@ export const dataEvaluationTaskOptions: TaskDetails[] = [
     "Tier 1": 27,
     "Tier 2": null,
     "Tier 3": null,
+    "Tier 4": null,
     maxHours: null,
   },
 ]
