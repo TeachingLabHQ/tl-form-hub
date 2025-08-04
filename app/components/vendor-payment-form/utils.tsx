@@ -163,9 +163,9 @@ export const copyEditorTaskOptions: TaskDetails[] = [
 export const copyRightPermissionsTaskOptions: TaskDetails[] = [
   {
     taskName: "Copy Right Permissions",
-    "Tier 1": 40,
-    "Tier 2": 45,
-    "Tier 3": 50,
+    "Tier 1": 30,
+    "Tier 2": 35,
+    "Tier 3": 40,
     maxHours: null,
   },
 ]

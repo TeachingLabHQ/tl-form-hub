@@ -110,6 +110,7 @@ try {
           )
         `)
         .gte("submission_date", previousMonthISO)
+        //the current month's data won't be included until the 6th of the month
         .lt("submission_date", currentMonthISO);
 
       if (submissionsError) {
