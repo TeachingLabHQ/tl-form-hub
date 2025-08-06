@@ -39,19 +39,33 @@ export const getPreAssignedProgramProjects = (
     //loop through the staffed projects and make sure the current user is in the project
     for (const project of programProjectsStaffing) {
       const { projectName, projectMembers } = project;
-      const member = projectMembers.find((member: any) =>
-        compareTwoStrings(member.name, mondayProfile?.name || "")
-      );
-      if (member) {
-        projectMembersInfo.push({
-          projectRole: member.role,
-          projectName: projectName,
-          activity: "",
-          workHours: "",
-          budgetedHours: "N/A",
-        });
+      for (const member of projectMembers) {
+      if (compareTwoStrings(member.name, mondayProfile?.name || "")) {
+        // Normalize coach/facilitator roles
+        let normalizedRole = member.role;
+        if (member.role.toLowerCase().includes("coach") || member.role.toLowerCase().includes("facilitator")) {
+          normalizedRole = "Facilitator/Coach";
+        }
+        
+        // Check if this role already exists for this project
+        const roleExists = projectMembersInfo.some(
+          existingMember => existingMember.projectName === projectName && 
+                           existingMember.projectRole === normalizedRole
+        );
+        
+        // Only add if the role doesn't already exist for this project
+        if (!roleExists) {
+          projectMembersInfo.push({
+            projectRole: normalizedRole,
+            projectName: projectName,
+            activity: "",
+            workHours: "",
+            budgetedHours: "N/A",
+          });
+        }
       }
     }
+  }
   }
   //get budgeted hours
   for (const member of projectMembersInfo) {
@@ -94,11 +108,10 @@ export const getBudgetedHoursFromMonday = (
     let itemEmployeeId = item.column_values.find(
       (col: any) => col.column.title === "Employee ID"
     )?.display_value;
-
     if (
       (compareTwoStrings(itemEmail, email) || compareTwoStrings(itemEmployeeId, employeeId)) &&
       compareTwoStrings(itemProjectName, projectName) &&
-      compareTwoStrings(projectRole, itemProjectRole)
+      compareTwoStrings(itemProjectRole, projectRole)
     ) {
       return parseFloat(itemBudgetedHours).toString() || "N/A";
     }
@@ -111,6 +124,11 @@ export function compareTwoStrings(strA: string, strB: string) {
   const cleanA = strA.toLowerCase().replace(/\s+/g, "");
   const cleanB = strB.toLowerCase().replace(/\s+/g, "");
   return cleanA === cleanB;
+}
+export function containsString(strA: string, strB: string) {
+  const cleanA = strA.toLowerCase().replace(/\s+/g, "");
+  const cleanB = strB.toLowerCase().replace(/\s+/g, "");
+  return cleanA.includes(cleanB);
 }
 
 export const handleProjectTypeByTeam = (businessFunction: string) => {
