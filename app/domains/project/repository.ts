@@ -67,7 +67,7 @@ export function projectRepository(): ProjectRepository {
                           group {
                             id
                           } 
-                          column_values(ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "multiple_person3", "people9"]) {
+                          column_values(ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "people__1", "people5__1", "multiple_person3", "people9"]) {
                             column {
                               title
                             } 
@@ -92,7 +92,7 @@ export function projectRepository(): ProjectRepository {
           id
         }
         column_values(
-          ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "multiple_person3", "people9"]
+          ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "people__1", "people5__1", "multiple_person3", "people9"]
         ) {
           column {
             title
@@ -120,7 +120,7 @@ export function projectRepository(): ProjectRepository {
                           group {
                             id
                           } 
-                          column_values(ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "multiple_person3", "people9"]) {
+                          column_values(ids: ["project_log_name8__1", "project_lead2", "project_sponsor", "cpm23", "multiple_person", "sme_knowledge53", "people8", "people__1", "people5__1", "multiple_person3", "people9"]) {
                             column {
                               title
                             } 
@@ -145,15 +145,18 @@ export function projectRepository(): ProjectRepository {
           );
         let programProjectsList: ProgramProject[] = [];
         for (const staffedProject of staffedProjectsList) {
+          const projectName = staffedProject["column_values"].find(
+            (c: { column: { title: string }; title: string }) =>
+              c.column.title === "Project Log Name"
+          )?.text;
+          // Only include projects with a valid project log name
+          if (projectName && projectName.trim() !== "") {
           let programProject: ProgramProject = {
             projectName: "",
             projectMembers: [],
           };
           //use the project name from the Project Log Name column
-          programProject.projectName = staffedProject["column_values"].find(
-            (c: { column: { title: string }; title: string }) =>
-              c.column.title === "Project Log Name"
-          ).text;
+              programProject.projectName = projectName;
           let projectMembers: ProjectMember[] = [];
           for (const projectMember of staffedProject["column_values"]) {
             //the names are Monday profile names
@@ -172,8 +175,12 @@ export function projectRepository(): ProjectRepository {
             }
           }
           programProject.projectMembers = projectMembers;
-          programProjectsList.push(programProject);
+            
+            
+            programProjectsList.push(programProject);
+          
         }
+      }
 
         return { data: programProjectsList, error: null };
       } catch (e) {

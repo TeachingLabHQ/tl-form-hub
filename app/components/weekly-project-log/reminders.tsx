@@ -3,7 +3,7 @@ import { IconChevronDown } from "@tabler/icons-react";
 import { Link } from "@remix-run/react";
 
 export interface ReminderItem {
-  title: string;
+  title: string | React.ReactNode;
   content: string | React.ReactNode;
 }
 
