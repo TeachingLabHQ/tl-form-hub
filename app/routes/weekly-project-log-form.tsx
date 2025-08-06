@@ -15,12 +15,12 @@ export default function WeeklyProjectLogForm() {
   if (mondayProfile === null) {
     return <LoadingSpinner />;
   }
-  if (mondayProfile?.businessFunction === "coach/facilitator") {
+  if (mondayProfile?.businessFunction === "contractor") {
     return <AccessDeniedState errorMessage="This form is only accessible to FTE/PTE employees. If you believe this is an error, please contact your administrator." />;
   }
+  else {
   return (
     <div className="min-h-screen w-full overflow-auto">
       <ProjectLogForm />
     </div>
-  );
-}
+  );} }
