@@ -72,7 +72,7 @@ export const VendorPaymentWidget = ({
             availableTasks.push({
               taskName: task.taskName,
               rate: rateValue,
-              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] || null,
             });
           }
         });
@@ -84,7 +84,7 @@ export const VendorPaymentWidget = ({
             availableTasks.push({
               taskName: task.taskName,
               rate: rateValue,
-              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] || null,
             });
           }
         });
@@ -96,7 +96,7 @@ export const VendorPaymentWidget = ({
             availableTasks.push({
               taskName: task.taskName,
               rate: rateValue,
-              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] || null,
             });
           }
         });
@@ -108,7 +108,7 @@ export const VendorPaymentWidget = ({
             availableTasks.push({
               taskName: task.taskName,
               rate: rateValue,
-              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] || null,
             }); 
           }
         });
@@ -120,7 +120,7 @@ export const VendorPaymentWidget = ({
             availableTasks.push({
               taskName: task.taskName,
               rate: rateValue,
-              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] || null,
             });
           } 
         });
@@ -132,7 +132,7 @@ export const VendorPaymentWidget = ({
             availableTasks.push({
               taskName: task.taskName,
               rate: rateValue,
-              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3"] || null,
+              maxHours: task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] || null,
             });
           }
         });
