@@ -7,6 +7,7 @@ export const projectRolesList = [
   "Analyst",
   "Client/Partnership Manager",
   "Coach Coordinator",
+  "Content Alignment Lead",
   "Facilitator/Coach",
   "Instructional Designer",
   "Project Lead",
