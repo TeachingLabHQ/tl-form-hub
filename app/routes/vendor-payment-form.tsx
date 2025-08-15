@@ -132,7 +132,7 @@ export default function VendorPaymentFormRoute() {
             name: "Samantha Wilner",
             tier: [{
               type: "facilitator",
-              value: "Tier 1",
+              value: "Tier 2",
             },
             {
               type: "contentDeveloper",
