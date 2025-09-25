@@ -24,102 +24,52 @@ export const activityList = [
   "Business Development",
   "PTO/Leave(Paid Time Off)",
 ];
-export const getPreAssignedProgramProjects = (
-  programProjectsStaffing: any,
-  rows: ProjectLogRows[],
-  setRows: React.Dispatch<
-    React.SetStateAction<
-      ProjectLogRows[]
-    >
-  >,
-  mondayProfile: EmployeeProfile | null,
-  allBudgetedHours: any
+export const setPreAssignedProjectsFromBudgetedHours = (
+  employeeBudgetedHours: any[],
+  setRows: React.Dispatch<React.SetStateAction<ProjectLogRows[]>>
 ) => {
-  let projectMembersInfo: ProjectLogRows[] = [];
-  if (programProjectsStaffing) {
-    //loop through the staffed projects and make sure the current user is in the project
-    for (const project of programProjectsStaffing) {
-      const { projectName, projectMembers } = project;
-      for (const member of projectMembers) {
-      if (compareTwoStrings(member.name, mondayProfile?.name || "")) {
-        // Normalize coach/facilitator roles
-        let normalizedRole = member.role;
-        if (member.role.toLowerCase().includes("coach") || member.role.toLowerCase().includes("facilitator")) {
-          normalizedRole = "Facilitator/Coach";
-        }
-        
-        // Check if this role already exists for this project
-        const roleExists = projectMembersInfo.some(
-          existingMember => existingMember.projectName === projectName && 
-                           existingMember.projectRole === normalizedRole
-        );
-        
-        // Only add if the role doesn't already exist for this project
-        if (!roleExists) {
-          projectMembersInfo.push({
-            projectRole: normalizedRole,
-            projectName: projectName,
-            activity: "",
-            workHours: "",
-            budgetedHours: "N/A",
-          });
-        }
-      }
+  if (!employeeBudgetedHours || employeeBudgetedHours.length === 0) {
+    return [];
+  }
+
+  // Transform employeeBudgetedHours data into ProjectLogRows format
+  const projectMembersInfo: ProjectLogRows[] = employeeBudgetedHours.map((budgetItem) => {
+    // Normalize coach/facilitator roles
+    let normalizedRole = budgetItem.projectRole;
+    if (budgetItem.projectRole.toLowerCase().includes("coach") || 
+        budgetItem.projectRole.toLowerCase().includes("facilitator")) {
+      normalizedRole = "Facilitator/Coach";
     }
-  }
-  }
-  //get budgeted hours
-  for (const member of projectMembersInfo) {
-    const budgetedHours = getBudgetedHoursFromMonday(
-      member.projectName,
-      member.projectRole,
-      mondayProfile?.email || "",
-      mondayProfile?.employeeId || "",
-      allBudgetedHours
+
+    return {
+      projectName: budgetItem.projectName,
+      projectRole: normalizedRole,
+      activity: "",
+      workHours: "",
+      budgetedHours: budgetItem.budgetedHours?.toString() || "N/A",
+    };
+  });
+
+  // Remove duplicates (same project + role combination)
+  const uniqueProjects: ProjectLogRows[] = [];
+  projectMembersInfo.forEach((item) => {
+    const exists = uniqueProjects.some(
+      (existing) => 
+        existing.projectName === item.projectName && 
+        existing.projectRole === item.projectRole
     );
-    member.budgetedHours = budgetedHours;
-  }
-  if (projectMembersInfo.length > 0) {
-    setRows(projectMembersInfo);
-  }
-  return projectMembersInfo;
-};
-
-export const getBudgetedHoursFromMonday = (
-  projectName: string,
-  projectRole: string,
-  email: string,
-  employeeId: string,
-  allBudgetedHours: any
-) => {
-  for (let item of allBudgetedHours) {
-    let itemEmail = item.column_values.find(
-      (col: any) => col.column.title === "Email"
-      //access the display_value of the mirror column
-    )?.display_value;
-    let itemProjectName = item.column_values.find(
-      (col: any) => col.column.title === "Project Name"
-    )?.text;
-    let itemBudgetedHours = item.column_values.find(
-      (col: any) => col.column.title === "Budgeted Hours/Week"
-    )?.text;
-    let itemProjectRole = item.column_values.find(
-      (col: any) => col.column.title === "Project Role"
-    )?.text;
-    let itemEmployeeId = item.column_values.find(
-      (col: any) => col.column.title === "Employee ID"
-    )?.display_value;
-    if (
-      (compareTwoStrings(itemEmail, email) || compareTwoStrings(itemEmployeeId, employeeId)) &&
-      compareTwoStrings(itemProjectName, projectName) &&
-      compareTwoStrings(itemProjectRole, projectRole)
-    ) {
-      return parseFloat(itemBudgetedHours).toString() || "N/A";
+    if (!exists) {
+      uniqueProjects.push(item);
     }
-  }
+  });
 
-  return "N/A"; // Return "N/A" if no match is found
+  if (uniqueProjects.length > 0) {
+    setRows(uniqueProjects);
+  }
+  
+  return uniqueProjects;
 };
+
 
 export function compareTwoStrings(strA: string, strB: string) {
   const cleanA = strA.toLowerCase().replace(/\s+/g, "");

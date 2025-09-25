@@ -13,6 +13,7 @@ import {
   executiveAssistantMappings,
   getClosestMonday,
   REMINDER_ITEMS,
+  setPreAssignedProjectsFromBudgetedHours,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
 
@@ -40,7 +41,7 @@ export const ProjectLogForm: React.FC = () => {
   const [projectData, setProjectData] = useState<{
     programProjectsStaffing: any;
     allProjects: any;
-    allBudgetedHours: any;
+    employeeBudgetedHours: any;
   } | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   
@@ -100,7 +101,7 @@ export const ProjectLogForm: React.FC = () => {
         setProjectData({
           programProjectsStaffing: null,
           allProjects: null,
-          allBudgetedHours: null,
+          employeeBudgetedHours: null,
         });
       } finally {
         setIsLoadingData(false);
@@ -109,6 +110,14 @@ export const ProjectLogForm: React.FC = () => {
 
     fetchProjectData();
   }, []);
+
+  // Set pre-assigned projects when data is loaded
+  useEffect(() => {
+    if (projectData?.employeeBudgetedHours && projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
+      // Only set pre-assigned projects if we have default empty state
+      setPreAssignedProjectsFromBudgetedHours(projectData.employeeBudgetedHours, setProjectWorkEntries);
+    }
+  }, [projectData?.employeeBudgetedHours, projectWorkEntries]);
 
   useEffect(() => {
     if (mondayProfile?.email) {

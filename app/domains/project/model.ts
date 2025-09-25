@@ -27,3 +27,12 @@ export type ProgramProjectWithHours = {
   projectRole: string;
   budgetedHours: string;
 };
+
+export type EmployeeBudgetedHours = {
+  itemId: string;
+  itemName: string;
+  email: string;
+  projectName: string;
+  projectRole: string;
+  budgetedHours: number;
+};

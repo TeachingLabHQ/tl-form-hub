@@ -3,19 +3,15 @@ import { fetchMondayData } from "../utils";
 import {
   ProgramProject,
   ProjectMember,
-  projectsByTypes
+  projectsByTypes,
 } from "./model";
 
 
 export interface ProjectRepository {
   fetchAllProjects(): Promise<Errorable<projectsByTypes[]>>;
   fetchProgramProjects(mondayProfileId: string): Promise<Errorable<ProgramProject[]>>;
-  fetchBudgetedHours(
-    employeeEmail: string,
-    projectName: string,
-    projectRole: string
-  ): Promise<Errorable<number>>;
-  fetchAllBudgetedHours(employeeId: string): Promise<Errorable<any>>;
+  fetchAllBudgetedHours(): Promise<Errorable<any>>;
+  fetchProjectColumnBAD(): Promise<Errorable<Record<string, string>>>;
 }
 
 export function projectRepository(): ProjectRepository {
@@ -191,94 +187,12 @@ export function projectRepository(): ProjectRepository {
         };
       }
     },
-    fetchBudgetedHours: async (
-      employeeEmail: string,
-      projectName: string,
-      projectRole: string
-    ) => {
+    fetchAllBudgetedHours: async (): Promise<Errorable<any>> => {
       try {
-        const query = `{
-          boards(ids: 8577820151) {
-            items_page(limit: 500) {
-              items {
-                column_values(ids: ["email_mknhbhe0", "dropdown_mknk8zwg", "color_mknhq0s3", "numeric_mknhqm6d"]) {
-                  column {
-                    title
-                  }
-                  text
-                  value
-                }
-              }
-            }
-          }
-        }`;
-
-        const rawMondayData = await fetchMondayData(query);
-        const items = rawMondayData.data.boards[0].items_page.items;
-
-        // Find the matching item
-        const matchingItem = items.find((item: any) => {
-          const emailValue = item.column_values.find(
-            (col: any) => col.column.title === "Email"
-          )?.text;
-          const projectValue = item.column_values.find(
-            (col: any) => col.column.title === "Project Name"
-          )?.text;
-          const roleValue = item.column_values.find(
-            (col: any) => col.column.title === "Project Role"
-          )?.text;
-
-          return (
-            emailValue === employeeEmail &&
-            projectValue === projectName &&
-            roleValue === projectRole
-          );
-        });
-
-        if (!matchingItem) {
-          return {
-            data: null,
-            error: new Error("No matching budgeted hours found"),
-          };
-        }
-
-        // Get the budgeted hours value
-        const budgetedHoursValue = matchingItem.column_values.find(
-          (col: any) => col.column.title === "Budgeted Hours/Week"
-        )?.value;
-
-        if (!budgetedHoursValue) {
-          return {
-            data: null,
-            error: new Error("Budgeted hours value not found"),
-          };
-        }
-
-        // Parse the value to a number
-        const budgetedHours = parseFloat(budgetedHoursValue);
-        if (isNaN(budgetedHours)) {
-          return {
-            data: null,
-            error: new Error("Invalid budgeted hours value"),
-          };
-        }
-
-        return { data: budgetedHours, error: null };
-      } catch (e) {
-        console.error(e);
-        return {
-          data: null,
-          error: new Error("fetchBudgetedHours() went wrong"),
-        };
-      }
-    },
-    fetchAllBudgetedHours: async (employeeId: string): Promise<Errorable<any>> => {
-      try {
+        //NOTE: Not using Monday API filtering by employeeId because it doesn't support filtering lookup columns
         let query = "";
-        //if employeeId is empty, fetch all budgeted hours
-        // if (employeeId === "") {
            query = `{
-            boards(ids: 8577820151) {
+            boards(ids: 9709949287) {
              items_page(
               limit: 500
             ) {
@@ -290,7 +204,7 @@ export function projectRepository(): ProjectRepository {
                     "lookup_mksmfdnr", 
                     "lookup_mkpvs1wj",
                     "numeric_mknhqm6d", 
-                    "dropdown_mknk8zwg", 
+                    "dropdown_mkttdgrw", 
                     "color_mknhq0s3"
                   ]) {
                     id
@@ -310,46 +224,6 @@ export function projectRepository(): ProjectRepository {
               }
             }
           }`;
-        // disabling this for since mirror column (id) lookup is not supported in the API yet
-        // }else{
-        //   console.log("employeeId", employeeId);
-        //   //if employeeId is not empty, fetch the budgeted hours for the given employeeId
-        //   query = `{
-        //     boards(ids: 8577820151) {
-        //      items_page(
-        //       limit: 500
-        //       query_params: {rules: [{column_id: "text_mkrh19y1", compare_value: ["${employeeId}"]}]}
-        //     ) {
-        //         cursor
-        //         items {
-        //           id
-        //           name
-        //           column_values(ids: [
-        //             "lookup_mkpvs1wj", 
-        //             "lookup_mksmfdnr", 
-        //             "numeric_mknhqm6d", 
-        //             "dropdown_mknk8zwg", 
-        //             "color_mknhq0s3"
-        //           ]) {
-        //             id
-        //             text
-        //             ... on StatusValue {
-        //               label
-        //             }
-        //             ... on MirrorValue {
-        //               display_value
-        //               id
-        //             }
-        //             column {
-        //               title
-        //             }
-        //           }
-        //         }
-        //       }
-        //     }
-        //   }`;
-        // }
-
 
         let rawMondayData = await fetchMondayData(query);
         let cursor: string | null =
@@ -367,7 +241,7 @@ export function projectRepository(): ProjectRepository {
                   "lookup_mksmfdnr", 
                   "lookup_mkpvs1wj",
                   "numeric_mknhqm6d", 
-                  "dropdown_mknk8zwg", 
+                  "dropdown_mkttdgrw", 
                   "color_mknhq0s3"
                 ]) {
                   id
@@ -393,12 +267,95 @@ export function projectRepository(): ProjectRepository {
 
           cursor = rawAdditionalData.data.next_items_page.cursor;
         }
+       
         return { data: allItems, error: null };
       } catch (e) {
         console.error(e);
         return {
           data: null,
           error: new Error("fetchAllBudgetedHours() went wrong"),
+        };
+      }
+    },
+    //NOTE: separate query because can't read dropdown column when filtering column values by column id
+    fetchProjectColumnBAD: async (): Promise<Errorable<Record<string, string>>> => {
+      try {
+        const query = `{
+          boards(ids: 9709949287) {
+            items_page(limit: 500) {
+              cursor
+              items {
+                id
+                name
+                column_values(types: dropdown) {
+                  id
+                  column { id type title }
+                  text
+                  ... on DropdownValue {
+                    values { id label }
+                  }
+                }
+              }
+            }
+          }
+        }`;
+
+        let rawMondayData = await fetchMondayData(query);
+        let cursor: string | null = rawMondayData.data.boards[0].items_page.cursor;
+        let allItems = rawMondayData.data.boards[0].items_page.items;
+
+        // Handle pagination if there are more results
+        while (cursor) {
+          const cursorQuery = `{
+            next_items_page(limit: 500, cursor: "${cursor}") {
+              cursor
+              items {
+                id
+                name
+                column_values(types: dropdown) {
+                  id
+                  column { id type title }
+                  text
+                  ... on DropdownValue {
+                    values { id label }
+                  }
+                }
+              }
+            }
+          }`;
+
+          const rawAdditionalData = await fetchMondayData(cursorQuery);
+          allItems.push(...rawAdditionalData.data.next_items_page.items);
+          cursor = rawAdditionalData.data.next_items_page.cursor;
+        }
+     
+        // Create a mapping of item ID to project name
+        const projectNamesMap: Record<string, string> = {};
+        
+        allItems.forEach((item: any) => {
+          // Find the dropdown column for project names (dropdown_mkttdgrw)
+          // Search through all column_values to find the one with the correct column ID
+          const projectNameColumn = item.column_values?.find(
+            (colValue: any) => colValue.column?.id === "dropdown_mkttdgrw"
+          );
+          
+          // Extract project name from dropdown values array
+          if (projectNameColumn && projectNameColumn.values && projectNameColumn.values.length > 0) {
+            // Get the label from the first value in the dropdown
+            const projectName = projectNameColumn.values[0]?.label;
+            if (projectName) {
+              projectNamesMap[item.id] = projectName;
+            }
+          }
+        });
+
+        console.log(`Fetched project names for ${Object.keys(projectNamesMap).length} items`);
+        return { data: projectNamesMap, error: null };
+      } catch (e) {
+        console.error("Error in fetchProjectNames:", e);
+        return {
+          data: null,
+          error: new Error("fetchProjectNames() went wrong"),
         };
       }
     }
