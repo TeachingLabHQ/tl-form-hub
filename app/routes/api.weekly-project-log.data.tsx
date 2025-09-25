@@ -33,16 +33,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const [
     programProjectsStaffing,
     allProjects,
-    allBudgetedHours,
+    employeeBudgetedHours,
   ] = await Promise.all([
     newProjectService.fetchProgramProjectsStaffing(mondayProfileId),
     newProjectService.fetchAllProjects(),
-    newProjectService.fetchAllBudgetedHours(employeeId),
+    newProjectService.fetchBudgetedHoursByEmployee(session?.user?.email || ""),
   ]);
 
   return json({
     programProjectsStaffing: programProjectsStaffing.data,
     allProjects: allProjects.data,
-    allBudgetedHours: allBudgetedHours.data,
+    employeeBudgetedHours: employeeBudgetedHours.data,
   }, { status: 200 });
 }; 
