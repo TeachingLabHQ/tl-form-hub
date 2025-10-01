@@ -26,8 +26,8 @@ export const ProjectLogsWidget = ({
   setTotalWorkHours: React.Dispatch<React.SetStateAction<number>>;
   projectData: {
     programProjectsStaffing: any;
-    allProjects: any;
     employeeBudgetedHours: any;
+    projectSourceNames: any;
   } | null;
 }) => {
 
@@ -83,12 +83,12 @@ export const ProjectLogsWidget = ({
   };
 
   const handleProjectOptions = () => {
-    if (!projectData?.allProjects) {
+    if (!projectData?.projectSourceNames) {
       return [];
     }
 
     let projects: string[] = [];
-    projects = projectData.allProjects.map((project: any) => project.projects).flat();
+    projects = projectData.projectSourceNames;
 
     // Remove duplicates by converting to Set and back to array
     return [...new Set(projects)].sort((a, b) => a.localeCompare(b));

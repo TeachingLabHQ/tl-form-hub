@@ -12,6 +12,7 @@ export interface ProjectRepository {
   fetchProgramProjects(mondayProfileId: string): Promise<Errorable<ProgramProject[]>>;
   fetchAllBudgetedHours(): Promise<Errorable<any>>;
   fetchProjectColumnBAD(): Promise<Errorable<Record<string, string>>>;
+  fetchProjectSourceNames(): Promise<Errorable<string[]>>;
 }
 
 export function projectRepository(): ProjectRepository {
@@ -356,6 +357,68 @@ export function projectRepository(): ProjectRepository {
         return {
           data: null,
           error: new Error("fetchProjectNames() went wrong"),
+        };
+      }
+    },
+    fetchProjectSourceNames: async (): Promise<Errorable<string[]>> => {
+      try {
+        const query = `{
+          boards(ids: 18054912217) {
+            items_page(limit: 500) {
+              cursor
+              items {
+                id
+                name
+                column_values(types: dropdown) {
+                  ... on DropdownValue {
+                    column {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }`;
+
+        let rawMondayData = await fetchMondayData(query);
+        let cursor: string | null = rawMondayData.data.boards[0].items_page.cursor;
+        let allItems = rawMondayData.data.boards[0].items_page.items;
+
+        // Handle pagination if there are more results
+        while (cursor) {
+          const cursorQuery = `{
+            next_items_page(limit: 500, cursor: "${cursor}") {
+              cursor
+              items {
+                id
+                name
+                column_values(types: dropdown) {
+                  ... on DropdownValue {
+                    column {
+                      id
+                    }
+                  }
+                }
+              }
+            }
+          }`;
+
+          const rawAdditionalData = await fetchMondayData(cursorQuery);
+          allItems.push(...rawAdditionalData.data.next_items_page.items);
+          cursor = rawAdditionalData.data.next_items_page.cursor;
+        }
+
+        // Extract project names from all items
+        const projectNames: string[] = allItems.map((item: any) => item.name);
+
+        console.log(`Fetched ${projectNames.length} project source names`);
+        return { data: projectNames, error: null };
+      } catch (e) {
+        console.error("Error in fetchProjectSourceNames:", e);
+        return {
+          data: null,
+          error: new Error("fetchProjectSourceNames() went wrong"),
         };
       }
     }

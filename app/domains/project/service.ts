@@ -88,6 +88,23 @@ export function projectService(projectRepository: ProjectRepository) {
        
         return { data: transformedData, error: null };
       },
-    
+    fetchProjectSourceNames: async () => {
+      const result = await projectRepository.fetchProjectSourceNames();
+      
+      if (result.error) {
+        console.error("Error fetching project source names:", result.error);
+        return { data: null, error: result.error };
+      }
+      
+      if (!result.data) {
+        console.log("No project source names found");
+        return { data: [], error: null };
+      }
+      
+      // Sort project names alphabetically
+      const sortedProjectNames = result.data.sort((a, b) => a.localeCompare(b));
+      
+      return { data: sortedProjectNames, error: null };
+    },
   };
 }

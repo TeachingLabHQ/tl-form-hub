@@ -40,8 +40,8 @@ export const ProjectLogForm: React.FC = () => {
   // Client-side data state
   const [projectData, setProjectData] = useState<{
     programProjectsStaffing: any;
-    allProjects: any;
     employeeBudgetedHours: any;
+    projectSourceNames: any;
   } | null>(null);
   const [isLoadingData, setIsLoadingData] = useState(true);
   
@@ -100,8 +100,8 @@ export const ProjectLogForm: React.FC = () => {
         // Set empty data as fallback
         setProjectData({
           programProjectsStaffing: null,
-          allProjects: null,
           employeeBudgetedHours: null,
+          projectSourceNames: null,
         });
       } finally {
         setIsLoadingData(false);
