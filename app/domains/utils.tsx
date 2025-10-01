@@ -4,7 +4,7 @@ export async function fetchMondayData(queryBody: string): Promise<any> {
     headers: {
       "Content-Type": "application/json",
       Authorization: import.meta.env.VITE_MONDAY_API_KEY,
-      "API-Version": "2023-10",
+      "API-Version": "2025-07",
     },
     body: JSON.stringify({
       query: queryBody,
@@ -20,7 +20,7 @@ export async function insertMondayData(query: string, vars: any): Promise<any> {
     headers: {
       "Content-Type": "application/json",
       Authorization: import.meta.env.VITE_MONDAY_API_KEY,
-      "API-Version": "2023-10",
+      "API-Version": "2025-07",
     },
     body: JSON.stringify({
       query: query,
