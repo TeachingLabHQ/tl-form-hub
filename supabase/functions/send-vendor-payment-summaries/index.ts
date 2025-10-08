@@ -10,6 +10,10 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { generateProjectPDF } from "./pdf-generator.ts";
 import { sendProjectEmail } from "./utils.ts";
 
+// --- Configuration ---
+const BATCH_SIZE = 15; // Process 15 emails per invocation
+const EMAIL_DELAY_MS = 600; // 600ms between emails (Resend allows 2 requests/second)
+
 // --- Helper function for delay ---
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -193,128 +197,214 @@ try {
       }
       console.log(`Grouped entries into ${projectsMap.size} projects.`);
 
+      // --- NEW: Query existing email logs to filter out already-sent combinations ---
+      console.log("Querying existing email logs to check what's already sent...");
+      const { data: sentLogs, error: sentLogsError } = await supabase
+        .from("vendor_payment_email_logs")
+        .select('project_name, cf_email, status')
+        .eq('month', previousMonthISO)
+        .eq('status', 'sent');
 
-      // Process each person within each project
+      if (sentLogsError) {
+        console.error(`Error fetching sent logs: ${JSON.stringify(sentLogsError)}`);
+        // Continue anyway - worst case we'll try to insert and get duplicate error
+      }
+
+      // Create set of already-sent combinations for quick lookup
+      const sentSet = new Set<string>();
+      if (sentLogs && sentLogs.length > 0) {
+        sentLogs.forEach(log => {
+          const key = `${log.project_name}|${log.cf_email}`;
+          sentSet.add(key);
+        });
+        console.log(`Found ${sentLogs.length} already-sent email logs`);
+      } else {
+        console.log("No previously sent emails found for this month");
+      }
+
+      // --- NEW: Build list of pending person/project combinations ---
+      console.log("Building list of pending email combinations...");
+      interface PendingCombo {
+        projectName: string;
+        personSummary: PersonProjectSummary;
+      }
+      const pendingCombos: PendingCombo[] = [];
+
+      for (const [projectName, projectData] of projectsMap.entries()) {
+        for (const personSummary of projectData.peopleSummaries) {
+          const key = `${projectName}|${personSummary.cf_email}`;
+          if (!sentSet.has(key)) {
+            pendingCombos.push({ projectName, personSummary });
+          } else {
+            console.log(`-- Skipping already-sent: ${personSummary.cf_email} / ${projectName}`);
+          }
+        }
+      }
+
+      console.log(`Total pending emails: ${pendingCombos.length}`);
+      
+      // --- NEW: Limit to batch size ---
+      const batch = pendingCombos.slice(0, BATCH_SIZE);
+      const remainingAfterBatch = pendingCombos.length - batch.length;
+      console.log(`Processing batch of ${batch.length} emails (${remainingAfterBatch} will remain after this batch)`);
+
+      // Process the batch
       let processedEmailCount = 0;
       let failedEmailCount = 0;
       let totalEmailsAttempted = 0;
 
-      for (const [projectName, projectData] of projectsMap.entries()) {
-        console.log(`Processing project: ${projectName}`);
-        for (const personSummary of projectData.peopleSummaries) {
-          totalEmailsAttempted++;
-          const personEmail = personSummary.cf_email;
-          console.log(`-- Processing person: ${personEmail} for project: ${projectName}`);
+      for (const { projectName, personSummary } of batch) {
+        totalEmailsAttempted++;
+        const personEmail = personSummary.cf_email;
+        console.log(`-- Processing person: ${personEmail} for project: ${projectName}`);
 
-          let logId: number | null = null;
+        let logId: number | null = null;
 
-          try {
-            // Create 'pending' email log entry for the person/project
-            console.log(`-- Creating 'pending' email log for ${personEmail} on project ${projectName}`);
-            const { data: newLogData, error: logInsertError } = await supabase
-              .from("vendor_payment_email_logs")
-              .insert({
-                project_name: projectName,
-                cf_email: personEmail, // Add cf_email
-                month: previousMonthISO,
-                status: "pending",
-              })
-              .select('id')
-              .single();
+        try {
+          // Create 'pending' email log entry for the person/project
+          console.log(`-- Creating 'pending' email log for ${personEmail} on project ${projectName}`);
+          const { data: newLogData, error: logInsertError } = await supabase
+            .from("vendor_payment_email_logs")
+            .insert({
+              project_name: projectName,
+              cf_email: personEmail, // Add cf_email
+              month: previousMonthISO,
+              status: "pending",
+            })
+            .select('id')
+            .single();
 
-            if (logInsertError) {
-               console.error(`-- Error creating 'pending' log for ${personEmail}/${projectName}: ${JSON.stringify(logInsertError)}`);
-               failedEmailCount++;
-               continue; // Skip this person/project combination
-            }
-            logId = newLogData?.id;
-            console.log(`-- Pending log created with ID: ${logId} for ${personEmail}/${projectName}`);
+          if (logInsertError) {
+            console.error(`-- Error creating 'pending' log for ${personEmail}/${projectName}: ${JSON.stringify(logInsertError)}`);
+            failedEmailCount++;
+            continue; // Skip this person/project combination
+          }
+          logId = newLogData?.id;
+          console.log(`-- Pending log created with ID: ${logId} for ${personEmail}/${projectName}`);
 
+          // Generate PDF for this person's entries in this project
+          console.log(`-- Generating PDF for ${personEmail} on project ${projectName}`);
+          const pdf = await generateProjectPDF(projectName, personSummary, logId); // Pass person-specific summary
+          console.log(`-- PDF generated successfully for ${personEmail}/${projectName}`);
 
-            // Generate PDF for this person's entries in this project
-            console.log(`-- Generating PDF for ${personEmail} on project ${projectName}`);
-            const pdf = await generateProjectPDF(projectName, personSummary, logId); // Pass person-specific summary
-            console.log(`-- PDF generated successfully for ${personEmail}/${projectName}`);
+          // Send email to this person for this project
+          console.log(`-- Sending email to ${personEmail} for project ${projectName}`);
+          await sendProjectEmail(
+            projectName,
+            personSummary, // Pass the necessary summary details
+            pdf,
+          );
+          console.log(`-- Email sent successfully to ${personEmail} for project ${projectName}`);
 
-            // Send email to this person for this project
-            console.log(`-- Sending email to ${personEmail} for project ${projectName}`);
-            await sendProjectEmail(
-                projectName,
-                personSummary, // Pass the necessary summary details
-                pdf,
-            );
-            console.log(`-- Email sent successfully to ${personEmail} for project ${projectName}`);
+          // Update email log to 'sent' status
+          console.log(`-- Updating log to 'sent' for ${personEmail}/${projectName} (Log ID: ${logId})`);
+          const { error: updateSentError } = await supabase
+            .from("vendor_payment_email_logs")
+            .update({
+              status: "sent",
+              sent_at: new Date().toISOString(),
+            })
+            .eq("id", logId); // Update using the specific log ID
 
-            // Update email log to 'sent' status
-            console.log(`-- Updating log to 'sent' for ${personEmail}/${projectName} (Log ID: ${logId})`);
-            const { error: updateSentError } = await supabase
+          if (updateSentError) {
+            console.error(`-- Error updating log to 'sent' for ${personEmail}/${projectName}: ${JSON.stringify(updateSentError)}`);
+            // Log the error, but count as processed as email was sent
+          } else {
+            console.log(`-- Log status updated to 'sent' for ${personEmail}/${projectName}`);
+          }
+          processedEmailCount++;
+
+        } catch (error) {
+          failedEmailCount++;
+          console.error(`-- Error processing email for ${personEmail} on project ${projectName}: ${JSON.stringify(error)}`);
+          // If an error occurred (PDF gen or email send), update log to 'failed' if logId exists
+          if (logId) {
+            console.log(`-- Updating log status to 'failed' for ${personEmail}/${projectName} (Log ID: ${logId})`);
+            const { error: updateFailedError } = await supabase
               .from("vendor_payment_email_logs")
               .update({
-                status: "sent",
-                sent_at: new Date().toISOString(),
+                status: "failed",
+                error_message: getErrorMessage(error), // Store error message
               })
               .eq("id", logId); // Update using the specific log ID
 
-            if (updateSentError) {
-              console.error(`-- Error updating log to 'sent' for ${personEmail}/${projectName}: ${JSON.stringify(updateSentError)}`);
-              // Log the error, but count as processed as email was sent
+            if (updateFailedError) {
+              console.error(`-- CRITICAL: Error updating email log to 'failed' for ${personEmail}/${projectName} after processing failure: ${JSON.stringify(updateFailedError)}`);
             } else {
-               console.log(`-- Log status updated to 'sent' for ${personEmail}/${projectName}`);
+              console.log(`-- Log status updated to 'failed' for ${personEmail}/${projectName}`);
             }
-            processedEmailCount++;
-
-          } catch (error) {
-            failedEmailCount++;
-            console.error(`-- Error processing email for ${personEmail} on project ${projectName}: ${JSON.stringify(error)}`);
-            // If an error occurred (PDF gen or email send), update log to 'failed' if logId exists
-            if (logId) {
-                console.log(`-- Updating log status to 'failed' for ${personEmail}/${projectName} (Log ID: ${logId})`);
-                const { error: updateFailedError } = await supabase
-                  .from("vendor_payment_email_logs")
-                  .update({
-                    status: "failed",
-                    error_message: getErrorMessage(error), // Store error message
-                  })
-                  .eq("id", logId); // Update using the specific log ID
-
-                if (updateFailedError) {
-                  console.error(`-- CRITICAL: Error updating email log to 'failed' for ${personEmail}/${projectName} after processing failure: ${JSON.stringify(updateFailedError)}`);
-                } else {
-                   console.log(`-- Log status updated to 'failed' for ${personEmail}/${projectName}`);
-                }
-            } else {
-                console.error(`-- Could not update log status to 'failed' for ${personEmail}/${projectName} because log ID was not obtained.`);
-                // Consider inserting a 'failed' log here if possible/desired, including cf_email
-                try {
-                    await supabase.from("vendor_payment_email_logs").insert({
-                        project_name: projectName,
-                        cf_email: personEmail,
-                        month: previousMonthISO,
-                        status: "failed",
-                        error_message: `Processing failed before log ID obtained: ${getErrorMessage(error)}`,
-                    });
-                    console.log(`-- Inserted substitute 'failed' log for ${personEmail}/${projectName}`);
-                } catch (insertFailError) {
-                     console.error(`-- CRITICAL: Failed to insert substitute 'failed' log for ${personEmail}/${projectName}: ${JSON.stringify(insertFailError)}`);
-                }
+          } else {
+            console.error(`-- Could not update log status to 'failed' for ${personEmail}/${projectName} because log ID was not obtained.`);
+            // Consider inserting a 'failed' log here if possible/desired, including cf_email
+            try {
+              await supabase.from("vendor_payment_email_logs").insert({
+                project_name: projectName,
+                cf_email: personEmail,
+                month: previousMonthISO,
+                status: "failed",
+                error_message: `Processing failed before log ID obtained: ${getErrorMessage(error)}`,
+              });
+              console.log(`-- Inserted substitute 'failed' log for ${personEmail}/${projectName}`);
+            } catch (insertFailError) {
+              console.error(`-- CRITICAL: Failed to insert substitute 'failed' log for ${personEmail}/${projectName}: ${JSON.stringify(insertFailError)}`);
             }
           }
+        }
         
-          // --- Add delay between sending emails to avoid rate limiting ---
-          console.log(`-- Adding delay before next email...`);
-          await sleep(800); // Wait before processing the next person/project email
-        } // End loop through people
-      } // End loop through projects
+        // --- Add delay between sending emails to avoid rate limiting ---
+        console.log(`-- Adding delay before next email...`);
+        await sleep(EMAIL_DELAY_MS);
+      } // End loop through batch
 
-      // Final Response
-      const responseMessage = `Email processing completed. Attempted: ${totalEmailsAttempted}, Successful: ${processedEmailCount}, Failed: ${failedEmailCount}.`;
+      // --- NEW: Self-invocation logic for remaining emails ---
+      if (remainingAfterBatch > 0) {
+        console.log(`\n=== TRIGGERING NEXT BATCH ===`);
+        console.log(`Remaining emails to process: ${remainingAfterBatch}`);
+        
+        try {
+          // Self-invoke the function to process next batch (async, don't wait for response)
+          const supabaseUrl = Deno.env.get('SUPABASE_URL');
+          const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY');
+          
+          if (supabaseUrl && supabaseAnonKey) {
+            // Fire and forget - don't await the response
+            fetch(`${supabaseUrl}/functions/v1/send-vendor-payment-summaries`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${supabaseAnonKey}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({})
+            }).catch(err => {
+              console.error('Failed to trigger next batch:', err);
+            });
+            
+            console.log(`Successfully triggered next batch processing`);
+          } else {
+            console.error('Cannot trigger next batch: Missing SUPABASE_URL or SUPABASE_ANON_KEY');
+          }
+        } catch (error) {
+          console.error('Error triggering next batch:', error);
+          // Continue anyway - function can be manually re-run or triggered by next month's cron
+        }
+      } else {
+        console.log(`\n=== ALL EMAILS PROCESSED ===`);
+        console.log(`No remaining emails. Batch processing complete!`);
+      }
+
+      // Final Response with batch information
+      const responseMessage = `Batch processing completed. Processed: ${processedEmailCount}, Failed: ${failedEmailCount}, Remaining: ${remainingAfterBatch}.`;
       console.log(responseMessage);
       return new Response(
         JSON.stringify({
           message: responseMessage,
-          processedEmailCount: processedEmailCount,
-          failedEmailCount: failedEmailCount,
-          totalEmailsAttempted: totalEmailsAttempted
+          batchComplete: true,
+          processedInThisBatch: processedEmailCount,
+          failedInThisBatch: failedEmailCount,
+          totalAttemptedInThisBatch: totalEmailsAttempted,
+          remainingAfterBatch: remainingAfterBatch,
+          allComplete: remainingAfterBatch === 0,
+          nextBatchTriggered: remainingAfterBatch > 0
         }),
         { status: 200, headers: { "Content-Type": "application/json" } }
       );
