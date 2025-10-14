@@ -6,7 +6,7 @@ import { ReminderItem } from "./reminders";
 export const projectRolesList = [
   "Analyst",
   "Client/Partnership Manager",
-  "Coach Coordinator",
+  "Coach Developer",
   "Content Alignment Lead",
   "Facilitator/Coach",
   "Instructional Designer",
