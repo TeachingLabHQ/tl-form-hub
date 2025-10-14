@@ -32,17 +32,17 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // Fetch data in parallel using Promise.all
   const [
     programProjectsStaffing,
-    allProjects,
-    allBudgetedHours,
+    employeeBudgetedHours,
+    projectSourceNames,
   ] = await Promise.all([
     newProjectService.fetchProgramProjectsStaffing(mondayProfileId),
-    newProjectService.fetchAllProjects(),
-    newProjectService.fetchAllBudgetedHours(employeeId),
+    newProjectService.fetchBudgetedHoursByEmployee(session?.user?.email || ""),
+    newProjectService.fetchProjectSourceNames(),
   ]);
 
   return json({
     programProjectsStaffing: programProjectsStaffing.data,
-    allProjects: allProjects.data,
-    allBudgetedHours: allBudgetedHours.data,
+    employeeBudgetedHours: employeeBudgetedHours.data,
+    projectSourceNames: projectSourceNames.data,
   }, { status: 200 });
 }; 
