@@ -17,7 +17,7 @@ export default function StaffingDashboard() {
           <div className="w-full h-[calc(100vh-120px)] rounded-lg overflow-hidden border border-gray-300 relative">
             {isLoading && <LoadingSpinner />}
             <iframe
-              src="https://tl-data.teachinglab.org/shiny/project_log_tl/"
+              src="https://tl-data.teachinglab.org/project_log_tl/"
               className="w-full h-full"
               title="Staffing Utilization Dashboard"
               sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
