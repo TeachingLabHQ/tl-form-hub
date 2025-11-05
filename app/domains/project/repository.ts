@@ -279,6 +279,7 @@ export function projectRepository(): ProjectRepository {
       }
     },
     //NOTE: separate query because can't read dropdown column when fetching with column ids filter
+    //UPDATE: to delete, you are now able to fetch the column with the fitler now
     fetchProjectColumnBAD: async (): Promise<Errorable<Record<string, string>>> => {
       try {
         const query = `{

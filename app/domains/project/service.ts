@@ -33,7 +33,6 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
     fetchProgramProjectsStaffing: projectRepository.fetchProgramProjects,
     fetchBudgetedHoursByEmployee: async (employeeEmail: string) => {
         const allBudgetedHoursResult = await projectRepository.fetchAllBudgetedHours();
-        
         if (allBudgetedHoursResult.error) {
           console.error("Error fetching all budgeted hours:", allBudgetedHoursResult.error);
           return { data: null, error: allBudgetedHoursResult.error };
@@ -43,11 +42,6 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
           console.log("No budgeted hours data found");
           return { data: [], error: null };
         }
-
-        // Fetch project names to enrich the data
-        // NOTE: Fetch project name column separately bc cant read dropdown doesnt with fetchAllBudgetedHours
-        const projectNamesResult = await projectRepository.fetchProjectColumnBAD();
-        const projectNamesMap = projectNamesResult.data || {};  
         
         // Filter items that match the employee email
         const matchedBudgetedHours = allBudgetedHoursResult.data.filter((item: any) => {
@@ -69,8 +63,10 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
             (col: any) => col.id === "lookup_mksmfdnr"
           )?.text || "";
 
-          // Project Name - use the mapping from fetchProjectColumnBAD
-          const projectNameValue = projectNamesMap[item.id] || "";
+         // Project Name
+         const projectNameValue = item.column_values?.find(
+          (col: any) => col.id === "dropdown_mkttdgrw"
+          )?.text || "";
 
           // Project Role (color_mknhq0s3)
           const projectRoleValue = item.column_values?.find(
@@ -93,7 +89,6 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
             budgetedHours: parseFloat(budgetedHoursValue) || 0
           } as EmployeeBudgetedHours;
         });
-       
         return { data: transformedData, error: null };
       },
     fetchProjectSourceNames: async () => {
