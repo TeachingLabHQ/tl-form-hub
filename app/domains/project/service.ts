@@ -10,6 +10,37 @@ export interface ProjectService {
   fetchProjectSourceNames: () => Promise<Errorable<string[]>>;
 }
 
+// Helper function to build inverted index for O(1) employee lookup
+function buildBudgetedHoursIndex(allItems: any[]): Map<string, EmployeeBudgetedHours[]> {
+  const index = new Map<string, EmployeeBudgetedHours[]>();
+  
+  for (const item of allItems) {
+    // Extract employee email from lookup column
+    const emailValue = item.column_values?.find((col: any) => col.id === "lookup_mksmfdnr")
+      ?.display_value || item.column_values?.find((col: any) => col.id === "lookup_mksmfdnr")?.text;
+    
+    if (!emailValue) continue; // Skip items without email
+    
+    // Transform item to EmployeeBudgetedHours format
+    const transformed: EmployeeBudgetedHours = {
+      itemId: item.id,
+      itemName: item.name,
+      email: emailValue,
+      projectName: item.column_values?.find((col: any) => col.id === "dropdown_mkttdgrw")?.text || "",
+      projectRole: item.column_values?.find((col: any) => col.id === "color_mknhq0s3")?.label || 
+                   item.column_values?.find((col: any) => col.id === "color_mknhq0s3")?.text || "",
+      budgetedHours: parseFloat(item.column_values?.find((col: any) => col.id === "numeric_mknhqm6d")?.text || "0") || 0
+    };
+    
+    // Add to index - grouped by email
+    if (!index.has(emailValue)) {
+      index.set(emailValue, []);
+    }
+    index.get(emailValue)!.push(transformed);
+  }
+  return index;
+}
+
 export function projectService(projectRepository: ProjectRepository): ProjectService {
   return {
     fetchAllProjects: async () => {
@@ -33,6 +64,7 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
     fetchProgramProjectsStaffing: projectRepository.fetchProgramProjects,
     fetchBudgetedHoursByEmployee: async (employeeEmail: string) => {
         const allBudgetedHoursResult = await projectRepository.fetchAllBudgetedHours();
+        
         if (allBudgetedHoursResult.error) {
           console.error("Error fetching all budgeted hours:", allBudgetedHoursResult.error);
           return { data: null, error: allBudgetedHoursResult.error };
@@ -43,53 +75,11 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
           return { data: [], error: null };
         }
         
-        // Filter items that match the employee email
-        const matchedBudgetedHours = allBudgetedHoursResult.data.filter((item: any) => {
-          const emailMatch = item.column_values?.some((col: any) => {
-            if (col.id === "lookup_mksmfdnr") {
-              return col.display_value === employeeEmail || col.text === employeeEmail;
-            }
-            return false;
-          });
-          return emailMatch;
-        });
-
-        // Transform filtered data to EmployeeBudgetedHours format
-        const transformedData = matchedBudgetedHours.map((item: any) => {
-          // Email (lookup_mksmfdnr)
-          const emailValue = item.column_values?.find(
-            (col: any) => col.id === "lookup_mksmfdnr"
-          )?.display_value || item.column_values?.find(
-            (col: any) => col.id === "lookup_mksmfdnr"
-          )?.text || "";
-
-         // Project Name
-         const projectNameValue = item.column_values?.find(
-          (col: any) => col.id === "dropdown_mkttdgrw"
-          )?.text || "";
-
-          // Project Role (color_mknhq0s3)
-          const projectRoleValue = item.column_values?.find(
-            (col: any) => col.id === "color_mknhq0s3"
-          )?.label || item.column_values?.find(
-            (col: any) => col.id === "color_mknhq0s3"
-          )?.text || "";
-
-          // Budgeted Hours (numeric_mknhqm6d)
-          const budgetedHoursValue = item.column_values?.find(
-            (col: any) => col.id === "numeric_mknhqm6d"
-          )?.text || "0";
-
-          return {
-            itemId: item.id,
-            itemName: item.name,
-            email: emailValue,
-            projectName: projectNameValue,
-            projectRole: projectRoleValue,
-            budgetedHours: parseFloat(budgetedHoursValue) || 0
-          } as EmployeeBudgetedHours;
-        });
-        return { data: transformedData, error: null };
+        // Build inverted index (single pass, transforms all items)
+        const index = buildBudgetedHoursIndex(allBudgetedHoursResult.data);
+        const employeeData = index.get(employeeEmail) || [];
+        
+        return { data: employeeData, error: null };
       },
     fetchProjectSourceNames: async () => {
       const result = await projectRepository.fetchProjectSourceNames();
