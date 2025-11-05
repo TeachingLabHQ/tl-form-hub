@@ -8,6 +8,7 @@ import {
   projectRolesList,
   updateTotalWorkHours
 } from "./utils";
+import { ProjectData } from "./project-log-form";
 
 export const ProjectLogsWidget = ({
   isValidated,
@@ -24,11 +25,7 @@ export const ProjectLogsWidget = ({
     >
   >;
   setTotalWorkHours: React.Dispatch<React.SetStateAction<number>>;
-  projectData: {
-    programProjectsStaffing: any;
-    employeeBudgetedHours: any;
-    projectSourceNames: any;
-  } | null;
+  projectData: ProjectData;
 }) => {
 
   const handleAddRow = () => {

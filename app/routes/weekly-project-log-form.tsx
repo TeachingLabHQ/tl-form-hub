@@ -39,19 +39,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     
     // Fetch data in parallel using Promise.all
     const [
-      programProjectsStaffing,
       employeeBudgetedHours,
       projectSourceNames,
     ] = await Promise.all([
-      newProjectService.fetchProgramProjectsStaffing(mondayProfileId),
       newProjectService.fetchBudgetedHoursByEmployee(session?.user?.email || ""),
       newProjectService.fetchProjectSourceNames(),
     ]);
 
-    // Handle errors by providing fallback values
-    if (programProjectsStaffing.error) {
-      console.error("Error fetching program projects staffing:", programProjectsStaffing.error);
-    }
     if (employeeBudgetedHours.error) {
       console.error("Error fetching employee budgeted hours:", employeeBudgetedHours.error);
     }
@@ -60,7 +54,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     }
 
     return {
-      programProjectsStaffing: programProjectsStaffing.data || [],
       employeeBudgetedHours: employeeBudgetedHours.data || [],
       projectSourceNames: projectSourceNames.data || [],
     };

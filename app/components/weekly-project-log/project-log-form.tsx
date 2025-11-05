@@ -35,7 +35,6 @@ export type SubmissionUser = {
 };
 
 export type ProjectData = {
-  programProjectsStaffing: any;
   employeeBudgetedHours: any;
   projectSourceNames: any;
 };
