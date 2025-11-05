@@ -34,16 +34,18 @@ export type SubmissionUser = {
   };
 };
 
-export const ProjectLogForm: React.FC = () => {
+export type ProjectData = {
+  programProjectsStaffing: any;
+  employeeBudgetedHours: any;
+  projectSourceNames: any;
+};
+
+type ProjectLogFormProps = {
+  projectData: ProjectData;
+};
+
+export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) => {
   const { mondayProfile } = useSession();
-  
-  // Client-side data state
-  const [projectData, setProjectData] = useState<{
-    programProjectsStaffing: any;
-    employeeBudgetedHours: any;
-    projectSourceNames: any;
-  } | null>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
   
   const [totalWorkHours, setTotalWorkHours] = useState<number>(0);
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
@@ -81,43 +83,13 @@ export const ProjectLogForm: React.FC = () => {
     submittedForYourself: null,
   }));
 
-  // Client-side data fetching
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      try {
-        setIsLoadingData(true);
-        
-        // This would be an API endpoint that returns the same data the loader used to return
-        const response = await fetch('/api/weekly-project-log/data');
-        if (!response.ok) {
-          throw new Error('Failed to fetch project data');
-        }
-        
-        const data = await response.json();
-        setProjectData(data);
-      } catch (error) {
-        console.error('Error fetching project data:', error);
-        // Set empty data as fallback
-        setProjectData({
-          programProjectsStaffing: null,
-          employeeBudgetedHours: null,
-          projectSourceNames: null,
-        });
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
-    fetchProjectData();
-  }, []);
-
-  // Set pre-assigned projects when data is loaded
+  // Set pre-assigned projects when component mounts
   useEffect(() => {
     if (projectData?.employeeBudgetedHours && projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
       // Only set pre-assigned projects if we have default empty state
       setPreAssignedProjectsFromBudgetedHours(projectData.employeeBudgetedHours, setProjectWorkEntries);
     }
-  }, [projectData?.employeeBudgetedHours, projectWorkEntries]);
+  }, [projectData?.employeeBudgetedHours]);
 
   useEffect(() => {
     if (mondayProfile?.email) {
@@ -251,13 +223,6 @@ export const ProjectLogForm: React.FC = () => {
       setIsValidated(null);
     }
   };
-
-  // Show loading state while data is being fetched
-  if (isLoadingData) {
-    return (
-      <LoadingSpinner />
-    );
-  }
 
   return (
     <div className="w-full h-full grid grid-cols-12 grid-rows-[auto_auto] gap-8 py-8">

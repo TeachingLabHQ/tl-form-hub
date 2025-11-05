@@ -1,7 +1,16 @@
-import { EmployeeBudgetedHours } from "./model";
+import { EmployeeBudgetedHours, ProgramProject, projectsByTypes } from "./model";
 import { ProjectRepository } from "./repository";
+import { Errorable } from "~/utils/errorable";
 
-export function projectService(projectRepository: ProjectRepository) {
+export interface ProjectService {
+  fetchAllProjects: () => Promise<{ data: projectsByTypes[] | null }>;
+  fetchProgramProjects: () => Promise<{ data: string[] | null | undefined }>;
+  fetchProgramProjectsStaffing: (mondayProfileId: string) => Promise<Errorable<ProgramProject[]>>;
+  fetchBudgetedHoursByEmployee: (employeeEmail: string) => Promise<Errorable<EmployeeBudgetedHours[]>>;
+  fetchProjectSourceNames: () => Promise<Errorable<string[]>>;
+}
+
+export function projectService(projectRepository: ProjectRepository): ProjectService {
   return {
     fetchAllProjects: async () => {
       const { data: allProjects } = await projectRepository.fetchAllProjects();
@@ -36,13 +45,12 @@ export function projectService(projectRepository: ProjectRepository) {
         }
 
         // Fetch project names to enrich the data
+        // NOTE: Fetch project name column separately bc cant read dropdown doesnt with fetchAllBudgetedHours
         const projectNamesResult = await projectRepository.fetchProjectColumnBAD();
-        const projectNamesMap = projectNamesResult.data || {};
-        console.log(JSON.stringify(projectNamesMap, null, 2));
-       
+        const projectNamesMap = projectNamesResult.data || {};  
         
         // Filter items that match the employee email
-        const filteredItems = allBudgetedHoursResult.data.filter((item: any) => {
+        const matchedBudgetedHours = allBudgetedHoursResult.data.filter((item: any) => {
           const emailMatch = item.column_values?.some((col: any) => {
             if (col.id === "lookup_mksmfdnr") {
               return col.display_value === employeeEmail || col.text === employeeEmail;
@@ -53,7 +61,7 @@ export function projectService(projectRepository: ProjectRepository) {
         });
 
         // Transform filtered data to EmployeeBudgetedHours format
-        const transformedData = filteredItems.map((item: any) => {
+        const transformedData = matchedBudgetedHours.map((item: any) => {
           // Email (lookup_mksmfdnr)
           const emailValue = item.column_values?.find(
             (col: any) => col.id === "lookup_mksmfdnr"

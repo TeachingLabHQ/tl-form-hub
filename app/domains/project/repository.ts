@@ -278,7 +278,7 @@ export function projectRepository(): ProjectRepository {
         };
       }
     },
-    //NOTE: separate query because can't read dropdown column when filtering column values by column id
+    //NOTE: separate query because can't read dropdown column when fetching with column ids filter
     fetchProjectColumnBAD: async (): Promise<Errorable<Record<string, string>>> => {
       try {
         const query = `{
