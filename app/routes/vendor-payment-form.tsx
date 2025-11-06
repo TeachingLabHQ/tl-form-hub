@@ -41,8 +41,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const newProjectService = projectService(projectRepository());
 
-  const { data: projects } = await newProjectService.fetchProgramProjects();
-  console.log(projects);
+  const { data: projects } = await newProjectService.fetchProjectSourceNames();
   return json({ paymentRequestHistory, projects });
 };
 
