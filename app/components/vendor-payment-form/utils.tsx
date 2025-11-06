@@ -139,14 +139,6 @@ export const facilitationTaskOptions: TaskDetails[] = [
     maxHours: null,
   },
   {
-    taskName: "Content Training Make-Up Work",
-    "Tier 1": 25,
-    "Tier 2": 25,
-    "Tier 3": 25,
-    "Tier 4": null,
-    maxHours: null,
-    },
-  {
     taskName: "Local Travel",
     "Tier 1": 20,
     "Tier 2": 20,
