@@ -164,7 +164,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
         entry.projectRole &&
         entry.activity &&
         entry.workHours &&
-        Number(entry.workHours) !== 0
+        Number(entry.workHours) > 0
     );
 
     if (!areAllLogsComplete) {

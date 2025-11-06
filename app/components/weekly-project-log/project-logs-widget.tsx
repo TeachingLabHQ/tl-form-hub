@@ -1,4 +1,4 @@
-import { Button, Select, Text, TextInput } from "@mantine/core";
+import { Button, Select, Text, TextInput, NumberInput } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { ProjectLogRows } from "~/domains/project/model";
 import { cn } from "../../utils/utils";
@@ -183,15 +183,23 @@ export const ProjectLogsWidget = ({
             />
           </div>
           <div>
-            <TextInput
-              value={row.workHours}
-              onChange={(e) => handleChange(index, "workHours", e.target.value)}
+            <NumberInput
+              value={parseFloat(row.workHours) || ""}
+              onChange={(value) => {
+                // Only allow positive numbers (greater than 0)
+                if (value === undefined || value === null || value === "" || (typeof value === 'number' && value > 0)) {
+                  handleChange(index, "workHours", value?.toString() || "");
+                }
+              }}
               placeholder="Enter work hours"
               onKeyDown={handleKeyDown}
+              min={0.01}
+              decimalScale={2}
+              allowNegative={false}
               error={
                 isValidated === false &&
-                (!row.workHours || Number(row.workHours) === 0)
-                  ? "Work Hours are required"
+                (!row.workHours || Number(row.workHours) <= 0)
+                  ? "Work Hours must be greater than 0"
                   : null
               }
             />
