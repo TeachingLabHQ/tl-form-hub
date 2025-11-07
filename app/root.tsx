@@ -15,6 +15,7 @@ import { MetaFunction, LinksFunction } from "@remix-run/node"; // Depends on the
 import "@mantine/dates/styles.css";
 import { ServerStyleContext, ClientStyleContext } from "./context";
 import { Navbar } from "./components/navigation/navbar";
+import { Footer } from "./components/navigation/footer";
 import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import "./tailwind.css";
@@ -73,10 +74,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <SessionProvider>
-      <Navbar />
-      <ProtectedRoute>
-        <Outlet />
-      </ProtectedRoute>
+      <div className="flex flex-col min-h-screen">
+        <Navbar />
+        <ProtectedRoute>
+          <div className="flex-grow">
+            <Outlet />
+          </div>
+        </ProtectedRoute>
+        <Footer />
+      </div>
     </SessionProvider>
   );
 }
