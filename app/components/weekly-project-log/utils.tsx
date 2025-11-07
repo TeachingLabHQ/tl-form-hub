@@ -22,7 +22,7 @@ export const activityList = [
   "Project Execution",
   "Content Development",
   "Business Development",
-  "PTO/Leave(Paid Time Off)",
+  "PTO/Holiday/Other Approved Time Off",
 ];
 export const setPreAssignedProjectsFromBudgetedHours = (
   employeeBudgetedHours: any[],
