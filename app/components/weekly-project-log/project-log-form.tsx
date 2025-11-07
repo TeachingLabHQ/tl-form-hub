@@ -14,6 +14,7 @@ import {
   getClosestMonday,
   REMINDER_ITEMS,
   setPreAssignedProjectsFromBudgetedHours,
+  addSharedOperationsRow,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
 
@@ -84,9 +85,14 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
 
   // Set pre-assigned projects when component mounts
   useEffect(() => {
-    if (projectData?.employeeBudgetedHours && projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
-      // Only set pre-assigned projects if we have default empty state
-      setPreAssignedProjectsFromBudgetedHours(projectData.employeeBudgetedHours, setProjectWorkEntries);
+    if (projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
+      // Set pre-assigned projects from budgeted hours if available
+      if (projectData?.employeeBudgetedHours) {
+        setPreAssignedProjectsFromBudgetedHours(
+          projectData.employeeBudgetedHours, 
+          setProjectWorkEntries
+        );
+      }
     }
   }, [projectData?.employeeBudgetedHours]);
 
@@ -102,7 +108,11 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
         submittedForYourself: true,
       });
     }
-  }, [mondayProfile?.email]);
+     // Add Shared Operations row if user is from Shared Operations
+     if (mondayProfile?.businessFunction === "Shared Operations") {
+      addSharedOperationsRow(setProjectWorkEntries);
+    }
+  }, [mondayProfile?.email,mondayProfile?.businessFunction]);
 
   const handleExecutiveSelection = (executiveName: string | null) => {
     if (!executiveName) {

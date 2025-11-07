@@ -70,6 +70,21 @@ export const setPreAssignedProjectsFromBudgetedHours = (
   return uniqueProjects;
 };
 
+export const addSharedOperationsRow = (
+  setRows: React.Dispatch<React.SetStateAction<ProjectLogRows[]>>
+) => {
+  setRows((prevEntries) => [
+    ...prevEntries,
+    {
+      projectName: "TL_Internal",
+      projectRole: "Other",
+      workHours: "",
+      budgetedHours: "N/A",
+      activity: "",
+    },
+  ]);
+};
+
 
 export function compareTwoStrings(strA: string, strB: string) {
   const cleanA = strA.toLowerCase().replace(/\s+/g, "");
