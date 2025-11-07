@@ -194,9 +194,18 @@ export function projectRepository(): ProjectRepository {
         let query = "";
            query = `{
             boards(ids: 9709949287) {
-             items_page(
-              limit: 500
-            ) {
+              items_page(
+                limit: 500
+                query_params: {
+                  rules: [
+                    {
+                      column_id: "group"
+                      compare_value: ["group_mkv0sxxj"]
+                      operator: any_of
+                    }
+                  ]
+                }
+              ) {
                 cursor
                 items {
                   id
@@ -224,7 +233,8 @@ export function projectRepository(): ProjectRepository {
                 }
               }
             }
-          }`;
+          }
+          `;
 
         let rawMondayData = await fetchMondayData(query);
         let cursor: string | null =
