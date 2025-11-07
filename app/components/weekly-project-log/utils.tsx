@@ -36,10 +36,6 @@ export const setPreAssignedProjectsFromBudgetedHours = (
   const projectMembersInfo: ProjectLogRows[] = employeeBudgetedHours.map((budgetItem) => {
     // Normalize coach/facilitator roles
     let normalizedRole = budgetItem.projectRole;
-    if (budgetItem.projectRole.toLowerCase().includes("coach") || 
-        budgetItem.projectRole.toLowerCase().includes("facilitator")) {
-      normalizedRole = "Facilitator/Coach";
-    }
 
     return {
       projectName: budgetItem.projectName,
