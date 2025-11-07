@@ -44,7 +44,7 @@ export const VendorPaymentWidget = ({
     type: string;
     value: string;
   }[];
-  projects: string[] | undefined;
+  projects: string[] | null;
 }) => {
   const programProjects = new Set(projects || []);
   const filteredProjects = filterVendorPaymentProjects(Array.from(programProjects));

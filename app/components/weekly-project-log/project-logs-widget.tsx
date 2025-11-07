@@ -1,17 +1,14 @@
-import { Button, Select, Text, TextInput } from "@mantine/core";
+import { Button, Select, Text, TextInput, NumberInput } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
-import { useEffect } from "react";
 import { ProjectLogRows } from "~/domains/project/model";
 import { cn } from "../../utils/utils";
-import { useSession } from "../auth/hooks/useSession";
 import {
-  getBudgetedHoursFromMonday,
-  getPreAssignedProgramProjects,
-  handleKeyDown,
   activityList,
+  handleKeyDown,
   projectRolesList,
   updateTotalWorkHours
 } from "./utils";
+import { ProjectData } from "./project-log-form";
 
 export const ProjectLogsWidget = ({
   isValidated,
@@ -28,26 +25,8 @@ export const ProjectLogsWidget = ({
     >
   >;
   setTotalWorkHours: React.Dispatch<React.SetStateAction<number>>;
-  projectData: {
-    programProjectsStaffing: any;
-    allProjects: any;
-    allBudgetedHours: any;
-  } | null;
+  projectData: ProjectData;
 }) => {
-  const { mondayProfile } = useSession();
-  
-  useEffect(() => {
-    if (mondayProfile && projectData?.programProjectsStaffing && projectData?.allBudgetedHours) {
-      //only show the pre-assigned active program projects for the current user
-      getPreAssignedProgramProjects(
-        projectData.programProjectsStaffing,
-        projectWorkEntries,
-        setProjectWorkEntries,
-        mondayProfile,
-        projectData.allBudgetedHours
-      );
-    }
-  }, [mondayProfile, projectData]);
 
   const handleAddRow = () => {
     setProjectWorkEntries([
@@ -83,22 +62,6 @@ export const ProjectLogsWidget = ({
               updatedEntry.projectRole = "Other";
             }
 
-            if (
-              (updatedEntry.projectRole) &&
-              (updatedEntry.projectName) &&
-              projectData?.allBudgetedHours
-            ) {
-              console.log(projectData.allBudgetedHours);
-              const budgetedHours = getBudgetedHoursFromMonday(
-                updatedEntry.projectName,
-                updatedEntry.projectRole,
-                mondayProfile?.email || "",
-                mondayProfile?.employeeId || "",
-                projectData.allBudgetedHours
-              );
-              updatedEntry.budgetedHours = budgetedHours || "N/A";
-            }
-
             return updatedEntry;
           }
           return entry;
@@ -117,12 +80,12 @@ export const ProjectLogsWidget = ({
   };
 
   const handleProjectOptions = () => {
-    if (!projectData?.allProjects) {
+    if (!projectData?.projectSourceNames) {
       return [];
     }
 
     let projects: string[] = [];
-    projects = projectData.allProjects.map((project: any) => project.projects).flat();
+    projects = projectData.projectSourceNames;
 
     // Remove duplicates by converting to Set and back to array
     return [...new Set(projects)].sort((a, b) => a.localeCompare(b));
@@ -220,15 +183,23 @@ export const ProjectLogsWidget = ({
             />
           </div>
           <div>
-            <TextInput
-              value={row.workHours}
-              onChange={(e) => handleChange(index, "workHours", e.target.value)}
+            <NumberInput
+              value={parseFloat(row.workHours) || ""}
+              onChange={(value) => {
+                // Only allow positive numbers (greater than 0)
+                if (value === undefined || value === null || value === "" || (typeof value === 'number' && value > 0)) {
+                  handleChange(index, "workHours", value?.toString() || "");
+                }
+              }}
               placeholder="Enter work hours"
               onKeyDown={handleKeyDown}
+              min={0.01}
+              decimalScale={2}
+              allowNegative={false}
               error={
                 isValidated === false &&
-                (!row.workHours || Number(row.workHours) === 0)
-                  ? "Work Hours are required"
+                (!row.workHours || Number(row.workHours) <= 0)
+                  ? "Work Hours must be greater than 0"
                   : null
               }
             />
