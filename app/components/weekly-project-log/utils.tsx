@@ -6,7 +6,8 @@ import { ReminderItem } from "./reminders";
 export const projectRolesList = [
   "Analyst",
   "Client/Partnership Manager",
-  "Coach Coordinator",
+  "Coach Developer",
+  "Content Alignment Lead",
   "Facilitator/Coach",
   "Instructional Designer",
   "Project Lead",
@@ -23,94 +24,77 @@ export const activityList = [
   "Business Development",
   "PTO/Leave(Paid Time Off)",
 ];
-export const getPreAssignedProgramProjects = (
-  programProjectsStaffing: any,
-  rows: ProjectLogRows[],
-  setRows: React.Dispatch<
-    React.SetStateAction<
-      ProjectLogRows[]
-    >
-  >,
-  mondayProfile: EmployeeProfile | null,
-  allBudgetedHours: any
+export const setPreAssignedProjectsFromBudgetedHours = (
+  employeeBudgetedHours: any[],
+  setRows: React.Dispatch<React.SetStateAction<ProjectLogRows[]>>
 ) => {
-  let projectMembersInfo: ProjectLogRows[] = [];
-  if (programProjectsStaffing) {
-    //loop through the staffed projects and make sure the current user is in the project
-    for (const project of programProjectsStaffing) {
-      const { projectName, projectMembers } = project;
-      const member = projectMembers.find((member: any) =>
-        compareTwoStrings(member.name, mondayProfile?.name || "")
-      );
-      if (member) {
-        projectMembersInfo.push({
-          projectRole: member.role,
-          projectName: projectName,
-          activity: "",
-          workHours: "",
-          budgetedHours: "N/A",
-        });
-      }
-    }
+  if (!employeeBudgetedHours || employeeBudgetedHours.length === 0) {
+    return [];
   }
-  //get budgeted hours
-  for (const member of projectMembersInfo) {
-    const budgetedHours = getBudgetedHoursFromMonday(
-      member.projectName,
-      member.projectRole,
-      mondayProfile?.email || "",
-      mondayProfile?.employeeId || "",
-      allBudgetedHours
+
+  // Transform employeeBudgetedHours data into ProjectLogRows format
+  const projectMembersInfo: ProjectLogRows[] = employeeBudgetedHours.map((budgetItem) => {
+    // Normalize coach/facilitator roles
+    let normalizedRole = budgetItem.projectRole;
+    if (budgetItem.projectRole.toLowerCase().includes("coach") || 
+        budgetItem.projectRole.toLowerCase().includes("facilitator")) {
+      normalizedRole = "Facilitator/Coach";
+    }
+
+    return {
+      projectName: budgetItem.projectName,
+      projectRole: normalizedRole,
+      activity: "",
+      workHours: "",
+      budgetedHours: budgetItem.budgetedHours?.toString() || "N/A",
+    };
+  });
+
+  // Remove duplicates (same project + role combination)
+  const uniqueProjects: ProjectLogRows[] = [];
+  projectMembersInfo.forEach((item) => {
+    const exists = uniqueProjects.some(
+      (existing) => 
+        existing.projectName === item.projectName && 
+        existing.projectRole === item.projectRole
     );
-    member.budgetedHours = budgetedHours;
-  }
-  if (projectMembersInfo.length > 0) {
-    setRows(projectMembersInfo);
-  }
-  return projectMembersInfo;
-};
-
-export const getBudgetedHoursFromMonday = (
-  projectName: string,
-  projectRole: string,
-  email: string,
-  employeeId: string,
-  allBudgetedHours: any
-) => {
-  for (let item of allBudgetedHours) {
-    let itemEmail = item.column_values.find(
-      (col: any) => col.column.title === "Email"
-      //access the display_value of the mirror column
-    )?.display_value;
-    let itemProjectName = item.column_values.find(
-      (col: any) => col.column.title === "Project Name"
-    )?.text;
-    let itemBudgetedHours = item.column_values.find(
-      (col: any) => col.column.title === "Budgeted Hours/Week"
-    )?.text;
-    let itemProjectRole = item.column_values.find(
-      (col: any) => col.column.title === "Project Role"
-    )?.text;
-    let itemEmployeeId = item.column_values.find(
-      (col: any) => col.column.title === "Employee ID"
-    )?.display_value;
-
-    if (
-      (compareTwoStrings(itemEmail, email) || compareTwoStrings(itemEmployeeId, employeeId)) &&
-      compareTwoStrings(itemProjectName, projectName) &&
-      compareTwoStrings(projectRole, itemProjectRole)
-    ) {
-      return parseFloat(itemBudgetedHours).toString() || "N/A";
+    if (!exists) {
+      uniqueProjects.push(item);
     }
-  }
+  });
 
-  return "N/A"; // Return "N/A" if no match is found
+  if (uniqueProjects.length > 0) {
+    setRows(uniqueProjects);
+  }
+  
+  return uniqueProjects;
 };
+
+export const addSharedOperationsRow = (
+  setRows: React.Dispatch<React.SetStateAction<ProjectLogRows[]>>
+) => {
+  setRows((prevEntries) => [
+    ...prevEntries,
+    {
+      projectName: "TL_Internal",
+      projectRole: "Other",
+      workHours: "",
+      budgetedHours: "N/A",
+      activity: "",
+    },
+  ]);
+};
+
 
 export function compareTwoStrings(strA: string, strB: string) {
   const cleanA = strA.toLowerCase().replace(/\s+/g, "");
   const cleanB = strB.toLowerCase().replace(/\s+/g, "");
   return cleanA === cleanB;
+}
+export function containsString(strA: string, strB: string) {
+  const cleanA = strA.toLowerCase().replace(/\s+/g, "");
+  const cleanB = strB.toLowerCase().replace(/\s+/g, "");
+  return cleanA.includes(cleanB);
 }
 
 export const handleProjectTypeByTeam = (businessFunction: string) => {
@@ -212,35 +196,42 @@ export const handleKeyDown = (e: React.KeyboardEvent) => {
 
 export const REMINDER_ITEMS: ReminderItem[] = [
   {
-    title: "NEW Budgeted Hours Column:",
+    title: 
+    (<>
+    - For More information on how to fill out your project log, please reference our <Link to="https://drive.google.com/file/d/1VdDQCeYWjFGWn6CjKp6PpsbYODgaDzMq/view" target="_blank" style={{ textDecoration: "underline" }}>Project Log SOP</Link>
+      </>)
+    ,
     content:
-      '- The "Budgeted Hours" column displays estimated hours for program projects. You are free to log hours below or above the displayed amount. If needed, please provide additional context or reasons in the comment section.',
+      '',
   },
   {
-    title: "Staffing Utilization Dashboard",
+    title: "NEW! Activity Column: ",
+    content:
+      '- For each project, team members should log the specific activities they performed. We use defined activity categories to track how time is spent across key functions. This helps us understand effort allocation and project costs. If you completed more than one activity for each project and role, please add another row of data. Each row of data should reflect one project, one role, and one activity.',
+  },
+  {
+    title: "Budgeted Hours Column: ",
     content: (
       <>
-        - To find information on your program project assignments and budgeted
-        hours for each project role, please visit the{" "}
+        - The “Budgeted Hours” Column is autopopulated as a reminder of how many hours you have been estimated to work on each of your projects as set by your project lead and project budget. This number serves as a compass for your weekly allocations, not a prescription. To see a round up of all your Project Allocations, reference our{" "}
         <Link to="/staffing-dashboard" style={{ textDecoration: "underline" }}>
           Staffing Utilization Dashboard
-        </Link>{" "}
-        in the navigation bar.
+        </Link>
       </>
     ),
   },
   {
-    title: "Q: Need to adjust your hours post submission?",
+    title: "Q: Need to adjust your hours post-submission?",
     content: (
       <>
-        - To adjust submitted hours, please send an email to the{" "}
+        - Please contact{" "}
         <a
           href="mailto:project.log@teachinglab.org"
           style={{ textDecoration: "underline" }}
         >
-          project log service
+          project.log@teachinglab.org
         </a>
-        , addressed to Savanna Worthington.
+        , attn: Savanna Worthington.
       </>
     ),
   },
@@ -248,17 +239,14 @@ export const REMINDER_ITEMS: ReminderItem[] = [
     title: "Q: Don't see your project?",
     content: (
       <>
-        - New projects are created when partner contracts have been signed, or
-        internal project budgets have been created. If you do not see your
-        client project listed in the drop down, please contact finance team,
-        attention{" "}
+        - Please contact{" "}
         <a
-          href="mailto:eric.vandonge@teachinglab.org"
+          href="mailto:finance@teachinglab.org"
           style={{ textDecoration: "underline" }}
         >
-          Eric Van Donge
+         finance@teachinglab.org
         </a>
-        .
+        , attn: Eric Van Donge.
       </>
     ),
   },

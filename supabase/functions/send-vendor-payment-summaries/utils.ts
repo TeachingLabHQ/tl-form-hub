@@ -2,7 +2,7 @@ import { Resend } from "https://esm.sh/resend@2.0.0";
 import { PersonProjectSummary } from "./index.ts";
 
 // Initialize Resend client
-const resend = new Resend(Deno.env.get("RESEND_API_KEY") || "re_2uMtEHKA_NnTp6E81HtzZMbfDzkZacCbD"); // Use env var
+const resend = new Resend(Deno.env.get("RESEND_API_KEY")); // Use env var
 
 
 

@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { Navigate, useLocation } from "@remix-run/react";
 import { SessionContext } from "./context/sessionContext";
-import { Loader } from "@mantine/core";
+import { LoadingSpinner } from "~/utils/LoadingSpinner";
 
 // List of public routes that don't require authentication
 const publicRoutes = ["/"];
@@ -17,9 +17,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Show loading state while checking authentication
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader size="xl" />
-      </div>
+      <LoadingSpinner/>
     );
   }
 

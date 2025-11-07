@@ -13,6 +13,8 @@ import {
   executiveAssistantMappings,
   getClosestMonday,
   REMINDER_ITEMS,
+  setPreAssignedProjectsFromBudgetedHours,
+  addSharedOperationsRow,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
 
@@ -33,16 +35,17 @@ export type SubmissionUser = {
   };
 };
 
-export const ProjectLogForm: React.FC = () => {
+export type ProjectData = {
+  employeeBudgetedHours: any;
+  projectSourceNames: any;
+};
+
+type ProjectLogFormProps = {
+  projectData: ProjectData;
+};
+
+export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) => {
   const { mondayProfile } = useSession();
-  
-  // Client-side data state
-  const [projectData, setProjectData] = useState<{
-    programProjectsStaffing: any;
-    allProjects: any;
-    allBudgetedHours: any;
-  } | null>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
   
   const [totalWorkHours, setTotalWorkHours] = useState<number>(0);
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
@@ -80,35 +83,18 @@ export const ProjectLogForm: React.FC = () => {
     submittedForYourself: null,
   }));
 
-  // Client-side data fetching
+  // Set pre-assigned projects when component mounts
   useEffect(() => {
-    const fetchProjectData = async () => {
-      try {
-        setIsLoadingData(true);
-        
-        // This would be an API endpoint that returns the same data the loader used to return
-        const response = await fetch('/api/weekly-project-log/data');
-        if (!response.ok) {
-          throw new Error('Failed to fetch project data');
-        }
-        
-        const data = await response.json();
-        setProjectData(data);
-      } catch (error) {
-        console.error('Error fetching project data:', error);
-        // Set empty data as fallback
-        setProjectData({
-          programProjectsStaffing: null,
-          allProjects: null,
-          allBudgetedHours: null,
-        });
-      } finally {
-        setIsLoadingData(false);
+    if (projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
+      // Set pre-assigned projects from budgeted hours if available
+      if (projectData?.employeeBudgetedHours) {
+        setPreAssignedProjectsFromBudgetedHours(
+          projectData.employeeBudgetedHours, 
+          setProjectWorkEntries
+        );
       }
-    };
-
-    fetchProjectData();
-  }, []);
+    }
+  }, [projectData?.employeeBudgetedHours]);
 
   useEffect(() => {
     if (mondayProfile?.email) {
@@ -122,7 +108,11 @@ export const ProjectLogForm: React.FC = () => {
         submittedForYourself: true,
       });
     }
-  }, [mondayProfile?.email]);
+     // Add Shared Operations row if user is from Shared Operations
+     if (mondayProfile?.businessFunction === "Shared Operations") {
+      addSharedOperationsRow(setProjectWorkEntries);
+    }
+  }, [mondayProfile?.email,mondayProfile?.businessFunction]);
 
   const handleExecutiveSelection = (executiveName: string | null) => {
     if (!executiveName) {
@@ -184,7 +174,7 @@ export const ProjectLogForm: React.FC = () => {
         entry.projectRole &&
         entry.activity &&
         entry.workHours &&
-        Number(entry.workHours) !== 0
+        Number(entry.workHours) > 0
     );
 
     if (!areAllLogsComplete) {
@@ -242,13 +232,6 @@ export const ProjectLogForm: React.FC = () => {
       setIsValidated(null);
     }
   };
-
-  // Show loading state while data is being fetched
-  if (isLoadingData) {
-    return (
-      <LoadingSpinner />
-    );
-  }
 
   return (
     <div className="w-full h-full grid grid-cols-12 grid-rows-[auto_auto] gap-8 py-8">
