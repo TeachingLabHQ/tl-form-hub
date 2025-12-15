@@ -15,6 +15,8 @@ import {
   REMINDER_ITEMS,
   setPreAssignedProjectsFromBudgetedHours,
   addSharedOperationsRow,
+  fetchProjectDataForUser,
+  type ProjectData,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
 
@@ -36,10 +38,6 @@ export type SubmissionUser = {
   };
 };
 
-export type ProjectData = {
-  employeeBudgetedHours: any;
-  projectSourceNames: any;
-};
 
 type ProjectLogFormProps = {
   projectData: ProjectData;
@@ -90,31 +88,14 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
 
   // Fetch project data when submission user changes (e.g., when executive is selected)
   useEffect(() => {
-    const fetchProjectDataForUser = async () => {
+    const loadProjectData = async () => {
       if (!submissionUser?.email) {
         return;
       }
 
-      try {
-        const response = await fetch("/api/weekly-project-log/data", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email: submissionUser.email }),
-        });
+      const newProjectData = await fetchProjectDataForUser(submissionUser.email);
 
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error("Error fetching project data:", data.error);
-        }
-
-        const newProjectData = {
-          employeeBudgetedHours: data.employeeBudgetedHours || [],
-          projectSourceNames: data.projectSourceNames || [],
-        };
-
+      if (newProjectData) {
         setCurrentProjectData(newProjectData);
 
         // Reset and set pre-assigned projects from budgeted hours
@@ -133,12 +114,10 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
             activity: "",
           }]);
         }
-      } catch (error) {
-        console.error("Error fetching project data:", error);
       }
     };
 
-    fetchProjectDataForUser();
+    loadProjectData();
   }, [submissionUser?.email]);
 
   // Set pre-assigned projects when component mounts (only if submitting for yourself initially)
