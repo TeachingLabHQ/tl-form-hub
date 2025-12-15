@@ -85,18 +85,39 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
 
   // Track current project data (changes when executive is selected)
   const [currentProjectData, setCurrentProjectData] = useState<ProjectData>(projectData);
+  const [lastFetchedEmail, setLastFetchedEmail] = useState<string | null>(null);
 
   // Fetch project data when submission user changes (e.g., when executive is selected)
+  // Skip fetch if it's the same email as the initial user (parent already fetched it)
   useEffect(() => {
     const loadProjectData = async () => {
       if (!submissionUser?.email) {
         return;
       }
 
-      const newProjectData = await fetchProjectDataForUser(submissionUser.email);
+      // Skip fetch if this is the initial user's email and we already have projectData
+      // Only fetch when switching to a different user (like an executive)
+      if (submissionUser.email === mondayProfile?.email && lastFetchedEmail === null && projectData) {
+        setLastFetchedEmail(submissionUser.email);
+        setCurrentProjectData(projectData);
+        // Set pre-assigned projects from initial projectData
+        if (projectData?.employeeBudgetedHours && projectData.employeeBudgetedHours.length > 0) {
+          setPreAssignedProjectsFromBudgetedHours(
+            projectData.employeeBudgetedHours, 
+            setProjectWorkEntries
+          );
+        }
+        return;
+      }
+      // Only fetch if email changed to a different user
+      if (submissionUser.email === lastFetchedEmail) {
+        return;
+      }
 
+      const newProjectData = await fetchProjectDataForUser(submissionUser.email);
       if (newProjectData) {
         setCurrentProjectData(newProjectData);
+        setLastFetchedEmail(submissionUser.email);
 
         // Reset and set pre-assigned projects from budgeted hours
         if (newProjectData?.employeeBudgetedHours && newProjectData.employeeBudgetedHours.length > 0) {
@@ -118,20 +139,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
     };
 
     loadProjectData();
-  }, [submissionUser?.email]);
-
-  // Set pre-assigned projects when component mounts (only if submitting for yourself initially)
-  useEffect(() => {
-    if (projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
-      // Set pre-assigned projects from budgeted hours if available
-      if (currentProjectData?.employeeBudgetedHours) {
-        setPreAssignedProjectsFromBudgetedHours(
-          currentProjectData.employeeBudgetedHours, 
-          setProjectWorkEntries
-        );
-      }
-    }
-  }, [currentProjectData?.employeeBudgetedHours]);
+  }, [submissionUser?.email, mondayProfile?.email, projectData, lastFetchedEmail]);
 
   useEffect(() => {
     if (mondayProfile?.email) {
