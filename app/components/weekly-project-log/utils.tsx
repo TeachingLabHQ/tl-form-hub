@@ -138,16 +138,56 @@ export const updateTotalWorkHours = (
   setTotalWorkHours(totalWorkHours);
 };
 
+export type ProjectData = {
+  employeeBudgetedHours: any;
+  projectSourceNames: any;
+};
+
+export const fetchProjectDataForUser = async (
+  email: string
+): Promise<ProjectData | null> => {
+  if (!email) {
+    return null;
+  }
+
+  try {
+    const response = await fetch("/api/weekly-project-log/data", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Error fetching project data:", data.error);
+      return null;
+    }
+
+    return {
+      employeeBudgetedHours: data.employeeBudgetedHours || [],
+      projectSourceNames: data.projectSourceNames || [],
+    };
+  } catch (error) {
+    console.error("Error fetching project data:", error);
+    return null;
+  }
+};
+
 export const executiveAssistantMappings: ExecutiveAssistantMapping[] = [
   {
     executiveAssistantEmail: "savanna.worthington@teachinglab.org",
     executiveName: "HaMy Vu",
     executiveEmail: "hamy.vu@teachinglab.org",
+    executiveId:"30"
   },
   {
     executiveAssistantEmail: "alli.franken@teachinglab.org",
     executiveName: "Sarah Johnson",
     executiveEmail: "sarah.johnson@teachinglab.org",
+    executiveId: "2"
   },
 ];
 

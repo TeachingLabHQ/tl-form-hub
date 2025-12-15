@@ -15,6 +15,8 @@ import {
   REMINDER_ITEMS,
   setPreAssignedProjectsFromBudgetedHours,
   addSharedOperationsRow,
+  fetchProjectDataForUser,
+  type ProjectData,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
 
@@ -27,6 +29,7 @@ export type FormValues = {
 export type SubmissionUser = {
   name: string;
   email: string;
+  employeeId: string;
   isExecutiveAssistant: boolean;
   submittedForYourself: boolean | null;
   executiveDetails?: {
@@ -35,10 +38,6 @@ export type SubmissionUser = {
   };
 };
 
-export type ProjectData = {
-  employeeBudgetedHours: any;
-  projectSourceNames: any;
-};
 
 type ProjectLogFormProps = {
   projectData: ProjectData;
@@ -79,22 +78,68 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
   const [submissionUser, setSubmissionUser] = useState<SubmissionUser>(() => ({
     name: mondayProfile?.name || "",
     email: mondayProfile?.email || "",
+    employeeId: mondayProfile?.employeeId || "",
     isExecutiveAssistant: false,
     submittedForYourself: null,
   }));
 
-  // Set pre-assigned projects when component mounts
+  // Track current project data (changes when executive is selected)
+  const [currentProjectData, setCurrentProjectData] = useState<ProjectData>(projectData);
+  const [lastFetchedEmail, setLastFetchedEmail] = useState<string | null>(null);
+
+  // Fetch project data when submission user changes (e.g., when executive is selected)
+  // Skip fetch if it's the same email as the initial user (parent already fetched it)
   useEffect(() => {
-    if (projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
-      // Set pre-assigned projects from budgeted hours if available
-      if (projectData?.employeeBudgetedHours) {
-        setPreAssignedProjectsFromBudgetedHours(
-          projectData.employeeBudgetedHours, 
-          setProjectWorkEntries
-        );
+    const loadProjectData = async () => {
+      if (!submissionUser?.email) {
+        return;
       }
-    }
-  }, [projectData?.employeeBudgetedHours]);
+
+      // Skip fetch if this is the initial user's email and we already have projectData
+      // Only fetch when switching to a different user (like an executive)
+      if (submissionUser.email === mondayProfile?.email && lastFetchedEmail === null && projectData) {
+        setLastFetchedEmail(submissionUser.email);
+        setCurrentProjectData(projectData);
+        // Set pre-assigned projects from initial projectData
+        if (projectData?.employeeBudgetedHours && projectData.employeeBudgetedHours.length > 0) {
+          setPreAssignedProjectsFromBudgetedHours(
+            projectData.employeeBudgetedHours, 
+            setProjectWorkEntries
+          );
+        }
+        return;
+      }
+      // Only fetch if email changed to a different user
+      if (submissionUser.email === lastFetchedEmail) {
+        return;
+      }
+
+      const newProjectData = await fetchProjectDataForUser(submissionUser.email);
+      if (newProjectData) {
+        setCurrentProjectData(newProjectData);
+        setLastFetchedEmail(submissionUser.email);
+
+        // Reset and set pre-assigned projects from budgeted hours
+        if (newProjectData?.employeeBudgetedHours && newProjectData.employeeBudgetedHours.length > 0) {
+          setPreAssignedProjectsFromBudgetedHours(
+            newProjectData.employeeBudgetedHours, 
+            setProjectWorkEntries
+          );
+        } else {
+          // Reset to empty if no budgeted hours
+          setProjectWorkEntries([{
+            projectName: "",
+            projectRole: "",
+            workHours: "",
+            budgetedHours: "N/A",
+            activity: "",
+          }]);
+        }
+      }
+    };
+
+    loadProjectData();
+  }, [submissionUser?.email, mondayProfile?.email, projectData, lastFetchedEmail]);
 
   useEffect(() => {
     if (mondayProfile?.email) {
@@ -104,6 +149,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       setSubmissionUser({
         name: mondayProfile.name,
         email: mondayProfile.email,
+        employeeId: mondayProfile.employeeId || "",
         isExecutiveAssistant: isEA,
         submittedForYourself: true,
       });
@@ -119,6 +165,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       setSubmissionUser({
         name: mondayProfile?.name || "",
         email: mondayProfile?.email || "",
+        employeeId: mondayProfile?.employeeId || "",
         isExecutiveAssistant: true,
         submittedForYourself: true,
       });
@@ -132,6 +179,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       setSubmissionUser({
         name: mapping.executiveName,
         email: mapping.executiveEmail,
+        employeeId: mapping.executiveId,
         isExecutiveAssistant: true,
         submittedForYourself: false,
         executiveDetails: {
@@ -194,7 +242,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
         },
         body: JSON.stringify({
           name: submissionUser.name,
-          employeeId: mondayProfile?.employeeId,
+          employeeId: submissionUser.employeeId,
           //send the date in iso format to avoid timezone issues in the server
           date: selectedDate
             ? new Date(
@@ -279,7 +327,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
               projectWorkEntries={projectWorkEntries}
               setProjectWorkEntries={setProjectWorkEntries}
               setTotalWorkHours={setTotalWorkHours}
-              projectData={projectData}
+              projectData={currentProjectData}
             />
           </div>
           <div className="flex flex-col gap-1">

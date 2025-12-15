@@ -6,9 +6,9 @@ import {
   activityList,
   handleKeyDown,
   projectRolesList,
-  updateTotalWorkHours
+  updateTotalWorkHours,
+  type ProjectData,
 } from "./utils";
-import { ProjectData } from "./project-log-form";
 
 export const ProjectLogsWidget = ({
   isValidated,
