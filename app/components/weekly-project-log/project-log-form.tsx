@@ -85,18 +85,74 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
     submittedForYourself: null,
   }));
 
-  // Set pre-assigned projects when component mounts
+  // Track current project data (changes when executive is selected)
+  const [currentProjectData, setCurrentProjectData] = useState<ProjectData>(projectData);
+
+  // Fetch project data when submission user changes (e.g., when executive is selected)
+  useEffect(() => {
+    const fetchProjectDataForUser = async () => {
+      if (!submissionUser?.email) {
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/weekly-project-log/data", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: submissionUser.email }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error("Error fetching project data:", data.error);
+        }
+
+        const newProjectData = {
+          employeeBudgetedHours: data.employeeBudgetedHours || [],
+          projectSourceNames: data.projectSourceNames || [],
+        };
+
+        setCurrentProjectData(newProjectData);
+
+        // Reset and set pre-assigned projects from budgeted hours
+        if (newProjectData?.employeeBudgetedHours && newProjectData.employeeBudgetedHours.length > 0) {
+          setPreAssignedProjectsFromBudgetedHours(
+            newProjectData.employeeBudgetedHours, 
+            setProjectWorkEntries
+          );
+        } else {
+          // Reset to empty if no budgeted hours
+          setProjectWorkEntries([{
+            projectName: "",
+            projectRole: "",
+            workHours: "",
+            budgetedHours: "N/A",
+            activity: "",
+          }]);
+        }
+      } catch (error) {
+        console.error("Error fetching project data:", error);
+      }
+    };
+
+    fetchProjectDataForUser();
+  }, [submissionUser?.email]);
+
+  // Set pre-assigned projects when component mounts (only if submitting for yourself initially)
   useEffect(() => {
     if (projectWorkEntries.length === 1 && !projectWorkEntries[0]?.projectName) {
       // Set pre-assigned projects from budgeted hours if available
-      if (projectData?.employeeBudgetedHours) {
+      if (currentProjectData?.employeeBudgetedHours) {
         setPreAssignedProjectsFromBudgetedHours(
-          projectData.employeeBudgetedHours, 
+          currentProjectData.employeeBudgetedHours, 
           setProjectWorkEntries
         );
       }
     }
-  }, [projectData?.employeeBudgetedHours]);
+  }, [currentProjectData?.employeeBudgetedHours]);
 
   useEffect(() => {
     if (mondayProfile?.email) {
@@ -284,7 +340,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
               projectWorkEntries={projectWorkEntries}
               setProjectWorkEntries={setProjectWorkEntries}
               setTotalWorkHours={setTotalWorkHours}
-              projectData={projectData}
+              projectData={currentProjectData}
             />
           </div>
           <div className="flex flex-col gap-1">
