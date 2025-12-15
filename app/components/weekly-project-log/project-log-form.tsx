@@ -27,6 +27,7 @@ export type FormValues = {
 export type SubmissionUser = {
   name: string;
   email: string;
+  employeeId: string;
   isExecutiveAssistant: boolean;
   submittedForYourself: boolean | null;
   executiveDetails?: {
@@ -79,6 +80,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
   const [submissionUser, setSubmissionUser] = useState<SubmissionUser>(() => ({
     name: mondayProfile?.name || "",
     email: mondayProfile?.email || "",
+    employeeId: mondayProfile?.employeeId || "",
     isExecutiveAssistant: false,
     submittedForYourself: null,
   }));
@@ -104,6 +106,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       setSubmissionUser({
         name: mondayProfile.name,
         email: mondayProfile.email,
+        employeeId: mondayProfile.employeeId || "",
         isExecutiveAssistant: isEA,
         submittedForYourself: true,
       });
@@ -119,6 +122,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       setSubmissionUser({
         name: mondayProfile?.name || "",
         email: mondayProfile?.email || "",
+        employeeId: mondayProfile?.employeeId || "",
         isExecutiveAssistant: true,
         submittedForYourself: true,
       });
@@ -132,6 +136,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       setSubmissionUser({
         name: mapping.executiveName,
         email: mapping.executiveEmail,
+        employeeId: mapping.executiveId,
         isExecutiveAssistant: true,
         submittedForYourself: false,
         executiveDetails: {
@@ -194,7 +199,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
         },
         body: JSON.stringify({
           name: submissionUser.name,
-          employeeId: mondayProfile?.employeeId,
+          employeeId: submissionUser.employeeId,
           //send the date in iso format to avoid timezone issues in the server
           date: selectedDate
             ? new Date(

@@ -5,6 +5,7 @@ export type ExecutiveAssistantMapping = {
   executiveAssistantEmail: string;
   executiveName: string;
   executiveEmail: string;
+  executiveId: string;
 };
 
 type Props = {
