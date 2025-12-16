@@ -30,6 +30,7 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
       task: "",
       project: "",
       workHours: "",
+      note: "",
     },
   ]);
   const [totalWorkHours, setTotalWorkHours] = useState(0);
@@ -49,6 +50,7 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
             task: "",
             project: "",
             workHours: "",
+            note: "",
           },
         ]);
         setTotalWorkHours(0);

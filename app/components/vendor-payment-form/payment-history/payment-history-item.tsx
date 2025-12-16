@@ -83,6 +83,7 @@ export const PaymentHistoryItem = ({
               <tr className="border-b border-white/20">
                 <th className="text-left py-2 px-4 w-1/4">Task</th>
                 <th className="text-left py-2 px-4">Project</th>
+                <th className="text-left py-2 px-4">Note</th>
                 <th className="text-right py-2 px-4">Hours</th>
                 <th className="text-right py-2 px-4">Rate</th>
                 <th className="text-right py-2 px-4">Subtotal</th>
@@ -96,6 +97,9 @@ export const PaymentHistoryItem = ({
                 >
                   <td className="py-3 px-4 w-1/4">{entry.task_name}</td>
                   <td className="py-3 px-4">{entry.project_name}</td>
+                  <td className="py-3 px-4 whitespace-pre-wrap break-words">
+                    {entry.note || ""}
+                  </td>
                   <td className="py-3 px-4 text-right">{entry.work_hours}</td>
                   <td className="py-3 px-4 text-right">${entry.rate}</td>
                   <td className="py-3 px-4 text-right font-medium">
@@ -106,7 +110,7 @@ export const PaymentHistoryItem = ({
             </tbody>
             <tfoot>
               <tr className="border-t border-white/20">
-                <td colSpan={4} className="py-2 px-4 text-right font-bold">
+                <td colSpan={5} className="py-2 px-4 text-right font-bold">
                   Total:
                 </td>
                 <td className="py-2 px-4 text-right font-bold">
