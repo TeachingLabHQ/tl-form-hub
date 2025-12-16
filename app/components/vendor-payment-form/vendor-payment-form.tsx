@@ -131,7 +131,11 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
     formData.append("entries", JSON.stringify(vendorPaymentEntries));
     formData.append("cfDetails", JSON.stringify(cfDetails));
     formData.append("totalPay", totalPay.toString());
-    formData.append("workDate", workDate.toISOString());
+    // Send local calendar date (YYYY-MM-DD) to avoid UTC day-shift near midnight ET
+    const yyyy = workDate.getFullYear();
+    const mm = String(workDate.getMonth() + 1).padStart(2, "0");
+    const dd = String(workDate.getDate()).padStart(2, "0");
+    formData.append("workDate", `${yyyy}-${mm}-${dd}`);
 
     // Submit the form using fetcher
     fetcher.submit(formData, {
