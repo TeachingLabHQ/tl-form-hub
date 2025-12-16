@@ -14,6 +14,7 @@ export interface VendorPaymentEntry {
   submission_id: number;
   task_name: string;
   project_name: string;
+  note: string | null;
   work_hours: number;
   rate: number;
   entry_pay: number;

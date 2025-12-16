@@ -1,4 +1,4 @@
-import { Button, Select, Text, TextInput, NumberInput } from "@mantine/core";
+import { Button, Select, Text, TextInput, NumberInput, Textarea } from "@mantine/core";
 import { useEffect, useState } from "react";
 import { cn } from "../../utils/utils";
 import { IconX } from "@tabler/icons-react";
@@ -8,6 +8,7 @@ type VendorPaymentRowKeys = keyof {
   task: string;
   project: string;
   workHours: string;
+  note: string;
 };
 
 type taskOptions = {
@@ -29,6 +30,7 @@ export const VendorPaymentWidget = ({
     task: string;
     project: string;
     workHours: string;
+    note: string;
   }[];
   setVendorPaymentEntries: React.Dispatch<
     React.SetStateAction<
@@ -36,6 +38,7 @@ export const VendorPaymentWidget = ({
         task: string;
         project: string;
         workHours: string;
+        note: string;
       }[]
     >
   >;
@@ -165,6 +168,7 @@ export const VendorPaymentWidget = ({
         task: "",
         project: "",
         workHours: "",
+        note: "",
       },
     ]);
   };
@@ -246,89 +250,104 @@ export const VendorPaymentWidget = ({
       </div>
       {/* Dynamic rows */}
       {vendorPaymentEntries.map((row, index) => (
-        <div
-          key={index}
-          className={cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
-            "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]":
-              vendorPaymentEntries.length > 1,
-          })}
-        >
-          <div>
-            <Select
-              value={row.task || null}
-              onChange={(value) => handleChange(index, "task", value)}
-              placeholder="Select a task"
-              data={listOfAvailableTasks.map((option) => ({
-                value: JSON.stringify(option),
-                label: option.taskName,
-              }))}
-              searchable
-              error={
-                isValidated === false && !row.task ? "Task is required" : null
-              }
-            />
-          </div>
-          <div>
-            <Select
-              value={row.project || null}
-              onChange={(value) => handleChange(index, "project", value)}
-              placeholder="Select a project"
-              data={projectOptions}
-              searchable
-              error={
-                isValidated === false && !row.project
-                  ? "Project is required"
-                  : null
-              }
-            />
-          </div>
-          <div>
-            <NumberInput
-              value={parseFloat(row.workHours) || 0}
-              onChange={(value) =>
-                handleChange(index, "workHours", value?.toString() || "")
-              }
-              placeholder="Enter work hours"
-              max={
-                JSON.parse(row.task || "{}").maxHours || undefined
-              }
-              min={0}
-              error={
-                isValidated === false &&
-                (!row.workHours || Number(row.workHours) === 0)
-                  ? "Work Hours are required"
-                  : null
-              }
-            />
-          </div>
-          <div>
-            <TextInput
-              value={row.task ? `$${JSON.parse(row.task).rate.toFixed(2)}` : "$0.00"}
-              readOnly
-              placeholder="Rate"
-            />
-          </div>
-          <div>
-            <TextInput
-              value={`$${calculateTaskTotalPay(
-                row.task || "",
-                row.workHours || ""
-              ).toFixed(2)}`}
-              readOnly
-              placeholder="Total pay"
-            />
-          </div>
-          {vendorPaymentEntries.length > 1 && (
+        <div key={index} className="flex flex-col gap-2">
+          <div
+            className={cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
+              "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]":
+                vendorPaymentEntries.length > 1,
+            })}
+          >
             <div>
-              <Button
-                color="red"
-                onClick={() => handleDeleteRow(index)}
-                size="xs"
-              >
-                <IconX size={20} />
-              </Button>
+              <Select
+                value={row.task || null}
+                onChange={(value) => handleChange(index, "task", value)}
+                placeholder="Select a task"
+                data={listOfAvailableTasks.map((option) => ({
+                  value: JSON.stringify(option),
+                  label: option.taskName,
+                }))}
+                searchable
+                error={
+                  isValidated === false && !row.task ? "Task is required" : null
+                }
+              />
             </div>
-          )}
+            <div>
+              <Select
+                value={row.project || null}
+                onChange={(value) => handleChange(index, "project", value)}
+                placeholder="Select a project"
+                data={projectOptions}
+                searchable
+                error={
+                  isValidated === false && !row.project
+                    ? "Project is required"
+                    : null
+                }
+              />
+            </div>
+            <div>
+              <NumberInput
+                value={parseFloat(row.workHours) || 0}
+                onChange={(value) =>
+                  handleChange(index, "workHours", value?.toString() || "")
+                }
+                placeholder="Enter work hours"
+                max={JSON.parse(row.task || "{}").maxHours || undefined}
+                min={0}
+                error={
+                  isValidated === false &&
+                  (!row.workHours || Number(row.workHours) === 0)
+                    ? "Work Hours are required"
+                    : null
+                }
+              />
+            </div>
+            <div>
+              <TextInput
+                value={
+                  row.task ? `$${JSON.parse(row.task).rate.toFixed(2)}` : "$0.00"
+                }
+                readOnly
+                placeholder="Rate"
+              />
+            </div>
+            <div>
+              <TextInput
+                value={`$${calculateTaskTotalPay(
+                  row.task || "",
+                  row.workHours || ""
+                ).toFixed(2)}`}
+                readOnly
+                placeholder="Total pay"
+              />
+            </div>
+            {vendorPaymentEntries.length > 1 && (
+              <div>
+                <Button
+                  color="red"
+                  onClick={() => handleDeleteRow(index)}
+                  size="xs"
+                >
+                  <IconX size={20} />
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div>
+            <Textarea
+              value={row.note}
+              onChange={(e) => handleChange(index, "note", e.currentTarget.value)}
+              placeholder="Memo (optional)"
+              autosize
+              minRows={2}
+              maxLength={2000}
+            />
+            <Text size="xs" c="white" className="opacity-80 mt-1 text-right">
+              {(row.note || "").length}/2000
+            </Text>
+          </div>
         </div>
       ))}
 

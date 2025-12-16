@@ -189,17 +189,18 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       return dateA - dateB; // For oldest to newest
     });
 
-    // Define table columns (Date, Task, Hours, Rate, Subtotal)
+    // Define table columns (Date, Task, Note, Hours, Rate, Subtotal)
     const columns = [
       { header: "Date", width: pageWidth * 0.15, align: 'left' },
-      { header: "Task", width: pageWidth * 0.35, align: 'left' },
-      { header: "Hours", width: pageWidth * 0.15, align: 'right' },
-      { header: "Rate", width: pageWidth * 0.15, align: 'right' },
-      { header: "Subtotal", width: pageWidth * 0.20, align: 'right' }
+      { header: "Task", width: pageWidth * 0.25, align: 'left' },
+      { header: "Note", width: pageWidth * 0.25, align: 'left' },
+      { header: "Hours", width: pageWidth * 0.12, align: 'right' },
+      { header: "Rate", width: pageWidth * 0.11, align: 'right' },
+      { header: "Subtotal", width: pageWidth * 0.12, align: 'right' }
     ];
 
     // Calculate starting positions for each column
-    let columnPositions: number[] = [];
+    const columnPositions: number[] = [];
     let currentX = margin;
     columns.forEach(column => {
       columnPositions.push(currentX);
@@ -237,11 +238,14 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
 
     // Draw table rows for each entry of the person
     sortedEntries.forEach((entry) => {
-      // Calculate dynamic row height based on Task column wrapping
+      // Calculate dynamic row height based on Task + Note column wrapping
       const wrapWidthMargin = 15;
       const taskLines = wrapText(entry.task_name, columns[1].width - wrapWidthMargin, helveticaFont, 10);
-      // Only task column needs wrapping consideration for height
-      const rowHeight = calculateRowHeight([taskLines], baseLineHeight * 1.2);
+      const noteText = typeof entry.note === "string" ? entry.note : "";
+      const noteLines = noteText
+        ? wrapText(noteText, columns[2].width - wrapWidthMargin, helveticaFont, 10)
+        : [];
+      const rowHeight = calculateRowHeight([taskLines, noteLines], baseLineHeight * 1.2);
 
       // Check for page break before drawing the row
       if (y - rowHeight < contentBottomMargin) {
@@ -259,7 +263,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         try {
           const dateObj = new Date(entry.submission_date);
           dateDisplay = dateObj.toLocaleDateString();
-        } catch (e) {
+        } catch (_e) {
           // If date parsing fails, use the raw string
           dateDisplay = entry.submission_date;
         }
@@ -268,7 +272,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         try {
           const dateObj = new Date(personSummary.submission_date);
           dateDisplay = dateObj.toLocaleDateString();
-        } catch (e) {
+        } catch (_e) {
           dateDisplay = personSummary.submission_date;
         }
       }
@@ -293,11 +297,22 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         });
       });
 
+      // Draw Note column (wrapped)
+      noteLines.forEach((line, i) => {
+        page.drawText(line, {
+          x: columnPositions[2] + 10, // Left align with padding
+          y: rowStartY - textOffsetY - (i * 12),
+          size: 10,
+          font: helveticaFont,
+          color: rgb(0, 0, 0),
+        });
+      });
+
       // Draw Hours, Rate, Subtotal columns (numeric, right-aligned)
       const numericValues = [
-        { value: entry.work_hours.toString(), columnIndex: 2 },
-        { value: `$${entry.rate.toFixed(2)}`, columnIndex: 3 },
-        { value: `$${entry.entry_pay.toFixed(2)}`, columnIndex: 4 }
+        { value: entry.work_hours.toString(), columnIndex: 3 },
+        { value: `$${entry.rate.toFixed(2)}`, columnIndex: 4 },
+        { value: `$${entry.entry_pay.toFixed(2)}`, columnIndex: 5 }
       ];
 
       numericValues.forEach(({ value, columnIndex }) => {

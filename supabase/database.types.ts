@@ -75,6 +75,7 @@ export type Database = {
           created_at: string | null
           entry_pay: number
           id: number
+          note: string | null
           project_name: string
           rate: number
           submission_date: string | null
@@ -87,6 +88,7 @@ export type Database = {
           created_at?: string | null
           entry_pay: number
           id?: number
+          note?: string | null
           project_name: string
           rate: number
           submission_date?: string | null
@@ -99,6 +101,7 @@ export type Database = {
           created_at?: string | null
           entry_pay?: number
           id?: number
+          note?: string | null
           project_name?: string
           rate?: number
           submission_date?: string | null

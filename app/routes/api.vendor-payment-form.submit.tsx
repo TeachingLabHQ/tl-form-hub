@@ -45,6 +45,7 @@ export async function action({ request }: ActionFunctionArgs) {
       return {
         task_name: taskData.taskName,
         project_name: entry.project,
+        note: entry.note,
         work_hours: hours,
         rate: taskData.rate,
         entry_pay: taskData.rate * hours,

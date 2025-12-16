@@ -37,6 +37,7 @@ const getErrorMessage = (error: unknown): string => {
 // Represents a single detailed work entry
 interface DetailedEntry {
   task_name: string;
+  note?: string | null;
   work_hours: number;
   rate: number;
   entry_pay: number;
@@ -107,6 +108,7 @@ try {
           submission_date,
           entries:vendor_payment_entries(
             task_name,
+            note,
             project_name,
             work_hours,
             rate,
@@ -172,8 +174,14 @@ try {
 
           // Add or aggregate the detailed entry to the person's summary
           const taskName = entry.task_name;
-          //only aggregate entries if they have the same submission_date and task_name
-          const existingEntryIndex = personSummary.detailedEntries.findIndex(de => de.task_name === taskName && de.submission_date === submission.submission_date);
+          const note = entry.note;
+          //only aggregate entries if they have the same submission_date and task_name and notes
+          const existingEntryIndex = personSummary.detailedEntries.findIndex(
+            (de) =>
+              de.task_name === taskName &&
+              de.submission_date === submission.submission_date &&
+              de.note === note
+          );
 
           if (existingEntryIndex > -1) {
             // Aggregate hours and pay if task already exists on the same day
@@ -184,6 +192,7 @@ try {
             // Push new entry if task doesn't exist
             personSummary.detailedEntries.push({
               task_name: taskName,
+              note,
               work_hours: entry.work_hours, // Assuming these are valid numbers
               rate: entry.rate, // Assuming rate is valid
               entry_pay: entryPay,
