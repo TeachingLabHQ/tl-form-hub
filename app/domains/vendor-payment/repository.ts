@@ -7,6 +7,17 @@ import {
 } from "./model";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "../../../supabase/database.types";
+//a defensive guard to ensure local calednar date format 
+function toDateOnlyString(value: Date | string | null): string | null {
+  if (!value) return null;
+  if (value instanceof Date) {
+    const yyyy = value.getFullYear();
+    const mm = String(value.getMonth() + 1).padStart(2, "0");
+    const dd = String(value.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  return value;
+}
 export interface VendorPaymentRepository {
   createSubmission(
     submission: CreateVendorPaymentSubmission
@@ -28,9 +39,7 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
             cf_name: submission.cf_name,
             cf_tier: submission.cf_tier,
             total_pay: submission.total_pay,
-            submission_date: submission.submission_date instanceof Date 
-              ? submission.submission_date.toISOString() 
-              : submission.submission_date,
+            submission_date: toDateOnlyString(submission.submission_date),
           })
           .select()
           .single();
@@ -41,9 +50,7 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
         const entries = submission.entries.map(entry => ({
           ...entry,
           submission_id: submissionData.id,
-          submission_date: submission.submission_date instanceof Date 
-            ? submission.submission_date.toISOString() 
-            : submission.submission_date,
+          submission_date: toDateOnlyString(submission.submission_date),
         }));
 
         const { error: entriesError } = await supabase
