@@ -1,10 +1,38 @@
 import { Accordion, ActionIcon, Group, Text } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
-import dayjs from "dayjs";
 import { useFetcher, useRevalidator } from "@remix-run/react";
 import { VendorPaymentSubmissionWithEntries } from "~/domains/vendor-payment/model";
 import { notifications } from "@mantine/notifications";
 import { useEffect } from 'react';
+//safety net to keep the date in local calendar format
+function formatDateOnly(value: unknown): string {
+  if (!value) return "";
+
+  // Supabase DATE commonly comes back as "YYYY-MM-DD" (no timezone).
+  const raw = value instanceof Date ? null : String(value);
+  const datePart = raw ? raw.split("T")[0] : null;
+
+  if (datePart && /^\d{4}-\d{2}-\d{2}$/.test(datePart)) {
+    const [y, m, d] = datePart.split("-");
+    const monthNames = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ];
+    const monthName = monthNames[Number(m) - 1] || m;
+    return `${monthName} ${Number(d)}, ${y}`;
+  }
+
+  // If it's a Date object or some unexpected string, fall back to a stable display.
+  // Avoid `toLocaleDateString()` here because it can introduce timezone shifts.
+  if (value instanceof Date) {
+    const yyyy = value.getFullYear();
+    const mm = String(value.getMonth() + 1).padStart(2, "0");
+    const dd = String(value.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  return raw ?? "";
+}
 
 type PaymentHistoryItemProps = {
   paymentRequest: VendorPaymentSubmissionWithEntries;
@@ -56,7 +84,7 @@ export const PaymentHistoryItem = ({
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
             <span className="text-white">
-              {dayjs(paymentRequest.submission_date).format("MMM D, YYYY")}
+              {formatDateOnly(paymentRequest.submission_date)}
             </span>
             <ActionIcon
               variant="subtle"

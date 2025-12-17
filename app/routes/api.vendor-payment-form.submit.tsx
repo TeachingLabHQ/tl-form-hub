@@ -11,7 +11,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const entries = JSON.parse(formData.get("entries") as string);
     const cfDetails = JSON.parse(formData.get("cfDetails") as string);
     const totalPay = parseFloat(formData.get("totalPay") as string);
-    const workDateIso = formData.get("workDate") as string;
+    const workDate = formData.get("workDate") as string;
 
     // Validate form data
     if (!entries || !Array.isArray(entries) || entries.length === 0) {
@@ -25,12 +25,9 @@ export async function action({ request }: ActionFunctionArgs) {
       );
     }
 
-    if (!workDateIso) {
+    if (!workDate) {
       return json({ error: "Work date is required" }, { status: 400 });
     }
-    
-    // Extract just the YYYY-MM-DD portion to avoid timezone issues
-    const workDate = workDateIso.split('T')[0] || workDateIso;
 
     // Transform cf_tier into human-readable format
     const humanReadableTier = formatTierData(cfDetails.tier);

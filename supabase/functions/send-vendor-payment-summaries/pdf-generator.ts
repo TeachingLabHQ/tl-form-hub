@@ -70,6 +70,21 @@ function calculateRowHeight(linesPerColumn: string[][], baseHeight: number): num
   const maxLines = linesPerColumn.reduce((max, lines) => Math.max(max, lines.length), 0);
   return Math.max(baseHeight, maxLines * 14 + 15); // Adjusted line height and padding
 }
+//safety net
+// Expecting a Postgres DATE-like value "YYYY-MM-DD" (no timezone).
+// If we ever get an ISO string, strip the time portion and format the date part only.
+function formatDateOnlyNoTz(input: string): string {
+  const datePart = input.split("T")[0];
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(datePart)) return input;
+
+  const [y, m, d] = datePart.split("-");
+  const monthNames = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const monthName = monthNames[Number(m) - 1] || m;
+  return `${monthName} ${Number(d)}, ${y}`;
+}
 
 // Helper function to generate invoice number from log ID
 function generateInvoiceNumber(logId: number): string {
@@ -183,10 +198,9 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
 
     // Sort entries by date (oldest first)
     const sortedEntries = [...personSummary.detailedEntries].sort((a, b) => {
-      // Convert dates to comparable values, defaulting to empty string if undefined
-      const dateA = a.submission_date ? new Date(a.submission_date).getTime() : 0;
-      const dateB = b.submission_date ? new Date(b.submission_date).getTime() : 0;
-      return dateA - dateB; // For oldest to newest
+      const dateA = (a.submission_date ?? "").split("T")[0];
+      const dateB = (b.submission_date ?? "").split("T")[0];
+      return dateA.localeCompare(dateB); // From oldest to newest
     });
 
     // Define table columns (Date, Task, Note, Hours, Rate, Subtotal)
@@ -260,21 +274,10 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       // Format the date (if available)
       let dateDisplay = '';
       if (entry.submission_date) {
-        try {
-          const dateObj = new Date(entry.submission_date);
-          dateDisplay = dateObj.toLocaleDateString();
-        } catch (_e) {
-          // If date parsing fails, use the raw string
-          dateDisplay = entry.submission_date;
-        }
+        dateDisplay = formatDateOnlyNoTz(entry.submission_date);
       } else if (personSummary.submission_date) {
         // Fall back to the person's submission date if entry doesn't have one
-        try {
-          const dateObj = new Date(personSummary.submission_date);
-          dateDisplay = dateObj.toLocaleDateString();
-        } catch (_e) {
-          dateDisplay = personSummary.submission_date;
-        }
+        dateDisplay = formatDateOnlyNoTz(personSummary.submission_date);
       }
 
       // Draw Date column
