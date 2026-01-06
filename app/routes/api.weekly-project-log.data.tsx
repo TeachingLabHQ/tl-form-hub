@@ -8,16 +8,19 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   try {
-    const { email } = await request.json();
+    const { employeeId, email } = await request.json();
 
-    if (!email) {
-      return json({ error: "Email is required" }, { status: 400 });
+    if (!employeeId && !email) {
+      return json(
+        { error: "employeeId or email is required" },
+        { status: 400 }
+      );
     }
 
     const newProjectService = projectService(projectRepository());
     
     const [employeeBudgetedHours, projectSourceNames] = await Promise.all([
-      newProjectService.fetchBudgetedHoursByEmployee(email),
+      newProjectService.fetchBudgetedHoursByEmployee(employeeId, email),
       newProjectService.fetchProjectSourceNames(),
     ]);
 
