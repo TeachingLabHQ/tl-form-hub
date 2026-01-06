@@ -6,39 +6,66 @@ export interface ProjectService {
   fetchAllProjects: () => Promise<{ data: projectsByTypes[] | null }>;
   fetchProgramProjects: () => Promise<{ data: string[] | null | undefined }>;
   fetchProgramProjectsStaffing: (mondayProfileId: string) => Promise<Errorable<ProgramProject[]>>;
-  fetchBudgetedHoursByEmployee: (employeeEmail: string) => Promise<Errorable<EmployeeBudgetedHours[]>>;
+  // Prefer designated employee ID (lookup_mkpvs1wj). Fall back to employee email (lookup_mksmfdnr).
+  fetchBudgetedHoursByEmployee: (
+    employeeId?: string | null,
+    employeeEmail?: string | null
+  ) => Promise<Errorable<EmployeeBudgetedHours[]>>;
   fetchProjectSourceNames: () => Promise<Errorable<string[]>>;
 }
 
-// Helper function to build inverted index for O(1) employee lookup
-function buildBudgetedHoursIndex(allItems: any[]): Map<string, EmployeeBudgetedHours[]> {
-  const index = new Map<string, EmployeeBudgetedHours[]>();
-  
+type BudgetedHoursIndex = {
+  byEmployeeId: Map<string, EmployeeBudgetedHours[]>;
+  byEmail: Map<string, EmployeeBudgetedHours[]>;
+};
+
+// Helper function to build inverted indices for O(1) employee lookup
+function buildBudgetedHoursIndex(allItems: any[]): BudgetedHoursIndex {
+  const byEmployeeId = new Map<string, EmployeeBudgetedHours[]>();
+  const byEmail = new Map<string, EmployeeBudgetedHours[]>();
+
   for (const item of allItems) {
-    // Extract employee email from lookup column
-    const emailValue = item.column_values?.find((col: any) => col.id === "lookup_mksmfdnr")
-      ?.display_value || item.column_values?.find((col: any) => col.id === "lookup_mksmfdnr")?.text;
-    
-    if (!emailValue) continue; // Skip items without email
-    
+    // Extract designated employee ID from lookup column
+    const employeeIdValueRaw =
+      item.column_values?.find((col: any) => col.id === "lookup_mkpvs1wj")?.display_value ||
+      "";
+    const employeeIdValue = typeof employeeIdValueRaw === "string" ? employeeIdValueRaw.trim() : "";
+
     // Transform item to EmployeeBudgetedHours format
+    const emailValue =
+      item.column_values?.find((col: any) => col.id === "lookup_mksmfdnr")?.display_value ||
+      "";
+    const emailValueTrimmed = typeof emailValue === "string" ? emailValue.trim().toLowerCase() : "";
+
+    // If we can't identify the employee at all, skip this row.
+    if (!employeeIdValue && !emailValueTrimmed) continue;
+
     const transformed: EmployeeBudgetedHours = {
       itemId: item.id,
       itemName: item.name,
-      email: emailValue,
+      email: emailValueTrimmed,
       projectName: item.column_values?.find((col: any) => col.id === "dropdown_mkttdgrw")?.text || "",
       projectRole: item.column_values?.find((col: any) => col.id === "color_mknhq0s3")?.label || 
                    item.column_values?.find((col: any) => col.id === "color_mknhq0s3")?.text || "",
       budgetedHours: parseFloat(item.column_values?.find((col: any) => col.id === "numeric_mknhqm6d")?.text || "0") || 0
     };
     
-    // Add to index - grouped by email
-    if (!index.has(emailValue)) {
-      index.set(emailValue, []);
+    if (employeeIdValue) {
+      if (!byEmployeeId.has(employeeIdValue)) {
+        byEmployeeId.set(employeeIdValue, []);
+      }
+      byEmployeeId.get(employeeIdValue)!.push(transformed);
     }
-    index.get(emailValue)!.push(transformed);
+
+    if (emailValueTrimmed) {
+      if (!byEmail.has(emailValueTrimmed)) {
+        byEmail.set(emailValueTrimmed, []);
+      }
+      byEmail.get(emailValueTrimmed)!.push(transformed);
+    }
   }
-  return index;
+
+  return { byEmployeeId, byEmail };
 }
 
 export function projectService(projectRepository: ProjectRepository): ProjectService {
@@ -62,7 +89,7 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
       return { data: programProjects };
     },
     fetchProgramProjectsStaffing: projectRepository.fetchProgramProjects,
-    fetchBudgetedHoursByEmployee: async (employeeEmail: string) => {
+    fetchBudgetedHoursByEmployee: async (employeeId?: string | null, employeeEmail?: string | null) => {
         const allBudgetedHoursResult = await projectRepository.fetchAllBudgetedHours();
         
         if (allBudgetedHoursResult.error) {
@@ -74,10 +101,15 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
           console.log("No budgeted hours data found");
           return { data: [], error: null };
         }
-        
         // Build inverted index (single pass, transforms all items)
         const index = buildBudgetedHoursIndex(allBudgetedHoursResult.data);
-        const employeeData = index.get(employeeEmail) || [];
+        const idKey = typeof employeeId === "string" ? employeeId.trim() : "";
+        const emailKey = typeof employeeEmail === "string" ? employeeEmail.trim().toLowerCase() : "";
+
+        const employeeData =
+          (idKey ? index.byEmployeeId.get(idKey) : undefined) ||
+          (emailKey ? index.byEmail.get(emailKey) : undefined) ||
+          [];
         
         return { data: employeeData, error: null };
       },

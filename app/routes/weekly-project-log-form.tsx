@@ -11,7 +11,7 @@ export default function WeeklyProjectLogForm() {
 
   useEffect(() => {
     const fetchProjectData = async () => {
-      if (!mondayProfile?.email) {
+      if (!mondayProfile?.employeeId && !mondayProfile?.email) {
         setIsLoadingData(false);
         return;
       }
@@ -22,7 +22,10 @@ export default function WeeklyProjectLogForm() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email: mondayProfile.email }),
+          body: JSON.stringify({
+            employeeId: mondayProfile.employeeId,
+            email: mondayProfile.email,
+          }),
         });
 
         const data = await response.json();
@@ -47,7 +50,7 @@ export default function WeeklyProjectLogForm() {
     };
 
     fetchProjectData();
-  }, [mondayProfile?.email]);
+  }, [mondayProfile?.employeeId, mondayProfile?.email]);
 
   if (isSessionLoading || mondayProfile === null) {
     return <LoadingSpinner message="Loading session..." />;
