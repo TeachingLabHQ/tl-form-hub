@@ -121,7 +121,7 @@ tl-form-hub/
 
 3. **Set up environment variables**
    
-   Create a `.env` file in the root directory:
+   Create a `.env` file in the root directory (The env file is stored securely in 1Password):
    ```env
    # Supabase Configuration
    SUPABASE_URL=your_supabase_url
@@ -153,7 +153,7 @@ tl-form-hub/
 
 7. **Configure Edge Function environment variables**
    
-   Create `supabase/.env`:
+   Create `supabase/.env` (The env file is stored securely in 1Password):
    ```bash
    RESEND_API_KEY=re_your_actual_api_key_here
    SUPPORT_EMAIL=accountspayable@teachinglab.org
