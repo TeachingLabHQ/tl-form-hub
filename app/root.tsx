@@ -20,7 +20,6 @@ import { ColorSchemeScript, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import "./tailwind.css";
 import { SessionProvider } from "./components/auth/context/sessionContext";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import BackgroundImg from "./assets/background.png";
 
 export const meta: MetaFunction = () => {
@@ -76,11 +75,9 @@ export default function App() {
     <SessionProvider>
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <ProtectedRoute>
-          <div className="flex-grow">
-            <Outlet />
-          </div>
-        </ProtectedRoute>
+        <div className="flex-grow">
+          <Outlet />
+        </div>
         <Footer />
       </div>
     </SessionProvider>

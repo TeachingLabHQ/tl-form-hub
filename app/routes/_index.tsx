@@ -1,9 +1,8 @@
-import { useSession } from "~/components/auth/hooks/useSession";
-import { FormHubLanding } from "~/components/form-hub-landing";
 import { LoginPage } from "~/components/auth/login-page";
 import BackgroundImg from "../assets/background.png";
-import { useEffect } from "react";
-import { useNavigate } from "@remix-run/react";
+import { useSearchParams } from "@remix-run/react";
+import { redirect, type LoaderFunctionArgs } from "@remix-run/node";
+import { createSupabaseServerClient } from "../../supabase/supabase.server";
 export const headers = () => {
   return {
     "Cross-Origin-Opener-Policy": "unsafe-none",
@@ -11,14 +10,22 @@ export const headers = () => {
   };
 };
 
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { supabaseClient, headers } = createSupabaseServerClient(request);
+  const {
+    data: { session },
+  } = await supabaseClient.auth.getSession();
+
+  if (session) {
+    throw redirect("/dashboard", { headers });
+  }
+
+  return null;
+};
+
 export default function Index() {
-  const { session, isAuthenticated, errorMessage } = useSession();
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
+  const [searchParams] = useSearchParams();
+  const errorMessage = searchParams.get("authError") ?? "";
 
   return (
     <div
