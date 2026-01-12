@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "@remix-run/react";
+import { Link, useNavigate, useNavigation } from "@remix-run/react";
 import {
   Button,
   Card,
@@ -16,13 +16,30 @@ import {
   IconReceipt,
 } from "@tabler/icons-react";
 import TLLogo from "../assets/tllogo.png";
+import { LoadingSpinner } from "~/utils/LoadingSpinner";
 
 interface FormHubLandingProps {
   userName: string;
 }
 
 export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
+  const navigation = useNavigation();
   const navigate = useNavigate();
+
+  // Check if we are currently transitioning to any route
+  const isLoading = navigation.state === "loading";
+
+  if (isLoading) {
+    let message = "Loading...";
+    if (navigation.location.pathname === "/weekly-project-log-form") {
+      message = "Loading Weekly Project Log...";
+    } else if (navigation.location.pathname === "/staffing-dashboard") {
+      message = "Loading Staffing Dashboard...";
+    } else if (navigation.location.pathname === "/vendor-payment-form") {
+      message = "Loading Vendor Payment Form...";
+    }
+    return <LoadingSpinner message={message} />;
+  }
 
   return (
     <Container size="lg" py="xl">
@@ -79,13 +96,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
                 to="/weekly-project-log-form"
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
-                prefetch="render"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setTimeout(() => {
-                    navigate("/weekly-project-log-form");
-                  }, 50);
-                }}
+                prefetch="intent"
               >
                 Submit Weekly Hours
               </Button>
