@@ -24,7 +24,9 @@ function positionText(x: number, width: number, text: string, font: any, fontSiz
 
 // Helper function to wrap text
 function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
-  const words = text.split(' ');
+  // Sanitize text to remove newlines which cause WinAnsi encoding errors
+  const sanitized = text.replace(/[\n\r]+/g, ' ');
+  const words = sanitized.split(' ');
   const lines: string[] = [];
   let currentLine = '';
 
