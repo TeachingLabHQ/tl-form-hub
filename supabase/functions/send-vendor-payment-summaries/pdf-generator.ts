@@ -1,9 +1,9 @@
-import { PDFDocument, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
+import { PDFDocument, PDFPage, PDFFont, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
 import { PersonProjectSummary } from "./index.ts";
 
 
 // Helper function to draw a line
-function drawLine(page: any, startX: number, startY: number, endX: number, endY: number) {
+function drawLine(page: PDFPage, startX: number, startY: number, endX: number, endY: number) {
   page.drawLine({
     start: { x: startX, y: startY },
     end: { x: endX, y: endY },
@@ -25,8 +25,28 @@ function sanitizeNoteForWinAnsi(text: string): string {
   );
 }
 
+function formatMoney(amount: number): string {
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function normalizeTaskName(taskName: string): string {
+  return taskName
+    .trim()
+    // Strip common "Task - " / "Task – " prefixes if present
+    .replace(/^task\s*[–-]\s*/i, "")
+    .trim();
+}
+
+function isContentDevelopmentTask(taskName: string): boolean {
+  const normalized = normalizeTaskName(taskName).toLowerCase();
+  return normalized === "content development";
+}
+
 // Helper function to position text based on alignment
-function positionText(x: number, width: number, text: string, font: any, fontSize: number, alignment = 'left'): number {
+function positionText(x: number, width: number, text: string, font: PDFFont, fontSize: number, alignment = 'left'): number {
   const textWidth = font.widthOfTextAtSize(text, fontSize);
   if (alignment === 'right') {
     return x + width - textWidth - 10; // 10px padding from right
@@ -36,7 +56,7 @@ function positionText(x: number, width: number, text: string, font: any, fontSiz
 }
 
 // Helper function to wrap text
-function wrapText(text: string, maxWidth: number, font: any, fontSize: number, sanitize = false): string[] {
+function wrapText(text: string, maxWidth: number, font: PDFFont, fontSize: number, sanitize = false): string[] {
   const normalized = sanitize ? sanitizeNoteForWinAnsi(text) : text;
   const words = normalized.split(' ');
   const lines: string[] = [];
@@ -236,7 +256,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     });
 
     // Function to draw table header (remains largely the same)
-    const drawTableHeader = (currentPage: any, startY: number): number => {
+    const drawTableHeader = (currentPage: PDFPage, startY: number): number => {
         const headerHeight = baseLineHeight * 1.5;
         currentPage.drawRectangle({
           x: margin,
@@ -358,23 +378,78 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     });
 
     // Add total for this person on this project
-    const totalLineHeight = baseLineHeight * 1.5;
-    if (y - totalLineHeight < contentBottomMargin) {
-        page = pdfDoc.addPage([595, 842]);
-        y = page.getHeight() - margin;
-    }
-    y -= totalLineHeight;
+    const totals = personSummary.detailedEntries.reduce(
+      (acc, entry) => {
+        const pay = typeof entry.entry_pay === "number" && !Number.isNaN(entry.entry_pay) ? entry.entry_pay : 0;
+        if (isContentDevelopmentTask(entry.task_name)) {
+          acc.contentDevelopment += pay;
+        } else {
+          acc.otherServices += pay;
+        }
+        return acc;
+      },
+      { contentDevelopment: 0, otherServices: 0 },
+    );
 
-    // Use personSummary.totalPayForProject for the displayed total as it's pre-calculated
-    const totalText = `Total Payment: $${personSummary.totalPayForProject.toFixed(2)}`;
-    const totalX = positionText(margin, pageWidth, totalText, helveticaBold, 14, 'right');
-    page.drawText(totalText, {
-      x: totalX,
-      y,
-      size: 14,
-      font: helveticaBold,
-      color: rgb(0, 0, 0),
-    });
+    // Only show the content-dev breakdown for tiered content development tasks (detected by presence of that task).
+    const showContentDevelopmentBreakdown = totals.contentDevelopment > 0;
+
+    const regularTotalLineHeight = baseLineHeight * 1.35;
+    const boldTotalLineHeight = baseLineHeight * 1.5;
+    const neededHeight = showContentDevelopmentBreakdown
+      ? (regularTotalLineHeight * 2 + boldTotalLineHeight)
+      : boldTotalLineHeight;
+
+    if (y - neededHeight < contentBottomMargin) {
+      page = pdfDoc.addPage([595, 842]);
+      y = page.getHeight() - margin;
+    }
+
+    const totalsLabelX = margin + pageWidth * 0.55;
+    const drawTotalsRow = (
+      label: string,
+      amount: number,
+      font: PDFFont,
+      size: number,
+      lineHeight: number,
+    ) => {
+      y -= lineHeight;
+      page.drawText(label, {
+        x: totalsLabelX,
+        y,
+        size,
+        font,
+        color: rgb(0, 0, 0),
+      });
+
+      const amountText = `$ ${formatMoney(amount)}`;
+      const amountX = positionText(margin, pageWidth, amountText, font, size, "right");
+      page.drawText(amountText, {
+        x: amountX,
+        y,
+        size,
+        font,
+        color: rgb(0, 0, 0),
+      });
+    };
+
+    if (showContentDevelopmentBreakdown) {
+      drawTotalsRow("Total Content Development:", totals.contentDevelopment, helveticaFont, 12, regularTotalLineHeight);
+      drawTotalsRow("Total Other Services:", totals.otherServices, helveticaFont, 12, regularTotalLineHeight);
+      drawTotalsRow("Total Payment:", personSummary.totalPayForProject, helveticaBold, 14, boldTotalLineHeight);
+    } else {
+      // Backwards-compatible single-line total
+      y -= boldTotalLineHeight;
+      const totalText = `Total Payment: $ ${formatMoney(personSummary.totalPayForProject)}`;
+      const totalX = positionText(margin, pageWidth, totalText, helveticaBold, 14, "right");
+      page.drawText(totalText, {
+        x: totalX,
+        y,
+        size: 14,
+        font: helveticaBold,
+        color: rgb(0, 0, 0),
+      });
+    }
 
     // Add footer (remains the same)
     const footerY = margin / 2;
