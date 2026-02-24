@@ -12,6 +12,19 @@ function drawLine(page: any, startX: number, startY: number, endX: number, endY:
   });
 }
 
+// Notes can include pasted control chars (tabs, etc.) that WinAnsi can't encode.
+// Sanitize notes before measuring/drawing to prevent PDF generation crashes.
+function sanitizeNoteForWinAnsi(text: string): string {
+  return (
+    text
+      // collapse line breaks and tabs to spaces
+      .replace(/[\t\r\n]+/g, " ")
+      // strip remaining ASCII control chars (except space)
+      // deno-lint-ignore no-control-regex
+      .replace(new RegExp("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]", "g"), "")
+  );
+}
+
 // Helper function to position text based on alignment
 function positionText(x: number, width: number, text: string, font: any, fontSize: number, alignment = 'left'): number {
   const textWidth = font.widthOfTextAtSize(text, fontSize);
@@ -23,10 +36,9 @@ function positionText(x: number, width: number, text: string, font: any, fontSiz
 }
 
 // Helper function to wrap text
-function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
-  // Sanitize text to remove newlines which cause WinAnsi encoding errors
-  const sanitized = text.replace(/[\n\r]+/g, ' ');
-  const words = sanitized.split(' ');
+function wrapText(text: string, maxWidth: number, font: any, fontSize: number, sanitize = false): string[] {
+  const normalized = sanitize ? sanitizeNoteForWinAnsi(text) : text;
+  const words = normalized.split(' ');
   const lines: string[] = [];
   let currentLine = '';
 
@@ -259,7 +271,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       const taskLines = wrapText(entry.task_name, columns[1].width - wrapWidthMargin, helveticaFont, 10);
       const noteText = typeof entry.note === "string" ? entry.note : "";
       const noteLines = noteText
-        ? wrapText(noteText, columns[2].width - wrapWidthMargin, helveticaFont, 10)
+        ? wrapText(noteText, columns[2].width - wrapWidthMargin, helveticaFont, 10, true)
         : [];
       const rowHeight = calculateRowHeight([taskLines, noteLines], baseLineHeight * 1.2);
 
@@ -304,7 +316,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
 
       // Draw Note column (wrapped)
       noteLines.forEach((line, i) => {
-        page.drawText(line, {
+        page.drawText(sanitizeNoteForWinAnsi(line), {
           x: columnPositions[2] + 10, // Left align with padding
           y: rowStartY - textOffsetY - (i * 12),
           size: 10,
