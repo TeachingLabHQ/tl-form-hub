@@ -218,6 +218,14 @@ export const dataEvaluationTaskOptions: TaskDetails[] = [
     "Tier 4": null,
     maxHours: null,
   },
+  {
+    taskName: "Analysis, Visualization & Interpretation",
+    "Tier 1": 30,
+    "Tier 2": null,
+    "Tier 3": null,
+    "Tier 4": null,
+    maxHours: null,
+  },
 ]
 
 
