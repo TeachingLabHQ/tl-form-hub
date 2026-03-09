@@ -91,6 +91,10 @@ export default function VendorPaymentFormRoute() {
               type: "contentDeveloper",
               value: "Tier 4",
             },
+              {
+                type: "dataEvaluation",
+                value: "Tier 1",
+              },
             
             ],
           });
@@ -120,7 +124,10 @@ export default function VendorPaymentFormRoute() {
               type: "contentDeveloper",
               value: "Tier 2",
             },
-            
+            {
+              type: "dataEvaluation",
+              value: "Tier 1",
+            },
             ],
           });
         }
@@ -147,6 +154,10 @@ export default function VendorPaymentFormRoute() {
             },
             {
               type: "presentationDesign",
+              value: "Tier 1",
+            },
+            {
+              type: "dataEvaluation",
               value: "Tier 1",
             },
             {
@@ -185,6 +196,10 @@ export default function VendorPaymentFormRoute() {
               type: "dataEvaluation",
               value: "Tier 1",
             },
+            {
+              type: "dataEvaluation",
+              value: "Tier 1",
+            },
             ],
           });
         }
@@ -213,7 +228,10 @@ export default function VendorPaymentFormRoute() {
               type: "contentDeveloper",
               value: "Tier 2",
             },
-            
+            {
+              type: "dataEvaluation",
+              value: "Tier 1",
+            },
             ],
           });
         }
