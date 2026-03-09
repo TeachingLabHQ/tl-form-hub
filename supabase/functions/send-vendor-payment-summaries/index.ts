@@ -9,6 +9,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { generateProjectPDF } from "./pdf-generator.ts";
 import { sendProjectEmail } from "./utils.ts";
+import { PersonProjectSummary } from "./types.ts";
 
 // --- Configuration ---
 const BATCH_SIZE = 15; // Process 15 emails per invocation
@@ -27,32 +28,10 @@ const getErrorMessage = (error: unknown): string => {
   return 'Unknown error occurred';
 };
 
-// --- Define interfaces ---
-
-//note to self: The function first fetch all submission entries available for the current month. By going through each submission and each entry, we are able to group the entries by project and then by person in the projectsMap.
+//note to self: The function first fetch all submission entries available for the current month. By looping through each submission and each entry, we are able to group the entries by project and then by person in the projectsMap.
 //Then, we loop through each project and each person within the project. We check if we have already sent an email to this person for this project this month. If we have, we skip to the next person.
 //If we have not sent an email to this person for this project this month, we generate a PDF and send an email to the person.
 //We then update the email log to 'sent' status.
-
-// Represents a single detailed work entry
-interface DetailedEntry {
-  task_name: string;
-  note?: string | null;
-  work_hours: number;
-  rate: number;
-  entry_pay: number;
-  submission_date?: string; // Include submission_date field
-}
-
-// Represents one person's summary for a specific project
-export interface PersonProjectSummary {
-  cf_name: string;
-  cf_email: string;
-  cf_tier: string;
-  totalPayForProject: number; // This person's total pay for this project
-  detailedEntries: DetailedEntry[]; // This person's entries for this project
-  submission_date: string;
-}
 
 // Represents all data for a single project, grouped by person
 interface ProjectGroupedData {
@@ -184,7 +163,7 @@ try {
           );
 
           if (existingEntryIndex > -1) {
-            // Aggregate hours and pay if task already exists on the same day
+            //if task exists, aggregate hours and pay if task already exists on the same day
             personSummary.detailedEntries[existingEntryIndex].work_hours += entry.work_hours; 
             personSummary.detailedEntries[existingEntryIndex].entry_pay += entryPay;
             // Assuming rate is consistent for the same task by the same person
@@ -193,8 +172,8 @@ try {
             personSummary.detailedEntries.push({
               task_name: taskName,
               note,
-              work_hours: entry.work_hours, // Assuming these are valid numbers
-              rate: entry.rate, // Assuming rate is valid
+              work_hours: entry.work_hours,
+              rate: entry.rate,
               entry_pay: entryPay,
               submission_date: submission.submission_date,
             });
