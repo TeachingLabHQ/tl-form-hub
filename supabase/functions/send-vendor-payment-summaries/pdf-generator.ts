@@ -1,5 +1,6 @@
-import { PDFDocument, PDFPage, PDFFont, rgb, StandardFonts } from "https://esm.sh/pdf-lib@1.17.1";
-import { PersonProjectSummary } from "./index.ts";
+import { PDFDocument, PDFPage, PDFFont, rgb } from "https://esm.sh/pdf-lib@1.17.1";
+import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1";
+import { PersonProjectSummary } from "./types.ts";
 
 
 // Helper function to draw a line
@@ -23,6 +24,48 @@ function sanitizeNoteForWinAnsi(text: string): string {
       // deno-lint-ignore no-control-regex
       .replace(new RegExp("[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F]", "g"), "")
   );
+}
+
+const NOTO_SANS_REGULAR_URL =
+  "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf";
+const NOTO_SANS_BOLD_URL =
+  "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Bold.ttf";
+
+let cachedNotoSansRegularBytes: Uint8Array | null = null;
+let cachedNotoSansBoldBytes: Uint8Array | null = null;
+
+async function getNotoSansRegularBytes(): Promise<Uint8Array> {
+  if (cachedNotoSansRegularBytes) return cachedNotoSansRegularBytes;
+  const res = await fetch(NOTO_SANS_REGULAR_URL);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch Noto Sans Regular font: ${res.status} ${res.statusText}`);
+  }
+  cachedNotoSansRegularBytes = new Uint8Array(await res.arrayBuffer());
+  return cachedNotoSansRegularBytes;
+}
+
+async function getNotoSansBoldBytes(): Promise<Uint8Array> {
+  if (cachedNotoSansBoldBytes) return cachedNotoSansBoldBytes;
+  const res = await fetch(NOTO_SANS_BOLD_URL);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch Noto Sans Bold font: ${res.status} ${res.statusText}`);
+  }
+  cachedNotoSansBoldBytes = new Uint8Array(await res.arrayBuffer());
+  return cachedNotoSansBoldBytes;
+}
+
+function sanitizeTextForFont(text: string, font: PDFFont, fontSize: number): string {
+  // If the font can't encode a glyph, replace it with a visible ASCII marker to avoid crashing PDF generation.
+  let out = "";
+  for (const ch of [...text]) {
+    try {
+      font.widthOfTextAtSize(ch, fontSize);
+      out += ch;
+    } catch {
+      out += "[?]";
+    }
+  }
+  return out;
 }
 
 function formatMoney(amount: number): string {
@@ -58,7 +101,8 @@ function positionText(x: number, width: number, text: string, font: PDFFont, fon
 // Helper function to wrap text
 function wrapText(text: string, maxWidth: number, font: PDFFont, fontSize: number, sanitize = false): string[] {
   const normalized = sanitize ? sanitizeNoteForWinAnsi(text) : text;
-  const words = normalized.split(' ');
+  const safe = sanitizeTextForFont(normalized, font, fontSize);
+  const words = safe.split(' ');
   const lines: string[] = [];
   let currentLine = '';
 
@@ -131,8 +175,13 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
   try {
     const pdfDoc = await PDFDocument.create();
     let page = pdfDoc.addPage([595, 842]); // A4 size
-    const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    pdfDoc.registerFontkit(fontkit);
+    const [notoRegularBytes, notoBoldBytes] = await Promise.all([
+      getNotoSansRegularBytes(),
+      getNotoSansBoldBytes(),
+    ]);
+    const notoSansRegular = await pdfDoc.embedFont(notoRegularBytes, { subset: true });
+    const notoSansBold = await pdfDoc.embedFont(notoBoldBytes, { subset: true });
 
     const margin = 50;
     const contentBottomMargin = margin + 60; // Space for total/footer
@@ -145,7 +194,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       x: margin,
       y,
       size: 20,
-      font: helveticaBold,
+      font: notoSansBold,
       color: rgb(0, 0, 0),
     });
     y -= baseLineHeight * 1.5;
@@ -160,7 +209,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       x: margin,
       y,
       size: 16,
-      font: helveticaBold,
+      font: notoSansBold,
       color: rgb(0, 0, 0),
     });
     y -= baseLineHeight * 1.5;
@@ -170,7 +219,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       x: margin,
       y,
       size: 12,
-      font: helveticaFont,
+      font: notoSansRegular,
       color: rgb(0, 0, 0),
     });
     y -= baseLineHeight * 1.2;
@@ -186,7 +235,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         x: margin,
         y,
         size: 12,
-        font: helveticaFont,
+        font: notoSansRegular,
     });
     y -= baseLineHeight * 1.2;
 
@@ -195,7 +244,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         x: margin,
         y,
         size: 12,
-        font: helveticaFont,
+        font: notoSansRegular,
     });
     y -= baseLineHeight * 1.2;
 
@@ -204,7 +253,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         x: margin,
         y,
         size: 12,
-        font: helveticaFont,
+        font: notoSansRegular,
     });
     y -= baseLineHeight * 1.2;
 
@@ -213,19 +262,19 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         x: margin,
         y,
         size: 12,
-        font: helveticaFont,
+        font: notoSansRegular,
     });
     y -= baseLineHeight * 1.0;
 
     // Tier (with text wrapping)
     const tierText = `Tier: ${personSummary.cf_tier}`;
-    const tierLines = wrapText(tierText, pageWidth - 20, helveticaFont, 12); // 20px margin buffer
+    const tierLines = wrapText(tierText, pageWidth - 20, notoSansRegular, 12); // 20px margin buffer
     tierLines.forEach((line, index) => {
         page.drawText(line, {
             x: margin,
             y: y - (index * baseLineHeight),
             size: 12,
-            font: helveticaFont,
+            font: notoSansRegular,
         });
     });
     y -= (tierLines.length * baseLineHeight) + baseLineHeight; // Adjust y position and add space before table
@@ -267,12 +316,12 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         });
 
         columns.forEach((column, i) => {
-          const textX = positionText(columnPositions[i], column.width, column.header, helveticaBold, 11, column.align);
+          const textX = positionText(columnPositions[i], column.width, column.header, notoSansBold, 11, column.align);
           currentPage.drawText(column.header, {
             x: textX,
             y: startY - (headerHeight / 2) + 1,
             size: 11,
-            font: helveticaBold,
+            font: notoSansBold,
             color: rgb(0, 0, 0),
           });
         });
@@ -288,10 +337,10 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     sortedEntries.forEach((entry) => {
       // Calculate dynamic row height based on Task + Note column wrapping
       const wrapWidthMargin = 15;
-      const taskLines = wrapText(entry.task_name, columns[1].width - wrapWidthMargin, helveticaFont, 10);
+      const taskLines = wrapText(entry.task_name, columns[1].width - wrapWidthMargin, notoSansRegular, 10);
       const noteText = typeof entry.note === "string" ? entry.note : "";
       const noteLines = noteText
-        ? wrapText(noteText, columns[2].width - wrapWidthMargin, helveticaFont, 10, true)
+        ? wrapText(noteText, columns[2].width - wrapWidthMargin, notoSansRegular, 10, true)
         : [];
       const rowHeight = calculateRowHeight([taskLines, noteLines], baseLineHeight * 1.2);
 
@@ -319,7 +368,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
         x: columnPositions[0] + 10, // Left align with padding
         y: rowStartY - textOffsetY,
         size: 10,
-        font: helveticaFont,
+        font: notoSansRegular,
         color: rgb(0, 0, 0),
       });
 
@@ -329,7 +378,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
           x: columnPositions[1] + 10, // Left align with padding
           y: rowStartY - textOffsetY - (i * 12),
           size: 10,
-          font: helveticaFont,
+          font: notoSansRegular,
           color: rgb(0, 0, 0),
         });
       });
@@ -340,7 +389,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
           x: columnPositions[2] + 10, // Left align with padding
           y: rowStartY - textOffsetY - (i * 12),
           size: 10,
-          font: helveticaFont,
+          font: notoSansRegular,
           color: rgb(0, 0, 0),
         });
       });
@@ -353,12 +402,12 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       ];
 
       numericValues.forEach(({ value, columnIndex }) => {
-        const textX = positionText(columnPositions[columnIndex], columns[columnIndex].width, value, helveticaFont, 10, 'right');
+        const textX = positionText(columnPositions[columnIndex], columns[columnIndex].width, value, notoSansRegular, 10, 'right');
         page.drawText(value, {
           x: textX,
           y: rowStartY - textOffsetY,
           size: 10,
-          font: helveticaFont,
+          font: notoSansRegular,
           color: rgb(0, 0, 0),
         });
       });
@@ -434,19 +483,19 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     };
 
     if (showContentDevelopmentBreakdown) {
-      drawTotalsRow("Total Content Development:", totals.contentDevelopment, helveticaFont, 12, regularTotalLineHeight);
-      drawTotalsRow("Total Other Services:", totals.otherServices, helveticaFont, 12, regularTotalLineHeight);
-      drawTotalsRow("Total Payment:", personSummary.totalPayForProject, helveticaBold, 14, boldTotalLineHeight);
+      drawTotalsRow("Total Content Development:", totals.contentDevelopment, notoSansRegular, 12, regularTotalLineHeight);
+      drawTotalsRow("Total Other Services:", totals.otherServices, notoSansRegular, 12, regularTotalLineHeight);
+      drawTotalsRow("Total Payment:", personSummary.totalPayForProject, notoSansBold, 14, boldTotalLineHeight);
     } else {
       // Backwards-compatible single-line total
       y -= boldTotalLineHeight;
       const totalText = `Total Payment: $ ${formatMoney(personSummary.totalPayForProject)}`;
-      const totalX = positionText(margin, pageWidth, totalText, helveticaBold, 14, "right");
+      const totalX = positionText(margin, pageWidth, totalText, notoSansBold, 14, "right");
       page.drawText(totalText, {
         x: totalX,
         y,
         size: 14,
-        font: helveticaBold,
+        font: notoSansBold,
         color: rgb(0, 0, 0),
       });
     }
@@ -458,8 +507,8 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     const footerText2 = `Please contact ${supportEmail} for any questions.`;
     // Need to ensure footer is drawn on the *last* page used
     const lastPage = pdfDoc.getPages()[pdfDoc.getPageCount() - 1];
-    lastPage.drawText(footerText1, { x: margin, y: footerY + 12, size: 9, font: helveticaFont, color: rgb(0.5, 0.5, 0.5) });
-    lastPage.drawText(footerText2, { x: margin, y: footerY, size: 9, font: helveticaFont, color: rgb(0.5, 0.5, 0.5) });
+    lastPage.drawText(footerText1, { x: margin, y: footerY + 12, size: 9, font: notoSansRegular, color: rgb(0.5, 0.5, 0.5) });
+    lastPage.drawText(footerText2, { x: margin, y: footerY, size: 9, font: notoSansRegular, color: rgb(0.5, 0.5, 0.5) });
 
     // Save the PDF
     console.log(`Saving PDF for ${personSummary.cf_email} / ${projectName}...`);

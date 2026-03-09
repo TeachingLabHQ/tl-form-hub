@@ -1,5 +1,8 @@
 {
   "imports": {},
+  "tasks": {
+    "test": "deno test --allow-net=esm.sh,raw.githubusercontent.com,deno.land pdf-generator.test.ts"
+  },
   "compilerOptions": {
     "strict": true,
     "noImplicitAny": true,

@@ -1,5 +1,5 @@
 import { Resend } from "https://esm.sh/resend@2.0.0";
-import { PersonProjectSummary } from "./index.ts";
+import { PersonProjectSummary } from "./types.ts";
 
 // Initialize Resend client
 const resend = new Resend(Deno.env.get("RESEND_API_KEY")); // Env var dones't work for localhost testing
