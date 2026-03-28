@@ -234,7 +234,7 @@ export const REMINDER_ITEMS: ReminderItem[] = [
   {
     title: 
     (<>
-    - For More information on how to fill out your project log, please reference our <Link to="https://drive.google.com/file/d/1VdDQCeYWjFGWn6CjKp6PpsbYODgaDzMq/view" target="_blank" style={{ textDecoration: "underline" }}>Project Log SOP</Link>
+    For more information on how to fill out your weekly project logs, please reference our <Link to="https://drive.google.com/file/d/1DXV59kJTC8iDPK2Nw5bqLpBq9XySzerV/view" target="_blank" style={{ textDecoration: "underline" }}>Project Log 101 One-Pager</Link>, or for even more information, our <Link to="https://drive.google.com/file/d/1VdDQCeYWjFGWn6CjKp6PpsbYODgaDzMq/view" target="_blank" style={{ textDecoration: "underline" }}>Project Log SOP</Link>.
       </>)
     ,
     content:
