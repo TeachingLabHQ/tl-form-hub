@@ -180,8 +180,8 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       getNotoSansRegularBytes(),
       getNotoSansBoldBytes(),
     ]);
-    const notoSansRegular = await pdfDoc.embedFont(notoRegularBytes, { subset: true });
-    const notoSansBold = await pdfDoc.embedFont(notoBoldBytes, { subset: true });
+    const notoSansRegular = await pdfDoc.embedFont(notoRegularBytes);
+    const notoSansBold = await pdfDoc.embedFont(notoBoldBytes);
 
     const margin = 50;
     const contentBottomMargin = margin + 60; // Space for total/footer

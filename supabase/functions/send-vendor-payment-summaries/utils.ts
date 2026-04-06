@@ -17,7 +17,14 @@ export async function sendProjectEmail(
     try {
       const supportEmail = Deno.env.get("SUPPORT_EMAIL") || "support@example.com";
   
-      const pdfBase64 = btoa(String.fromCharCode(...pdf));
+      const pdfBase64 = (() => {
+        let binary = "";
+        const chunkSize = 8192;
+        for (let i = 0; i < pdf.length; i += chunkSize) {
+          binary += String.fromCharCode(...pdf.subarray(i, i + chunkSize));
+        }
+        return btoa(binary);
+      })();
       console.log(`PDF Base64 length: ${pdfBase64.length}`);
       const reportMonthYear = new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
       // Make filename person-specific
