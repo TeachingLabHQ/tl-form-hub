@@ -12,7 +12,8 @@ import { sendProjectEmail } from "./utils.ts";
 import { PersonProjectSummary } from "./types.ts";
 
 // --- Configuration ---
-const BATCH_SIZE = 15; // Process 15 emails per invocation
+const BATCH_SIZE = 5; // Process fewer project/person summaries per invocation
+const SUBMISSION_PAGE_SIZE = 50; // Scan monthly submissions in pages to cap peak memory use
 const EMAIL_DELAY_MS = 600; // 600ms between emails (Resend allows 2 requests/second)
 
 // --- Helper function for delay ---
@@ -28,15 +29,71 @@ const getErrorMessage = (error: unknown): string => {
   return 'Unknown error occurred';
 };
 
-//note to self: The function first fetch all submission entries available for the current month. By looping through each submission and each entry, we are able to group the entries by project and then by person in the projectsMap.
-//Then, we loop through each project and each person within the project. We check if we have already sent an email to this person for this project this month. If we have, we skip to the next person.
-//If we have not sent an email to this person for this project this month, we generate a PDF and send an email to the person.
-//We then update the email log to 'sent' status.
+interface SubmissionEntry {
+  task_name: string;
+  note?: string | null;
+  project_name?: string | null;
+  work_hours: number;
+  rate: number;
+  entry_pay: number | null;
+}
 
-// Represents all data for a single project, grouped by person
-interface ProjectGroupedData {
+interface SubmissionRecord {
+  cf_email: string;
+  cf_name: string;
+  cf_tier: string;
+  submission_date: string;
+  entries: SubmissionEntry[] | null;
+}
+
+interface PendingCombo {
   projectName: string;
-  peopleSummaries: PersonProjectSummary[]; // Array of summaries, one per person
+  personSummary: PersonProjectSummary;
+}
+
+const getComboKey = (projectName: string, personEmail: string): string =>
+  `${projectName}|${personEmail}`;
+
+const createPersonSummary = (submission: SubmissionRecord): PersonProjectSummary => ({
+  cf_name: submission.cf_name,
+  cf_email: submission.cf_email,
+  cf_tier: submission.cf_tier,
+  totalPayForProject: 0,
+  detailedEntries: [],
+  submission_date: submission.submission_date,
+});
+
+const updatePersonSummaryTotals = (
+  personSummary: PersonProjectSummary,
+  submission: SubmissionRecord,
+  entry: SubmissionEntry,
+) => {
+  const entryPay =
+    typeof entry.entry_pay === "number" && !Number.isNaN(entry.entry_pay) ? entry.entry_pay : 0;
+  const taskName = entry.task_name;
+  const note = entry.note;
+  const existingEntryIndex = personSummary.detailedEntries.findIndex(
+    (detailedEntry) =>
+      detailedEntry.task_name === taskName &&
+      detailedEntry.submission_date === submission.submission_date &&
+      detailedEntry.note === note,
+  );
+
+  if (existingEntryIndex > -1) {
+    personSummary.detailedEntries[existingEntryIndex].work_hours += entry.work_hours;
+    personSummary.detailedEntries[existingEntryIndex].entry_pay += entryPay;
+  } else {
+    personSummary.detailedEntries.push({
+      task_name: taskName,
+      note,
+      work_hours: entry.work_hours,
+      rate: entry.rate,
+      entry_pay: entryPay,
+      submission_date: submission.submission_date,
+    });
+  }
+
+  personSummary.totalPayForProject += entryPay;
 }
 
 // Initialize Supabase client
@@ -73,118 +130,6 @@ try {
       const currentMonthISO = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
       console.log(`Processing submissions for previous month: ${previousMonthISO} to ${currentMonthISO}`);
 
-      // Get all submissions for the previous month
-      console.log("Fetching submissions from database...");
-      const { data: submissions, error: submissionsError } = await supabase
-        .from("vendor_payment_submissions")
-        .select(`
-          id,
-          cf_email,
-          cf_name,
-          cf_tier,
-          total_pay,
-          created_at,
-          submission_date,
-          entries:vendor_payment_entries(
-            task_name,
-            note,
-            project_name,
-            work_hours,
-            rate,
-            entry_pay
-          )
-        `)
-        .gte("submission_date", previousMonthISO)
-        //the current month's data won't be included until the 6th of the month
-        .lt("submission_date", currentMonthISO);
-
-      if (submissionsError) {
-        console.error(`Error fetching submissions: ${JSON.stringify(submissionsError)}`);
-        throw submissionsError;
-      }
-
-      console.log(`Found ${submissions?.length || 0} submissions`);
-      if (!submissions || submissions.length === 0) {
-        return new Response(
-          JSON.stringify({ message: `No submissions found for the previous month. ${previousMonthISO} to ${currentMonthISO} + ${submissions}`  }),
-          { status: 200, headers: { "Content-Type": "application/json" } }
-        );
-      }
-
-      // Group entries by project and then by person
-      console.log("Grouping entries by project and person...");
-      // Use: Map<string, ProjectGroupedData>
-      const projectsMap = new Map<string, ProjectGroupedData>();
-
-      for (const submission of submissions) {
-        // Ensure submission.entries is an array before iterating
-        const entries = Array.isArray(submission.entries) ? submission.entries : [];
-
-        for (const entry of entries) {
-          const projectName = entry.project_name || "Unassigned";
-          const personEmail = submission.cf_email; // Key for the person
-
-          // Ensure entry_pay is a valid number, default to 0 if not
-          const entryPay = typeof entry.entry_pay === 'number' && !isNaN(entry.entry_pay) ? entry.entry_pay : 0;
-
-          // Get or create project data
-          let projectData = projectsMap.get(projectName);
-          if (!projectData) {
-            projectData = {
-              projectName: projectName,
-              peopleSummaries: [], // Initialize as empty array
-            };
-            projectsMap.set(projectName, projectData);
-          }
-
-          // Find or create person's summary within the project
-          let personSummary = projectData.peopleSummaries.find(p => p.cf_email === personEmail);
-          if (!personSummary) {
-            personSummary = {
-              cf_name: submission.cf_name,
-              cf_email: submission.cf_email,
-              cf_tier: submission.cf_tier,
-              totalPayForProject: 0,
-              detailedEntries: [],
-              submission_date: submission.submission_date,
-            };
-            projectData.peopleSummaries.push(personSummary);
-          }
-
-          // Add or aggregate the detailed entry to the person's summary
-          const taskName = entry.task_name;
-          const note = entry.note;
-          //only aggregate entries if they have the same submission_date and task_name and notes
-          const existingEntryIndex = personSummary.detailedEntries.findIndex(
-            (de) =>
-              de.task_name === taskName &&
-              de.submission_date === submission.submission_date &&
-              de.note === note
-          );
-
-          if (existingEntryIndex > -1) {
-            //if task exists, aggregate hours and pay if task already exists on the same day
-            personSummary.detailedEntries[existingEntryIndex].work_hours += entry.work_hours; 
-            personSummary.detailedEntries[existingEntryIndex].entry_pay += entryPay;
-            // Assuming rate is consistent for the same task by the same person
-          } else {
-            // Push new entry if task doesn't exist
-            personSummary.detailedEntries.push({
-              task_name: taskName,
-              note,
-              work_hours: entry.work_hours,
-              rate: entry.rate,
-              entry_pay: entryPay,
-              submission_date: submission.submission_date,
-            });
-          }
-
-          // Update total pay for the person for this project
-          personSummary.totalPayForProject += entryPay;
-        }
-      }
-      console.log(`Grouped entries into ${projectsMap.size} projects.`);
-
       // --- NEW: Query existing email logs to filter out already-sent combinations ---
       console.log("Querying existing email logs to check what's already sent...");
       const { data: sentLogs, error: sentLogsError } = await supabase
@@ -210,31 +155,102 @@ try {
         console.log("No previously sent emails found for this month");
       }
 
-      // --- NEW: Build list of pending person/project combinations ---
-      console.log("Building list of pending email combinations...");
-      interface PendingCombo {
-        projectName: string;
-        personSummary: PersonProjectSummary;
-      }
-      const pendingCombos: PendingCombo[] = [];
+      // Scan submissions page-by-page and keep only a small set of unsent combos in memory.
+      console.log("Selecting the next batch of pending email combinations...");
+      const selectedCombos = new Map<string, PendingCombo>();
+      const remainingPendingKeys = new Set<string>();
+      let submissionOffset = 0;
+      let totalSubmissionsScanned = 0;
+      let foundAnySubmission = false;
 
-      for (const [projectName, projectData] of projectsMap.entries()) {
-        for (const personSummary of projectData.peopleSummaries) {
-          const key = `${projectName}|${personSummary.cf_email}`;
-          if (!sentSet.has(key)) {
-            pendingCombos.push({ projectName, personSummary });
-          } else {
-            console.log(`-- Skipping already-sent: ${personSummary.cf_email} / ${projectName}`);
+      while (true) {
+        const pageStart = submissionOffset;
+        const pageEnd = submissionOffset + SUBMISSION_PAGE_SIZE - 1;
+        console.log(`Fetching submissions page ${pageStart}-${pageEnd}...`);
+
+        const { data: submissionsPage, error: submissionsError } = await supabase
+          .from("vendor_payment_submissions")
+          .select(`
+            id,
+            cf_email,
+            cf_name,
+            cf_tier,
+            total_pay,
+            created_at,
+            submission_date,
+            entries:vendor_payment_entries(
+              task_name,
+              note,
+              project_name,
+              work_hours,
+              rate,
+              entry_pay
+            )
+          `)
+          .gte("submission_date", previousMonthISO)
+          .lt("submission_date", currentMonthISO)
+          .order("id", { ascending: true })
+          .range(pageStart, pageEnd);
+
+        if (submissionsError) {
+          console.error(`Error fetching submissions page ${pageStart}-${pageEnd}: ${JSON.stringify(submissionsError)}`);
+          throw submissionsError;
+        }
+
+        if (!submissionsPage || submissionsPage.length === 0) {
+          break;
+        }
+
+        foundAnySubmission = true;
+        totalSubmissionsScanned += submissionsPage.length;
+
+        for (const submission of submissionsPage as SubmissionRecord[]) {
+          const entries = Array.isArray(submission.entries) ? submission.entries : [];
+
+          for (const entry of entries) {
+            const projectName = entry.project_name || "Unassigned";
+            const comboKey = getComboKey(projectName, submission.cf_email);
+
+            if (sentSet.has(comboKey)) {
+              continue;
+            }
+
+            let combo = selectedCombos.get(comboKey);
+            if (!combo) {
+              if (selectedCombos.size >= BATCH_SIZE) {
+                remainingPendingKeys.add(comboKey);
+                continue;
+              }
+
+              combo = {
+                projectName,
+                personSummary: createPersonSummary(submission),
+              };
+              selectedCombos.set(comboKey, combo);
+            }
+
+            updatePersonSummaryTotals(combo.personSummary, submission, entry);
           }
         }
+
+        if (submissionsPage.length < SUBMISSION_PAGE_SIZE) {
+          break;
+        }
+
+        submissionOffset += SUBMISSION_PAGE_SIZE;
       }
 
-      console.log(`Total pending emails: ${pendingCombos.length}`);
-      
-      // --- NEW: Limit to batch size ---
-      const batch = pendingCombos.slice(0, BATCH_SIZE);
-      const remainingAfterBatch = pendingCombos.length - batch.length;
-      console.log(`Processing batch of ${batch.length} emails (${remainingAfterBatch} will remain after this batch)`);
+      console.log(`Scanned ${totalSubmissionsScanned} submissions to build the next batch.`);
+      if (!foundAnySubmission) {
+        return new Response(
+          JSON.stringify({ message: `No submissions found for the previous month. ${previousMonthISO} to ${currentMonthISO}` }),
+          { status: 200, headers: { "Content-Type": "application/json" } }
+        );
+      }
+
+      const batch = Array.from(selectedCombos.values());
+      const remainingAfterBatch = remainingPendingKeys.size;
+      console.log(`Processing batch of ${batch.length} emails (${remainingAfterBatch} additional combos remain)`); 
 
       // Process the batch
       let processedEmailCount = 0;
