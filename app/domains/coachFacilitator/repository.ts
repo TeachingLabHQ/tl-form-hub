@@ -1,4 +1,4 @@
-import { compareTwoStrings } from "~/components/weekly-project-log/utils";
+import { compareTwoStrings } from "~/utils/string";
 import { Errorable } from "../../utils/errorable";
 import { fetchMondayData } from "../utils";
 import { extractTier } from "./utils";

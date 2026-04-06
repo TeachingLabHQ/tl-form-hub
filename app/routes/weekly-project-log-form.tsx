@@ -1,72 +1,72 @@
-import { useEffect, useState } from "react";
-import { useSession } from "~/components/auth/hooks/useSession";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { AccessDeniedState } from "~/components/vendor-payment-form/access-denied-state";
 import { ProjectLogForm } from "~/components/weekly-project-log/project-log-form";
-import { LoadingSpinner } from "~/utils/LoadingSpinner";
+import { projectRepository } from "~/domains/project/repository";
+import { projectService } from "~/domains/project/service";
+import { requireMondayProfile } from "~/utils/auth.server";
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { mondayProfile, headers } = await requireMondayProfile(request);
+
+  if (mondayProfile.businessFunction === "contractor") {
+    return json(
+      {
+        mondayProfile,
+        denied: true,
+        deniedMessage:
+          "This form is only accessible to FTE/PTE employees. If you believe this is an error, please contact your administrator.",
+        projectData: null,
+      },
+      { headers }
+    );
+  }
+
+  const newProjectService = projectService(projectRepository());
+  // Await the data to block hydration issues with defer
+  const [employeeBudgetedHours, projectSourceNames] = await Promise.all([
+    newProjectService.fetchBudgetedHoursByEmployee(
+      mondayProfile.employeeId,
+      mondayProfile.email
+    ),
+    newProjectService.fetchProjectSourceNames(),
+  ]);
+
+  const projectData = {
+    employeeBudgetedHours: employeeBudgetedHours.data || [],
+    projectSourceNames: projectSourceNames.data || [],
+  };
+
+  return json(
+    {
+      mondayProfile,
+      denied: false,
+      deniedMessage: "",
+      projectData,
+    },
+    { headers }
+  );
+};
 
 export default function WeeklyProjectLogForm() {
-  const { mondayProfile, isLoading: isSessionLoading } = useSession();
-  const [projectData, setProjectData] = useState<any>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
+  const { denied, deniedMessage, projectData, mondayProfile } =
+    useLoaderData<typeof loader>();
 
-  useEffect(() => {
-    const fetchProjectData = async () => {
-      if (!mondayProfile?.employeeId && !mondayProfile?.email) {
-        setIsLoadingData(false);
-        return;
-      }
-
-      try {
-        const response = await fetch("/api/weekly-project-log/data", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            employeeId: mondayProfile.employeeId,
-            email: mondayProfile.email,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          console.error("Error fetching project data:", data.error);
-        }
-
-        setProjectData({
-          employeeBudgetedHours: data.employeeBudgetedHours || [],
-          projectSourceNames: data.projectSourceNames || [],
-        });
-      } catch (error) {
-        console.error("Error fetching project data:", error);
-        setProjectData({
-          employeeBudgetedHours: [],
-          projectSourceNames: [],
-        });
-      } finally {
-        setIsLoadingData(false);
-      }
-    };
-
-    fetchProjectData();
-  }, [mondayProfile?.employeeId, mondayProfile?.email]);
-
-  if (isSessionLoading || mondayProfile === null) {
-    return <LoadingSpinner message="Loading session..." />;
-  }
-
-  if (mondayProfile?.businessFunction === "contractor") {
-    return <AccessDeniedState errorMessage="This form is only accessible to FTE/PTE employees. If you believe this is an error, please contact your administrator." />;
-  }
-
-  if (isLoadingData || !projectData) {
-    return <LoadingSpinner message="Loading project data..." />;
+  if (denied) {
+    return <AccessDeniedState errorMessage={deniedMessage} />;
   }
 
   return (
     <div className="min-h-screen w-full overflow-auto">
-      <ProjectLogForm projectData={projectData} />
+      <ProjectLogForm
+        mondayProfile={mondayProfile}
+        projectData={
+          projectData || {
+            employeeBudgetedHours: null,
+            projectSourceNames: null,
+          }
+        }
+      />
     </div>
   );
 }
