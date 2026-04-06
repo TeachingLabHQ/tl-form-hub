@@ -1,5 +1,4 @@
-import { PDFDocument, PDFPage, PDFFont, rgb } from "https://esm.sh/pdf-lib@1.17.1";
-import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1";
+import { PDFDocument, PDFPage, PDFFont, StandardFonts, rgb } from "https://esm.sh/pdf-lib@1.17.1";
 import { PersonProjectSummary } from "./types.ts";
 
 
@@ -26,34 +25,6 @@ function sanitizeNoteForWinAnsi(text: string): string {
   );
 }
 
-const NOTO_SANS_REGULAR_URL =
-  "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Regular.ttf";
-const NOTO_SANS_BOLD_URL =
-  "https://raw.githubusercontent.com/googlefonts/noto-fonts/main/hinted/ttf/NotoSans/NotoSans-Bold.ttf";
-
-let cachedNotoSansRegularBytes: Uint8Array | null = null;
-let cachedNotoSansBoldBytes: Uint8Array | null = null;
-
-async function getNotoSansRegularBytes(): Promise<Uint8Array> {
-  if (cachedNotoSansRegularBytes) return cachedNotoSansRegularBytes;
-  const res = await fetch(NOTO_SANS_REGULAR_URL);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch Noto Sans Regular font: ${res.status} ${res.statusText}`);
-  }
-  cachedNotoSansRegularBytes = new Uint8Array(await res.arrayBuffer());
-  return cachedNotoSansRegularBytes;
-}
-
-async function getNotoSansBoldBytes(): Promise<Uint8Array> {
-  if (cachedNotoSansBoldBytes) return cachedNotoSansBoldBytes;
-  const res = await fetch(NOTO_SANS_BOLD_URL);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch Noto Sans Bold font: ${res.status} ${res.statusText}`);
-  }
-  cachedNotoSansBoldBytes = new Uint8Array(await res.arrayBuffer());
-  return cachedNotoSansBoldBytes;
-}
-
 function sanitizeTextForFont(text: string, font: PDFFont, fontSize: number): string {
   // If the font can't encode a glyph, replace it with a visible ASCII marker to avoid crashing PDF generation.
   let out = "";
@@ -66,6 +37,11 @@ function sanitizeTextForFont(text: string, font: PDFFont, fontSize: number): str
     }
   }
   return out;
+}
+
+function safeText(text: string, font: PDFFont, fontSize: number, sanitize = false): string {
+  const normalized = sanitize ? sanitizeNoteForWinAnsi(text) : text;
+  return sanitizeTextForFont(normalized, font, fontSize);
 }
 
 function formatMoney(amount: number): string {
@@ -175,13 +151,8 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
   try {
     const pdfDoc = await PDFDocument.create();
     let page = pdfDoc.addPage([595, 842]); // A4 size
-    pdfDoc.registerFontkit(fontkit);
-    const [notoRegularBytes, notoBoldBytes] = await Promise.all([
-      getNotoSansRegularBytes(),
-      getNotoSansBoldBytes(),
-    ]);
-    const notoSansRegular = await pdfDoc.embedFont(notoRegularBytes);
-    const notoSansBold = await pdfDoc.embedFont(notoBoldBytes);
+    const notoSansRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const notoSansBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
     const margin = 50;
     const contentBottomMargin = margin + 60; // Space for total/footer
@@ -190,7 +161,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     let y = page.getHeight() - margin;
 
     // Title
-    page.drawText(`${personSummary.cf_name} - Payment Summary`, {
+    page.drawText(safeText(`${personSummary.cf_name} - Payment Summary`, notoSansBold, 20), {
       x: margin,
       y,
       size: 20,
@@ -205,7 +176,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       : Date.now().toString(); // Fallback if no logId provided
 
     // Subtitle - Personal Summary for Project
-    page.drawText(`Project: ${projectName}`, {
+    page.drawText(safeText(`Project: ${projectName}`, notoSansBold, 16), {
       x: margin,
       y,
       size: 16,
@@ -215,7 +186,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     y -= baseLineHeight * 1.5;
 
     // Invoice Number
-    page.drawText(`Invoice #: ${invoiceNumber}`, {
+    page.drawText(safeText(`Invoice #: ${invoiceNumber}`, notoSansRegular, 12), {
       x: margin,
       y,
       size: 12,
@@ -231,7 +202,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     const lastDayOfPreviousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
     const invoiceDate = lastDayOfPreviousMonth.toLocaleDateString();
     
-    page.drawText(`Report Month: ${reportMonth}`, {
+    page.drawText(safeText(`Report Month: ${reportMonth}`, notoSansRegular, 12), {
         x: margin,
         y,
         size: 12,
@@ -240,7 +211,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     y -= baseLineHeight * 1.2;
 
     // Invoice Date (last day of report month)
-    page.drawText(`Invoice Date: ${invoiceDate}`, {
+    page.drawText(safeText(`Invoice Date: ${invoiceDate}`, notoSansRegular, 12), {
         x: margin,
         y,
         size: 12,
@@ -249,7 +220,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     y -= baseLineHeight * 1.2;
 
     // Add Bill to information
-    page.drawText("Bill to: Teaching Lab", {
+    page.drawText(safeText("Bill to: Teaching Lab", notoSansRegular, 12), {
         x: margin,
         y,
         size: 12,
@@ -258,7 +229,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
     y -= baseLineHeight * 1.2;
 
     // Person Details
-    page.drawText(`Coach/Facilitator: ${personSummary.cf_name} (${personSummary.cf_email})`, {
+    page.drawText(safeText(`Coach/Facilitator: ${personSummary.cf_name} (${personSummary.cf_email})`, notoSansRegular, 12), {
         x: margin,
         y,
         size: 12,
@@ -364,7 +335,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
       }
 
       // Draw Date column
-      page.drawText(dateDisplay, {
+      page.drawText(safeText(dateDisplay, notoSansRegular, 10), {
         x: columnPositions[0] + 10, // Left align with padding
         y: rowStartY - textOffsetY,
         size: 10,
@@ -385,7 +356,7 @@ export async function generateProjectPDF(projectName: string, personSummary: Per
 
       // Draw Note column (wrapped)
       noteLines.forEach((line, i) => {
-        page.drawText(sanitizeNoteForWinAnsi(line), {
+        page.drawText(safeText(line, notoSansRegular, 10, true), {
           x: columnPositions[2] + 10, // Left align with padding
           y: rowStartY - textOffsetY - (i * 12),
           size: 10,
