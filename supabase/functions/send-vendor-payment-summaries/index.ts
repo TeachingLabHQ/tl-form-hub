@@ -15,6 +15,7 @@ import { PersonProjectSummary } from "./types.ts";
 const BATCH_SIZE = 5; // Process fewer project/person summaries per invocation
 const SUBMISSION_PAGE_SIZE = 50; // Scan monthly submissions in pages to cap peak memory use
 const EMAIL_DELAY_MS = 600; // 600ms between emails (Resend allows 2 requests/second)
+const NEXT_BATCH_GRACE_MS = 2000; // Give the self-invocation request time to leave the worker
 
 // --- Helper function for delay ---
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -383,7 +384,9 @@ try {
               console.error('Failed to trigger next batch:', err);
             });
             
-            console.log(`Successfully triggered next batch processing`);
+            console.log(`Started next batch request; waiting briefly before exit`);
+            await sleep(NEXT_BATCH_GRACE_MS);
+            console.log(`Finished handoff grace period for next batch request`);
           } else {
             console.error('Cannot trigger next batch: Missing SUPABASE_URL or SUPABASE_ANON_KEY');
           }
