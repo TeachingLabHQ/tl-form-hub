@@ -12,7 +12,7 @@ import { sendProjectEmail } from "./utils.ts";
 import { PersonProjectSummary } from "./types.ts";
 
 // --- Configuration ---
-const BATCH_SIZE = 5; // Process fewer project/person summaries per invocation
+const BATCH_SIZE = 1; // Process fewer project/person summaries per invocation
 const SUBMISSION_PAGE_SIZE = 50; // Scan monthly submissions in pages to cap peak memory use
 const EMAIL_DELAY_MS = 600; // 600ms between emails (Resend allows 2 requests/second)
 const NEXT_BATCH_GRACE_MS = 2000; // Give the self-invocation request time to leave the worker

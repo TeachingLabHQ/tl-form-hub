@@ -12,7 +12,7 @@ export async function sendProjectEmail(
     personSummary: PersonProjectSummary, // Pass the person's summary object
     pdf: Uint8Array,
   ): Promise<void> {
-    const recipientEmail = ["yancheng.pan@teachinglab.org","accountspayable@teachinglab.org"];
+    const recipientEmail = ["yancheng.pan@teachinglab.org"];
     console.log(`Starting email sending for ${personSummary.cf_name} (${personSummary.cf_email}) on project: ${projectName}`);
     try {
       const supportEmail = Deno.env.get("SUPPORT_EMAIL") || "support@example.com";
