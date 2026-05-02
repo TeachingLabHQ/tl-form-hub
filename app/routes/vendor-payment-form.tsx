@@ -12,6 +12,12 @@ import { vendorPaymentRepository } from "~/domains/vendor-payment/repository";
 import { vendorPaymentService } from "~/domains/vendor-payment/service";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
+
+/** Dev-only: when logged in as key, load vendor payment history for value (hardcoded impersonation). */
+const VENDOR_PAYMENT_HISTORY_IMPERSONATE_AS: Record<string, string> = {
+  "yancheng.pan@teachinglab.org": "sarah.burton@teachinglab.org",
+};
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabaseClient } = createSupabaseServerClient(request);
 
@@ -31,9 +37,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     return json({ paymentRequestHistory: [], projects: [] });
   }
 
+  const historyEmail =
+    VENDOR_PAYMENT_HISTORY_IMPERSONATE_AS[cfDetails.email] ?? cfDetails.email;
+
   const newVendorPaymentService = vendorPaymentService(vendorPaymentRepository(supabaseClient));
   const { data: paymentRequestHistory, error: paymentRequestHistoryError } = await newVendorPaymentService.getSubmissionsByEmail(
-    cfDetails.email
+    historyEmail
   );
   if (paymentRequestHistoryError) {
     throw new Error("Failed to fetch payment history");
