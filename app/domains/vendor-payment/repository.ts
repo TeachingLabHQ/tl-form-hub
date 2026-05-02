@@ -124,9 +124,7 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
           startDate = firstDayCurrentMonth;
           endDate = fifthDayNextMonth;
         }
-        console.log("startDate",startDate)
-        console.log("endDate",endDate)
-        console.log("email",email)
+
         const { data, error } = await supabase
           .from('vendor_payment_submissions')
           .select(`
@@ -137,8 +135,7 @@ export function vendorPaymentRepository(supabase: SupabaseClient<Database>): Ven
           .gte('submission_date', startDate)
           .lt('submission_date', endDate)
           .order('created_at', { ascending: false });
-console.log("data",data)
-console.log("error",error)
+
         if (error) throw error;
         return { data, error: null };
       } catch (e) {
