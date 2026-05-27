@@ -1,0 +1,37 @@
+name: Claude Code PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths-ignore:
+      - "**/*.md"
+      - "plan/**"
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write # required for the action to fetch its GitHub auth token via OIDC
+
+jobs:
+  claude-review:
+    if: |
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          trigger_phrase: "@claude"
+          prompt: |
+            Review this pull request. Check for:
+            - Logic errors and bugs
+            - Security vulnerabilities (XSS, injection, secret leaks)
+            - Unhandled edge cases / missing error handling
+            - Readability and maintainability
+            Post inline comments on specific lines where you find issues.
+            Write a short summary at the top of your review.
+          classify_inline_comments: "true"
+          include_fix_links: "true"
