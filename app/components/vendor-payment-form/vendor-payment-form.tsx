@@ -2,7 +2,7 @@ import { Button, Notification, Tabs } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useFetcher, useNavigate, useLoaderData } from "@remix-run/react";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { CoachFacilitatorDetails } from "~/domains/coachFacilitator/repository";
 import { Reminders } from "../weekly-project-log/reminders";
 import { PaymentHistory } from "./payment-history/payment-history";
@@ -33,7 +33,14 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
       note: "",
     },
   ]);
-  const [totalWorkHours, setTotalWorkHours] = useState(0);
+  const totalWorkHours = useMemo(
+    () =>
+      vendorPaymentEntries.reduce(
+        (sum, row) => sum + (parseFloat(row.workHours) || 0),
+        0
+      ),
+    [vendorPaymentEntries]
+  );
 
   // Handle form submission response
   useEffect(() => {
@@ -53,7 +60,6 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
             note: "",
           },
         ]);
-        setTotalWorkHours(0);
       }
     }
   }, [fetcher.data]);
@@ -203,7 +209,6 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
                 isValidated={isValidated}
                 vendorPaymentEntries={vendorPaymentEntries}
                 setVendorPaymentEntries={setVendorPaymentEntries}
-                setTotalWorkHours={setTotalWorkHours}
                 cfTier={cfDetails?.tier || []}
                 projects={projects}
               />

@@ -2,7 +2,7 @@ import { Button, Loader, Notification, Textarea } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
 import { useSession } from "../auth/hooks/useSession";
 import { ExecutiveAssistantSelector } from "./executive-assistant-selector";
@@ -45,8 +45,7 @@ type ProjectLogFormProps = {
 
 export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) => {
   const { mondayProfile } = useSession();
-  
-  const [totalWorkHours, setTotalWorkHours] = useState<number>(0);
+
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSuccessful, setIsSuccessful] = useState<boolean | null>(null);
@@ -61,6 +60,14 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
   ]);
   const xIcon = <IconX size={20} />;
   const checkIcon = <IconCheck size={20} />;
+  const totalWorkHours = useMemo(
+    () =>
+      projectWorkEntries.reduce(
+        (sum, row) => sum + (parseFloat(row.workHours) || 0),
+        0
+      ),
+    [projectWorkEntries]
+  );
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
     const today = new Date();
@@ -326,7 +333,6 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
               isValidated={isValidated}
               projectWorkEntries={projectWorkEntries}
               setProjectWorkEntries={setProjectWorkEntries}
-              setTotalWorkHours={setTotalWorkHours}
               projectData={currentProjectData}
             />
           </div>

@@ -126,18 +126,6 @@ export const handleProjectTypeByTeam = (businessFunction: string) => {
   }
 };
 
-export const updateTotalWorkHours = (
-  updatedProjectLogEntries: ProjectLogRows[],
-  setTotalWorkHours: React.Dispatch<React.SetStateAction<number>>
-) => {
-  let totalWorkHours = 0;
-  for (const projectLog of updatedProjectLogEntries) {
-    const { workHours } = projectLog;
-    totalWorkHours += Number(workHours);
-  }
-  setTotalWorkHours(totalWorkHours);
-};
-
 export type ProjectData = {
   employeeBudgetedHours: any;
   projectSourceNames: any;
