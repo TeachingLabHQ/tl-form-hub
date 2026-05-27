@@ -36,7 +36,7 @@ jobs:
           claude_args: >-
             --model claude-sonnet-4-6
             --max-turns 20
-            --allowedTools 'Read,Glob,Grep,Bash(git:*),Bash(grep:*),Bash(rg:*),Bash(find:*),Bash(cat:*),Bash(ls:*),Bash(head:*),Bash(tail:*),Bash(wc:*)'
+            --allowedTools 'Read,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(grep:*),Bash(rg:*),Bash(find:*),Bash(cat:*),Bash(ls:*),Bash(head:*),Bash(tail:*),Bash(wc:*)'
           prompt: |
             Review this pull request. Check for:
             - Logic errors and bugs
