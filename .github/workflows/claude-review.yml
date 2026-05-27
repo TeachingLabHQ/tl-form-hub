@@ -28,6 +28,9 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           trigger_phrase: "@claude"
+          # Sonnet 4.6 + max-turns 20: faster + cheaper than Opus default,
+          # caps runaway reviews. Tune later if review depth drops.
+          claude_args: "--model claude-sonnet-4-6 --max-turns 20"
           prompt: |
             Review this pull request. Check for:
             - Logic errors and bugs
@@ -38,3 +41,6 @@ jobs:
             Write a short summary at the top of your review.
           classify_inline_comments: "true"
           include_fix_links: "true"
+          # Surface full tool-call output in the Actions log so we can see
+          # which tools get denied. Private repo so secret-leak risk is bounded.
+          show_full_output: "true"
