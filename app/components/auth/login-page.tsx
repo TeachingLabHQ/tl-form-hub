@@ -19,13 +19,7 @@ import { supabase } from "../../../supabase/supabase.client";
 import { IconAlertCircle } from "@tabler/icons-react";
 
 export const LoginPage = ({ errorMessage }: { errorMessage: string }) => {
-  const { setSession } = useSession();
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-  }, []);
+  // Session initialization happens in SessionProvider; no need to fetch session here.
 
   const handleGoogleLogin = async () => {
     const { data, error } = await supabase.auth.signInWithOAuth({
@@ -35,7 +29,7 @@ export const LoginPage = ({ errorMessage }: { errorMessage: string }) => {
           access_type: "offline",
           prompt: "consent",
         },
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
       },
     });
     if (error) {

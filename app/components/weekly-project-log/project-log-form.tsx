@@ -4,7 +4,6 @@ import { useForm } from "@mantine/form";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import React, { useEffect, useState } from "react";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
-import { useSession } from "../auth/hooks/useSession";
 import { ExecutiveAssistantSelector } from "./executive-assistant-selector";
 import { ProjectLogsWidget } from "./project-logs-widget";
 import { Reminders } from "./reminders";
@@ -19,6 +18,7 @@ import {
   type ProjectData,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
+import type { EmployeeProfile } from "~/domains/employee/model";
 
 export type FormValues = {
   email: string;
@@ -41,11 +41,13 @@ export type SubmissionUser = {
 
 type ProjectLogFormProps = {
   projectData: ProjectData;
+  mondayProfile: EmployeeProfile;
 };
 
-export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) => {
-  const { mondayProfile } = useSession();
-  
+export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({
+  projectData,
+  mondayProfile,
+}) => {
   const [totalWorkHours, setTotalWorkHours] = useState<number>(0);
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);

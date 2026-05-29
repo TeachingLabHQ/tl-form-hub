@@ -1,7 +1,6 @@
 import { LoaderFunctionArgs } from "@remix-run/node";
-import { json } from "@remix-run/react";
-import { useEffect, useState } from "react";
-import { useSession } from "~/components/auth/hooks/useSession";
+import { json } from "@remix-run/node";
+import { useLoaderData } from "@remix-run/react";
 import { AccessDeniedState } from "~/components/vendor-payment-form/access-denied-state";
 import { VendorPaymentForm } from "~/components/vendor-payment-form/vendor-payment-form";
 import { CoachFacilitatorDetails, coachFacilitatorRepository } from "~/domains/coachFacilitator/repository";
@@ -10,16 +9,15 @@ import { projectRepository } from "~/domains/project/repository";
 import { projectService } from "~/domains/project/service";
 import { vendorPaymentRepository } from "~/domains/vendor-payment/repository";
 import { vendorPaymentService } from "~/domains/vendor-payment/service";
-import { LoadingSpinner } from "~/utils/LoadingSpinner";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { supabaseClient } = createSupabaseServerClient(request);
+  const { supabaseClient, headers } = createSupabaseServerClient(request);
 
   // Get cfDetails from session or wherever it's stored
   const {
     data: { session },
   } = await supabaseClient.auth.getSession();
-  const cfDetails = session?.user?.email
+  const supabaseUser = session?.user?.email
     ? {
         email: session.user.email,
         name: session.user.user_metadata?.full_name || "",
@@ -27,13 +25,89 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     : null;
 
-  if (!cfDetails?.email) {
-    return json({ paymentRequestHistory: [], projects: [] });
+  if (!supabaseUser?.email) {
+    return json(
+      { paymentRequestHistory: [], projects: [], cfDetails: null },
+      { headers }
+    );
   }
+
+  // Determine coach/facilitator access (server-side)
+  const newCoachFacilitatorService = coachFacilitatorService(
+    coachFacilitatorRepository()
+  );
+  const { data: fetchedCfDetails } =
+    await newCoachFacilitatorService.fetchCoachFacilitatorDetails(
+      supabaseUser.email
+    );
+
+  // For testing purposes, allow specific emails to access the form
+  const overrides: Record<string, CoachFacilitatorDetails> = {
+    "yancheng.pan@teachinglab.org": {
+      email: "yancheng.pan@teachinglab.org",
+      name: "Yancheng Pan",
+      tier: [
+        { type: "facilitator", value: "Tier 1" },
+        { type: "copyRightPermissions", value: "Tier 2" },
+        { type: "copyEditor", value: "Tier 2" },
+        { type: "presentationDesign", value: "Tier 2" },
+        { type: "contentDeveloper", value: "Tier 4" },
+      ],
+    },
+    "daissan.colbert@teachinglab.org": {
+      email: "daissan.colbert@teachinglab.org",
+      name: "Daisann Colbert",
+      tier: [
+        { type: "facilitator", value: "Tier 2" },
+        { type: "copyRightPermissions", value: "Tier 2" },
+        { type: "copyEditor", value: "Tier 2" },
+        { type: "presentationDesign", value: "Tier 2" },
+        { type: "contentDeveloper", value: "Tier 2" },
+      ],
+    },
+    "samantha.wilner@teachinglab.org": {
+      email: "samantha.wilner@teachinglab.org",
+      name: "Samantha Wilner",
+      tier: [
+        { type: "facilitator", value: "Tier 1" },
+        { type: "contentDeveloper", value: "Tier 1" },
+        { type: "copyEditor", value: "Tier 1" },
+        { type: "copyRightPermissions", value: "Tier 1" },
+        { type: "presentationDesign", value: "Tier 1" },
+        { type: "dataEvaluation", value: "Tier 1" },
+      ],
+    },
+    "tonia.lonie@teachinglab.org": {
+      email: "tonia.lonie@teachinglab.org",
+      name: "Tonia Lonie",
+      tier: [
+        { type: "facilitator", value: "Tier 1" },
+        { type: "contentDeveloper", value: "Tier 1" },
+        { type: "copyEditor", value: "Tier 1" },
+        { type: "copyRightPermissions", value: "Tier 1" },
+        { type: "presentationDesign", value: "Tier 1" },
+        { type: "dataEvaluation", value: "Tier 1" },
+      ],
+    },
+    "ellen.greig@teachinglab.org": {
+      email: "ellen.greig@teachinglab.org",
+      name: "Ellen Greig",
+      tier: [
+        { type: "facilitator", value: "Tier 2" },
+        { type: "copyRightPermissions", value: "Tier 2" },
+        { type: "copyEditor", value: "Tier 2" },
+        { type: "presentationDesign", value: "Tier 2" },
+        { type: "contentDeveloper", value: "Tier 2" },
+      ],
+    },
+  };
+
+  const cfDetails: CoachFacilitatorDetails | null =
+    fetchedCfDetails ?? overrides[supabaseUser.email] ?? null;
 
   const newVendorPaymentService = vendorPaymentService(vendorPaymentRepository(supabaseClient));
   const { data: paymentRequestHistory, error: paymentRequestHistoryError } = await newVendorPaymentService.getSubmissionsByEmail(
-    cfDetails.email
+    supabaseUser.email
   );
   if (paymentRequestHistoryError) {
     throw new Error("Failed to fetch payment history");
@@ -42,192 +116,13 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const newProjectService = projectService(projectRepository());
 
   const { data: projects } = await newProjectService.fetchProjectSourceNames();
-  return json({ paymentRequestHistory, projects });
+  return json({ paymentRequestHistory, projects, cfDetails }, { headers });
 };
 
 export default function VendorPaymentFormRoute() {
-  const { isAuthenticated, errorMessage, session, mondayProfile } =
-    useSession();
-  const [isCoachOrFacilitator, setIsCoachOrFacilitator] = useState<
-    boolean | null
-  >(null);
-  const [cfDetails, setCfDetails] = useState<CoachFacilitatorDetails | null>(null);
+  const { cfDetails } = useLoaderData<typeof loader>();
 
-  useEffect(() => {
-    const checkCoachOrFacilitator = async () => {
-      if (mondayProfile?.email) {
-        const newCoachFacilitatorService = coachFacilitatorService(
-          coachFacilitatorRepository()
-        );
-        const { data, error } =
-          await newCoachFacilitatorService.fetchCoachFacilitatorDetails(
-            mondayProfile?.email
-          );
-        setIsCoachOrFacilitator(!!data);
-        setCfDetails(data || null);
-        // For testing purposes, allow YC and Finance to access the form
-        if(mondayProfile?.email === "yancheng.pan@teachinglab.org"){
-          setIsCoachOrFacilitator(true);
-          setCfDetails({
-            email: "yancheng.pan@teachinglab.org",
-            name: "Yancheng Pan",
-            tier: [{
-              type: "facilitator",
-              value: "Tier 1",
-            },
-            {
-              type: "copyRightPermissions",
-              value: "Tier 2",
-            },
-            {
-              type: "copyEditor",
-              value: "Tier 2",
-            },
-            {
-              type: "presentationDesign",
-              value: "Tier 2",
-            },
-            {
-              type: "contentDeveloper",
-              value: "Tier 4",
-            },
-            
-            ],
-          });
-        }
-         else if(mondayProfile?.email === "daissan.colbert@teachinglab.org"){
-          setIsCoachOrFacilitator(true);
-          setCfDetails({
-            email: "daissan.colbert@teachinglab.org",
-            name: "Daisann Colbert",
-            tier: [{
-              type: "facilitator",
-              value: "Tier 2",
-            },
-            {
-              type: "copyRightPermissions",
-              value: "Tier 2",
-            },
-            {
-              type: "copyEditor",
-              value: "Tier 2",
-            },
-            {
-              type: "presentationDesign",
-              value: "Tier 2",
-            },
-            {
-              type: "contentDeveloper",
-              value: "Tier 2",
-            },
-            
-            ],
-          });
-        }
-        else if(mondayProfile?.email === "samantha.wilner@teachinglab.org"){
-          setIsCoachOrFacilitator(true);
-          setCfDetails({
-            email: "samantha.wilner@teachinglab.org",
-            name: "Samantha Wilner",
-            tier: [{
-              type: "facilitator",
-              value: "Tier 1",
-            },
-            {
-              type: "contentDeveloper",
-              value: "Tier 1",
-            },
-            {
-              type: "copyEditor",
-              value: "Tier 1",
-            },
-            {
-              type: "copyRightPermissions",
-              value: "Tier 1",
-            },
-            {
-              type: "presentationDesign",
-              value: "Tier 1",
-            },
-            {
-              type: "dataEvaluation",
-              value: "Tier 1",
-            },
-            ],
-          });
-        }
-       else if(mondayProfile?.email === "tonia.lonie@teachinglab.org"){
-          setIsCoachOrFacilitator(true);
-          setCfDetails({
-            email: "tonia.lonie@teachinglab.org",
-            name: "Tonia Lonie",
-            tier: [{
-              type: "facilitator",
-              value: "Tier 1",
-            },
-            {
-              type: "contentDeveloper",
-              value: "Tier 1",
-            },
-            {
-              type: "copyEditor",
-              value: "Tier 1",
-            },
-            {
-              type: "copyRightPermissions",
-              value: "Tier 1",
-            },
-            {
-              type: "presentationDesign",
-              value: "Tier 1",
-            },
-            {
-              type: "dataEvaluation",
-              value: "Tier 1",
-            },
-            ],
-          });
-        }
-        else if(mondayProfile?.email === "ellen.greig@teachinglab.org"){
-          setIsCoachOrFacilitator(true);
-          setCfDetails({
-            email: "ellen.greig@teachinglab.org",
-            name: "Ellen Greig",
-            tier: [{
-              type: "facilitator",
-              value: "Tier 2",
-            },
-            {
-              type: "copyRightPermissions",
-              value: "Tier 2",
-            },
-            {
-              type: "copyEditor",
-              value: "Tier 2",
-            },
-            {
-              type: "presentationDesign",
-              value: "Tier 2",
-            },
-            {
-              type: "contentDeveloper",
-              value: "Tier 2",
-            },
-            
-            ],
-          });
-        }
-       
-      }
-    };
-
-    checkCoachOrFacilitator();
-  }, [mondayProfile?.email]);
-  if (isCoachOrFacilitator === null) {
-    return <LoadingSpinner />;
-  }
-
-  if (isCoachOrFacilitator === false) {
+  if (!cfDetails) {
     return <AccessDeniedState errorMessage="This form is only accessible to coaches and facilitators. If you believe this is an error, please contact your administrator." />;
   }
 
