@@ -29,7 +29,7 @@ export const RepeatableRowWidget = <T,>({
   const canDelete = rows.length > minRows;
 
   const handleAddRow = () => {
-    setRows((prev) => [...prev, emptyRow]);
+    setRows((prev) => [...prev, {...emptyRow}]);
   };
 
   return (
