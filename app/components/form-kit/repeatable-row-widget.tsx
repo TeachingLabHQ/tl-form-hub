@@ -1,5 +1,6 @@
 import { Button } from "@mantine/core";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { useRef } from "react";
 
 export type RepeatableRowContext<T> = {
   updateRow: (patch: Partial<T>) => void;
@@ -27,8 +28,13 @@ export const RepeatableRowWidget = <T,>({
   addRowLabel = "Add New Row",
 }: RepeatableRowWidgetProps<T>) => {
   const canDelete = rows.length > minRows;
+  const rowIdsRef = useRef<string[] | null>(null);
+  if(rowIdsRef.current === null){
+    rowIdsRef.current = rows.map(()=> crypto.randomUUID())
+  }
 
   const handleAddRow = () => {
+    rowIdsRef.current!.push(crypto.randomUUID())
     setRows((prev) => [...prev, {...emptyRow}]);
   };
 
@@ -43,10 +49,12 @@ export const RepeatableRowWidget = <T,>({
           );
         };
         const deleteRow = () => {
+          rowIdsRef.current = rowIdsRef.current!.filter((_,i)=>{return i !== index})
           setRows((prev) => prev.filter((_, i) => i !== index));
         };
+        const rowKey = rowIdsRef.current![index]
         return (
-          <div key={index}>
+          <div key={rowKey}>
             {renderRow(row, index, { updateRow, deleteRow, canDelete })}
           </div>
         );
