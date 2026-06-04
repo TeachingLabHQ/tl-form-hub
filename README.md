@@ -248,7 +248,7 @@ The application includes testing infrastructure for browser-based testing and fo
 
 - [Local Development Setup](./LOCAL_DEV_SETUP.md) - Detailed local setup guide
 - [Batch Processing Guide](./supabase/functions/send-vendor-payment-summaries/BATCH_PROCESSING_GUIDE.md)
-- [Loading Speed Refactor](./loading-speed-refactor.md)
+- [Plan docs](./plan/) - migration plans, refactor notes, and review docs
 
 ## 🤝 Contributing
 

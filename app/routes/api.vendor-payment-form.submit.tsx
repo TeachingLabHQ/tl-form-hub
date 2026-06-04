@@ -3,6 +3,7 @@ import { vendorPaymentService } from "~/domains/vendor-payment/service";
 import { vendorPaymentRepository } from "~/domains/vendor-payment/repository";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
 import { formatTierData } from "~/utils/utils";
+import { parseStoredTask } from "~/components/vendor-payment-form/utils";
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
@@ -33,13 +34,15 @@ export async function action({ request }: ActionFunctionArgs) {
     const humanReadableTier = formatTierData(cfDetails.tier);
 
     // Transform entries into submission format
-    const transformedEntries = entries.map((entry) => {
-      const taskData = JSON.parse(entry.task);
+    const transformedEntries = [];
+    for (const entry of entries) {
+      const taskData = parseStoredTask(entry.task);
+      if (!taskData) {
+        return json({ error: "Invalid task data" }, { status: 400 });
+      }
       const hours = parseFloat(entry.workHours);
 
-     
-
-      return {
+      transformedEntries.push({
         task_name: taskData.taskName,
         project_name: entry.project,
         note: entry.note,
@@ -47,8 +50,8 @@ export async function action({ request }: ActionFunctionArgs) {
         rate: taskData.rate,
         entry_pay: taskData.rate * hours,
         submission_date: workDate,
-      };
-    });
+      });
+    }
 
     // Create submission
     const submission = {
