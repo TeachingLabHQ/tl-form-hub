@@ -6,7 +6,11 @@ import React, { useEffect, useMemo, useState } from "react";
 import { CoachFacilitatorDetails } from "~/domains/coachFacilitator/repository";
 import { Reminders } from "../weekly-project-log/reminders";
 import { PaymentHistory } from "./payment-history/payment-history";
-import { REMINDER_ITEMS, shouldExcludeVendorPaymentDate } from "./utils";
+import {
+  parseStoredTask,
+  REMINDER_ITEMS,
+  shouldExcludeVendorPaymentDate,
+} from "./utils";
 import { VendorPaymentWidget } from "./vendor-payment-widget";
 import { loader } from "~/routes/vendor-payment-form";
 
@@ -69,19 +73,12 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
       return 0;
     }
     return entries.reduce((total, entry) => {
-      try {
-        const taskData = JSON.parse(entry.task);
-        const hours = parseFloat(entry.workHours) || 0;
-
-        // Get rate based on tier
-        let rate = 0;
-        rate = taskData.rate || 0;
-
-        return total + rate * hours;
-      } catch (error) {
-        console.error("Error calculating total pay:", error);
+      const taskData = parseStoredTask(entry.task);
+      if (!taskData) {
         return total;
       }
+      const hours = parseFloat(entry.workHours) || 0;
+      return total + taskData.rate * hours;
     }, 0);
   };
 

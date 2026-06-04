@@ -1,4 +1,29 @@
+import { z } from "zod";
 import { ReminderItem } from "../weekly-project-log/reminders";
+
+export const storedTaskSchema = z.object({
+  taskName: z.string(),
+  rate: z.number(),
+  maxHours: z.number().nullable(),
+});
+
+export type StoredTask = z.infer<typeof storedTaskSchema>;
+
+/**
+ * Safely parse a task string stored from the task Select (JSON.stringify(option)).
+ * Returns null for empty/whitespace strings or any malformed/invalid JSON.
+ */
+export const parseStoredTask = (task: string): StoredTask | null => {
+  if (!task || !task.trim()) {
+    return null;
+  }
+  try {
+    const result = storedTaskSchema.safeParse(JSON.parse(task));
+    return result.success ? result.data : null;
+  } catch {
+    return null;
+  }
+};
 
 export enum Tier {
   TIER_1 = "Tier 1",

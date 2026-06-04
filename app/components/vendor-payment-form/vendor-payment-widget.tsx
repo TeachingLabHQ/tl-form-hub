@@ -16,7 +16,9 @@ import {
   dataEvaluationTaskOptions,
   facilitationTaskOptions,
   filterVendorPaymentProjects,
+  parseStoredTask,
   presentationDesignTaskOptions,
+  StoredTask,
   TaskDetails,
 } from "./utils";
 
@@ -25,12 +27,6 @@ type VendorPaymentRow = {
   project: string;
   workHours: string;
   note: string;
-};
-
-type taskOptions = {
-  taskName: string;
-  rate: number;
-  maxHours: number | null;
 };
 
 const EMPTY_ROW: VendorPaymentRow = {
@@ -70,7 +66,7 @@ export const VendorPaymentWidget = ({
 
   // Filter tasks based on tier and rate availability
   const getAvailableTasks = () => {
-    let availableTasks: taskOptions[] = [];
+    let availableTasks: StoredTask[] = [];
     if (cfTier.length === 0) {
       return availableTasks;
     }
@@ -160,18 +156,12 @@ export const VendorPaymentWidget = ({
   };
 
   const calculateTaskTotalPay = (task: string, workHours: string): number => {
-    if (!task || !workHours) {
+    const taskData = parseStoredTask(task);
+    if (!taskData || !workHours) {
       return 0;
     }
-    try {
-      const taskData = JSON.parse(task);
-      const hours = parseFloat(workHours) || 0;
-      let rate = taskData.rate || 0;
-      return rate * hours;
-    } catch (error) {
-      console.error("Error calculating total pay:", error);
-      return 0;
-    }
+    const hours = parseFloat(workHours) || 0;
+    return taskData.rate * hours;
   };
 
   const listOfAvailableTasks = getAvailableTasks() || [];
@@ -195,7 +185,9 @@ export const VendorPaymentWidget = ({
           <Text fw={500} size="md">Total Pay</Text>
         </div>
       )}
-      renderRow={(row, _index, { canDelete, updateRow, deleteRow }) => (
+      renderRow={(row, _index, { canDelete, updateRow, deleteRow }) => {
+        const taskData = parseStoredTask(row.task);
+        return (
         <div className="flex flex-col gap-2">
           <div className={gridClass(canDelete)}>
             <Select
@@ -229,7 +221,7 @@ export const VendorPaymentWidget = ({
                 updateRow({ workHours: value?.toString() || "" })
               }
               placeholder="Enter work hours"
-              max={JSON.parse(row.task || "{}").maxHours || undefined}
+              max={taskData?.maxHours ?? undefined}
               min={0}
               error={
                 isValidated === false &&
@@ -239,9 +231,7 @@ export const VendorPaymentWidget = ({
               }
             />
             <TextInput
-              value={
-                row.task ? `$${JSON.parse(row.task).rate.toFixed(2)}` : "$0.00"
-              }
+              value={`$${(taskData?.rate ?? 0).toFixed(2)}`}
               readOnly
               placeholder="Rate"
             />
@@ -278,7 +268,8 @@ export const VendorPaymentWidget = ({
             </Text>
           </div>
         </div>
-      )}
+        );
+      }}
     />
   );
 };
