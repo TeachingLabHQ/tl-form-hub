@@ -36,6 +36,12 @@ const EMPTY_ROW: VendorPaymentRow = {
   note: "",
 };
 
+function gridClass(canDelete: boolean) {
+  return cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
+    "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]": canDelete,
+  });
+}
+
 export const VendorPaymentWidget = ({
   isValidated,
   vendorPaymentEntries,
@@ -165,11 +171,6 @@ export const VendorPaymentWidget = ({
   };
 
   const listOfAvailableTasks = getAvailableTasks() || [];
-
-  const gridClass = (canDelete: boolean) =>
-    cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
-      "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]": canDelete,
-    });
 
   return (
     <RepeatableRowWidget<VendorPaymentRow>

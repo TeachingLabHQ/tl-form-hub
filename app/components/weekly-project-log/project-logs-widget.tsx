@@ -1,5 +1,6 @@
 import { Button, NumberInput, Select, Text, TextInput } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
+import { useMemo } from "react";
 import { RepeatableRowWidget } from "~/components/form-kit";
 import { ProjectLogRows } from "~/domains/project/model";
 import { cn } from "../../utils/utils";
@@ -18,6 +19,12 @@ const EMPTY_ROW: ProjectLogRows = {
   budgetedHours: "N/A",
 };
 
+function gridClass(canDelete: boolean) {
+  return cn("grid gap-4 grid-cols-[2fr_1.3fr_1fr_1fr_1fr]", {
+    "grid-cols-[2fr_1.3fr_1fr_1fr_1fr_0.5fr]": canDelete,
+  });
+}
+
 export const ProjectLogsWidget = ({
   isValidated,
   projectWorkEntries,
@@ -29,18 +36,13 @@ export const ProjectLogsWidget = ({
   setProjectWorkEntries: React.Dispatch<React.SetStateAction<ProjectLogRows[]>>;
   projectData: ProjectData;
 }) => {
-  const projectOptions: string[] = (() => {
+  const projectOptions = useMemo((): string[] => {
     if (!projectData?.projectSourceNames) {
       return [];
     }
     const projects: string[] = projectData.projectSourceNames;
     return [...new Set(projects)].sort((a, b) => a.localeCompare(b));
-  })();
-
-  const gridClass = (canDelete: boolean) =>
-    cn("grid gap-4 grid-cols-[2fr_1.3fr_1fr_1fr_1fr]", {
-      "grid-cols-[2fr_1.3fr_1fr_1fr_1fr_0.5fr]": canDelete,
-    });
+  }, [projectData]);
 
   return (
     <RepeatableRowWidget<ProjectLogRows>
