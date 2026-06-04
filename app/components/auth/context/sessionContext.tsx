@@ -7,12 +7,16 @@ export const SessionContext = createContext<{
   isLoading: boolean;
   isAuthenticated: boolean;
   setIsAuthenticated: React.Dispatch<React.SetStateAction<boolean>>;
+  errorMessage: string;
+  setErrorMessage: React.Dispatch<React.SetStateAction<string>>;
 }>({
   session: null,
   setSession: () => {},
   isLoading: true,
   isAuthenticated: false,
   setIsAuthenticated: () => {},
+  errorMessage: "",
+  setErrorMessage: () => {},
 });
 
 export const SessionProvider = ({
@@ -23,6 +27,7 @@ export const SessionProvider = ({
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -46,6 +51,8 @@ export const SessionProvider = ({
         isLoading,
         isAuthenticated,
         setIsAuthenticated,
+        errorMessage,
+        setErrorMessage,
       }}
     >
       {children}
