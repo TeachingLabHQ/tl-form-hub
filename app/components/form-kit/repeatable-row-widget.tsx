@@ -29,8 +29,10 @@ export const RepeatableRowWidget = <T,>({
 }: RepeatableRowWidgetProps<T>) => {
   const canDelete = rows.length > minRows;
   const rowIdsRef = useRef<string[] | null>(null);
-  if(rowIdsRef.current === null){
-    rowIdsRef.current = rows.map(()=> crypto.randomUUID())
+  if (rowIdsRef.current === null) {
+    rowIdsRef.current = rows.map(() => crypto.randomUUID());
+  } else if (rowIdsRef.current.length > rows.length) {
+    rowIdsRef.current = rowIdsRef.current.slice(0, rows.length);
   }
 
   const handleAddRow = () => {

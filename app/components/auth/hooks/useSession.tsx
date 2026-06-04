@@ -11,9 +11,14 @@ import { coachFacilitatorService } from "~/domains/coachFacilitator/service";
 const MONDAY_PROFILE_KEY = "mondayProfile";
 
 export const useSession = () => {
-  const { session, setSession, isAuthenticated, setIsAuthenticated } =
-    useContext(SessionContext);
-  const [errorMessage, setErrorMessage] = useState("");
+  const {
+    session,
+    setSession,
+    isAuthenticated,
+    setIsAuthenticated,
+    errorMessage,
+    setErrorMessage,
+  } = useContext(SessionContext);
   const [isLoading, setIsLoading] = useState(false);
   const [mondayProfile, setMondayProfile] = useState<EmployeeProfile | null>(
     null
@@ -55,6 +60,7 @@ export const useSession = () => {
           const parsedProfile = JSON.parse(storedProfile);
           if (parsedProfile.email === session.user.email) {
             setMondayProfile(parsedProfile);
+            setErrorMessage("");
             setIsAuthenticated(true);
             return;
           }
@@ -76,7 +82,7 @@ export const useSession = () => {
             );
           if (coachFacilitatorError || !coachFacilitatorData) {
             setErrorMessage(
-              "You are not authorized to access this page. Please contact the operations team."
+              `We couldn't find a Teaching Lab profile matching ${session.user.email}. If your email was recently changed, please contact the operations team to update your access.`
             );
             await supabase.auth.signOut();
             setIsAuthenticated(false);
@@ -94,6 +100,7 @@ export const useSession = () => {
             MONDAY_PROFILE_KEY,
             JSON.stringify(coachFacilitatorProfile)
           );
+          setErrorMessage("");
           setIsAuthenticated(true);
           return;
         }
@@ -107,6 +114,7 @@ export const useSession = () => {
         };
         setMondayProfile(newProfile);
         localStorage.setItem(MONDAY_PROFILE_KEY, JSON.stringify(newProfile));
+        setErrorMessage("");
         setIsAuthenticated(true);
       } catch (error) {
         console.error("Error checking Monday profile:", error);
