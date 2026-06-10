@@ -1,8 +1,10 @@
 export type YesNo = "Yes" | "No";
 
 /**
- * A district (Monday parent item) with its schools (subitems), sourced from the
- * district/school board (see COACH_LOG board IDs in the coach-log repository).
+ * A district with its schools, sourced from the district/school Google Sheet
+ * (one column per district; see the coach-log repository). The service layer
+ * augments the school list with "All Schools"/"N/A" options before it reaches
+ * the form.
  */
 export type DistrictWithSchools = {
   district: string;
