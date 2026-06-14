@@ -1,7 +1,11 @@
 import { Button, Loader, Notification } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import type { DistrictWithSchools } from "~/domains/coach-log/model";
+import { useEffect, useMemo, useState } from "react";
+import {
+  subSchoolKey,
+  type DistrictWithSchools,
+  type SubSchoolMap,
+} from "~/domains/coach-log/model";
 import { useSession } from "../auth/hooks/useSession";
 import { isNycCoachTypeDistrict, shouldShowSubSchool } from "./constants";
 import { CancellationQuestion } from "./questions/cancellation-question";
@@ -19,9 +23,10 @@ import {
 
 type Props = {
   districts: DistrictWithSchools[];
+  subSchools: SubSchoolMap;
 };
 
-export const CoachLogForm = ({ districts }: Props) => {
+export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const { mondayProfile } = useSession();
   const form = useCoachLogForm();
 
@@ -39,6 +44,12 @@ export const CoachLogForm = ({ districts }: Props) => {
   const showSubSchool = shouldShowSubSchool(district, nycCoachType);
   const showActivities = canceled !== "Yes";
 
+  // Sub-school options are filtered from the loader map by district + school.
+  const subSchoolOptions = useMemo(
+    () => subSchools[subSchoolKey(district, school)] ?? [],
+    [subSchools, district, school]
+  );
+
   const resetCoacheeSelections = () => {
     form.setFieldValue("coacheeRows", [{ ...EMPTY_COACHEE_ROW }]);
     form.setFieldValue("groupParticipants", []);
@@ -54,6 +65,7 @@ export const CoachLogForm = ({ districts }: Props) => {
 
   const handleSchoolChange = (value: string) => {
     form.setFieldValue("school", value);
+    form.setFieldValue("subSchool", "");
     resetCoacheeSelections();
   };
 
@@ -168,7 +180,9 @@ export const CoachLogForm = ({ districts }: Props) => {
             />
           )}
 
-          {showSubSchool && <SubSchoolQuestion form={form} />}
+          {showSubSchool && (
+            <SubSchoolQuestion form={form} options={subSchoolOptions} />
+          )}
 
           <SessionDateQuestion form={form} />
 

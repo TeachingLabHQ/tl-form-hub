@@ -11,6 +11,26 @@ export type DistrictWithSchools = {
   schools: string[];
 };
 
+/** One row of the sub-school sheet: a (district, school) -> sub-school mapping. */
+export type SubSchoolRow = {
+  district: string;
+  school: string;
+  subSchool: string;
+};
+
+/**
+ * Sub-school options keyed by {@link subSchoolKey}. Loaded once (server-side)
+ * and filtered client-side by the selected district + school.
+ */
+export type SubSchoolMap = Record<string, string[]>;
+
+/**
+ * Stable lookup key for sub-schools by district + school. Used by both the
+ * service (building the map) and the form (reading it) so they can't drift.
+ */
+export const subSchoolKey = (district: string, school: string) =>
+  `${district.trim().toLowerCase()}|${school.trim().toLowerCase()}`;
+
 /** One 1:1 coaching entry. Each row becomes a Monday subitem on submission. */
 export type CoacheeRow = {
   coacheeName: string;

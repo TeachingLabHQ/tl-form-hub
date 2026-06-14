@@ -1,5 +1,5 @@
 import { Errorable } from "~/utils/errorable";
-import { DistrictWithSchools } from "./model";
+import { DistrictWithSchools, SubSchoolMap, subSchoolKey } from "./model";
 import { CoachLogRepository } from "./repository";
 
 export interface CoachLogService {
@@ -8,6 +8,7 @@ export interface CoachLogService {
     district: string,
     school: string
   ) => Promise<Errorable<string[]>>;
+  fetchSubSchoolMap: () => Promise<Errorable<SubSchoolMap>>;
 }
 
 const uniqueSorted = (values: string[]) =>
@@ -45,6 +46,24 @@ export function coachLogService(
       const result = await repository.fetchCoachees(district, school);
       if (result.error || !result.data) return result;
       return { data: uniqueSorted(result.data), error: null };
+    },
+
+    fetchSubSchoolMap: async () => {
+      const result = await repository.fetchSubSchoolRows();
+      if (result.error || !result.data) return result;
+
+      // Group sub-schools by (district, school), deduped and sorted.
+      const grouped: SubSchoolMap = {};
+      for (const row of result.data) {
+        const key = subSchoolKey(row.district, row.school);
+        (grouped[key] ??= []).push(row.subSchool);
+      }
+      const map: SubSchoolMap = {};
+      for (const [key, list] of Object.entries(grouped)) {
+        map[key] = uniqueSorted(list);
+      }
+
+      return { data: map, error: null };
     },
   };
 }

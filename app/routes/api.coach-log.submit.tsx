@@ -17,6 +17,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     coachMondayId,
     district,
     school,
+    subSchool,
     nycCoachType,
     sessionDate,
     canceled,
@@ -52,7 +53,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       };
     }
     if (nycCoachType) parentColumns.text13__1 = nycCoachType; // NYC Coach Type
-    // TODO(columns): Sub-school has no Monday column id yet — not mapped.
+    if (subSchool) parentColumns.text_mm465e65 = subSchool; // Sub-school
 
     if (canceled === "Yes") {
       parentColumns.text51__1 = cancelReason; // Why session did not take place

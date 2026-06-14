@@ -1,16 +1,18 @@
 import { google } from "googleapis";
 import { Errorable } from "~/utils/errorable";
 import { fetchMondayData } from "~/domains/utils";
-import { DistrictWithSchools } from "./model";
+import { DistrictWithSchools, SubSchoolRow } from "./model";
 
-// District/school source: a Google Sheet. The tab is laid out one column per
-// district — the first cell is the district name and the cells below it are its
-// schools — so we read it with a COLUMNS major dimension and treat each column
-// as a district. The tab is identified by its gid (sheetId), which we resolve
-// to the tab title before reading values (the values API ranges by title).
-const DISTRICT_SCHOOL_SPREADSHEET_ID =
-  "1hbs5d1uf2xqDvs0hG68hZG4ttmf7BhqKDuKCNNaYd54";
+// Coach-log reference data lives in one Google Sheet with several tabs. Tabs are
+// identified by gid (sheetId), which we resolve to a tab title before reading
+// values (the values API ranges by title).
+//   - District/school tab: laid out one column per district (first cell is the
+//     district name, cells below it are its schools); read COLUMNS-major.
+//   - Sub-school tab: one row per (Site, School, Subschool); read ROWS-major and
+//     keyed on the selected district (Site) + school.
+const COACH_LOG_SPREADSHEET_ID = "1hbs5d1uf2xqDvs0hG68hZG4ttmf7BhqKDuKCNNaYd54";
 const DISTRICT_SCHOOL_TAB_GID = 2037785111;
+const SUB_SCHOOL_TAB_GID = 1285523694;
 const SHEETS_READONLY_SCOPE =
   "https://www.googleapis.com/auth/spreadsheets.readonly";
 
@@ -35,9 +37,26 @@ function sheetsClient() {
   return google.sheets({ version: "v4", auth });
 }
 
+// Resolve a tab gid (sheetId) to its title so the values API can range by it.
+async function tabTitleByGid(
+  sheets: ReturnType<typeof sheetsClient>,
+  gid: number
+): Promise<string> {
+  const meta = await sheets.spreadsheets.get({
+    spreadsheetId: COACH_LOG_SPREADSHEET_ID,
+    fields: "sheets.properties(sheetId,title)",
+  });
+  const title = meta.data.sheets?.find(
+    (s) => s.properties?.sheetId === gid
+  )?.properties?.title;
+  if (!title) throw new Error(`Tab gid ${gid} not found`);
+  return title;
+}
+
 export interface CoachLogRepository {
   fetchDistrictsWithSchools(): Promise<Errorable<DistrictWithSchools[]>>;
   fetchCoachees(district: string, school: string): Promise<Errorable<string[]>>;
+  fetchSubSchoolRows(): Promise<Errorable<SubSchoolRow[]>>;
 }
 
 export function coachLogRepository(): CoachLogRepository {
@@ -45,21 +64,10 @@ export function coachLogRepository(): CoachLogRepository {
     fetchDistrictsWithSchools: async () => {
       try {
         const sheets = sheetsClient();
-
-        // Resolve the tab gid -> title; the values API ranges by tab title.
-        const meta = await sheets.spreadsheets.get({
-          spreadsheetId: DISTRICT_SCHOOL_SPREADSHEET_ID,
-          fields: "sheets.properties(sheetId,title)",
-        });
-        const tabTitle = meta.data.sheets?.find(
-          (s) => s.properties?.sheetId === DISTRICT_SCHOOL_TAB_GID
-        )?.properties?.title;
-        if (!tabTitle) {
-          throw new Error(`Tab gid ${DISTRICT_SCHOOL_TAB_GID} not found`);
-        }
+        const tabTitle = await tabTitleByGid(sheets, DISTRICT_SCHOOL_TAB_GID);
 
         const res = await sheets.spreadsheets.values.get({
-          spreadsheetId: DISTRICT_SCHOOL_SPREADSHEET_ID,
+          spreadsheetId: COACH_LOG_SPREADSHEET_ID,
           range: tabTitle,
           majorDimension: "COLUMNS",
         });
@@ -134,6 +142,40 @@ export function coachLogRepository(): CoachLogRepository {
       } catch (e) {
         console.error(e);
         return { data: null, error: new Error("fetchCoachees() went wrong") };
+      }
+    },
+
+    // Raw rows from the sub-school tab — one [Site (district), School, Subschool]
+    // per row. Returned unfiltered (the service builds the lookup map); the
+    // header row is dropped here.
+    fetchSubSchoolRows: async () => {
+      try {
+        const sheets = sheetsClient();
+        const tabTitle = await tabTitleByGid(sheets, SUB_SCHOOL_TAB_GID);
+
+        const res = await sheets.spreadsheets.values.get({
+          spreadsheetId: COACH_LOG_SPREADSHEET_ID,
+          range: tabTitle,
+          majorDimension: "ROWS",
+        });
+
+        const rows = res.data.values ?? [];
+        const subSchoolRows: SubSchoolRow[] = rows
+          .slice(1) // drop the "Site | School | Subschool" header row
+          .map((row) => ({
+            district: String(row?.[0] ?? "").trim(),
+            school: String(row?.[1] ?? "").trim(),
+            subSchool: String(row?.[2] ?? "").trim(),
+          }))
+          .filter((r) => r.district && r.school && r.subSchool);
+
+        return { data: subSchoolRows, error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("fetchSubSchoolRows() went wrong"),
+        };
       }
     },
   };
