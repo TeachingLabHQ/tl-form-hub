@@ -13,7 +13,7 @@ import { vendorPaymentService } from "~/domains/vendor-payment/service";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { supabaseClient } = createSupabaseServerClient(request);
+  const { supabaseClient, headers } = createSupabaseServerClient(request);
 
   // Get cfDetails from session or wherever it's stored
   const {
@@ -27,8 +27,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       }
     : null;
 
+  // getSession() may rotate the refresh token; `headers` carries the resulting
+  // Set-Cookie. Returning it keeps the browser session in sync — otherwise the
+  // client's refresh token is silently invalidated and ProtectedRoute bounces
+  // the user to the sign-in page on the next auth check.
   if (!cfDetails?.email) {
-    return json({ paymentRequestHistory: [], projects: [] });
+    return json({ paymentRequestHistory: [], projects: [] }, { headers });
   }
 
   const newVendorPaymentService = vendorPaymentService(vendorPaymentRepository(supabaseClient));
@@ -42,7 +46,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const newProjectService = projectService(projectRepository());
 
   const { data: projects } = await newProjectService.fetchProjectSourceNames();
-  return json({ paymentRequestHistory, projects });
+  return json({ paymentRequestHistory, projects }, { headers });
 };
 
 export default function VendorPaymentFormRoute() {
