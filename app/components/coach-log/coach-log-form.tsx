@@ -8,9 +8,19 @@ import {
   type SubSchoolMap,
 } from "~/domains/coach-log/model";
 import { useSession } from "../auth/hooks/useSession";
-import { isNycCoachTypeDistrict, shouldShowSubSchool } from "./constants";
+import { buildCoachLogSubmission } from "./build-submission";
+import {
+  isNycCoachTypeDistrict,
+  shouldShowEarlyChildhood,
+  shouldShowReads,
+  shouldShowSolves,
+  shouldShowSubSchool,
+} from "./constants";
 import { CancellationQuestion } from "./questions/cancellation-question";
 import { DistrictSchoolQuestion } from "./questions/district-school-question";
+import { EarlyChildhoodQuestion } from "./questions/early-childhood-question";
+import { ReadsQuestion } from "./questions/nyc/reads-question";
+import { SolvesQuestion } from "./questions/nyc/solves-question";
 import { GroupCoachingQuestion } from "./questions/group-coaching-question";
 import { NycCoachTypeQuestion } from "./questions/nyc-coach-type-question";
 import { OneOnOneCoachingQuestion } from "./questions/one-on-one-coaching-question";
@@ -51,6 +61,9 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const { district, school, nycCoachType, canceled } = form.values;
   const showNycCoachType = isNycCoachTypeDistrict(district);
   const showSubSchool = shouldShowSubSchool(district, nycCoachType);
+  const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
+  const showReads = shouldShowReads(district, nycCoachType);
+  const showSolves = shouldShowSolves(district, nycCoachType);
   const showActivities = canceled !== "Yes";
 
   // Sub-school options are filtered from the loader map by district + school.
@@ -64,6 +77,12 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("groupParticipants", []);
   };
 
+  const resetEarlyChildhood = () => {
+    form.setFieldValue("ecTouchpoint", "");
+    form.setFieldValue("ecTeacherStrategies", []);
+    form.setFieldValue("ecLeaderCapacityFocus", []);
+  };
+
   const handleDistrictChange = (value: string) => {
     form.setFieldValue("district", value);
     form.setFieldValue("school", "");
@@ -71,6 +90,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("subSchool", "");
     form.setFieldValue("sessionDate", "");
     resetCoacheeSelections();
+    resetEarlyChildhood();
   };
 
   const handleSchoolChange = (value: string) => {
@@ -83,6 +103,9 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("nycCoachType", value);
     if (!shouldShowSubSchool(district, value)) {
       form.setFieldValue("subSchool", "");
+    }
+    if (!shouldShowEarlyChildhood(district, value)) {
+      resetEarlyChildhood();
     }
   };
 
@@ -162,8 +185,6 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     }
 
     setShowErrorBanner(false);
-    const cancelledSession = values.canceled === "Yes";
-    const didGroup = !cancelledSession && values.didGroupCoaching === "Yes";
 
     try {
       setIsSubmitting(true);
@@ -173,29 +194,12 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
       const response = await fetch("/api/coach-log/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coachName: mondayProfile.name,
-          coachMondayId: mondayProfile.mondayProfileId || "",
-          district: values.district,
-          school: values.school,
-          subSchool: showSubSchool ? values.subSchool : "",
-          nycCoachType: showNycCoachType ? values.nycCoachType : "",
-          sessionDate: values.sessionDate,
-          canceled: values.canceled,
-          cancelReason: cancelledSession ? values.cancelReason : "",
-          cancelReasonOther: cancelledSession ? values.cancelReasonOther : "",
-          rescheduled: cancelledSession ? values.rescheduled : "",
-          did1on1: cancelledSession ? "" : values.did1on1,
-          coacheeRows:
-            !cancelledSession && values.did1on1 === "Yes"
-              ? values.coacheeRows
-              : [],
-          didGroupCoaching: cancelledSession ? "" : values.didGroupCoaching,
-          groupParticipants: didGroup ? values.groupParticipants : [],
-          groupParticipantRole: didGroup ? values.groupParticipantRole : "",
-          groupTopic: didGroup ? values.groupTopic : "",
-          groupDurationMins: didGroup ? values.groupDurationMins : "",
-        }),
+        body: JSON.stringify(
+          buildCoachLogSubmission(values, {
+            name: mondayProfile.name,
+            mondayProfileId: mondayProfile.mondayProfileId || "",
+          })
+        ),
       });
 
       if (response.status === 207) {
@@ -259,6 +263,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 loadingCoachees={loadingCoachees}
               />
               <GroupCoachingQuestion form={form} coacheeOptions={coacheeOptions} />
+              {showEarlyChildhood && <EarlyChildhoodQuestion form={form} />}
+              {showReads && (
+                <ReadsQuestion form={form} district={district} school={school} />
+              )}
+              {showSolves && <SolvesQuestion form={form} />}
             </>
           )}
 

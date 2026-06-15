@@ -65,6 +65,49 @@ export type CoachLogSubmission = {
   nycCoachType: string;
   sessionDate: string;
 
+  // ELA Early Childhood coach
+  ecTouchpoint: string;
+  ecTeacherStrategies: string[];
+  ecLeaderCapacityFocus: string[];
+
+  // NYC Reads coach
+  readsIsPLSession: YesNo | "";
+  readsScheduleProvided: YesNo | "";
+  readsHighImpactActivities: YesNo | "";
+  readsTouchpoint: string;
+  readsIsMultiSchool: YesNo | "";
+  readsMultiSchoolDBN: string;
+  readsVisitDuration: string;
+  readsSupportedTeacherTypes: string[];
+  readsGradeBands: string[];
+  readsTeacherStrategies: string[];
+  readsMTSSFocus: YesNo | "";
+  readsMajorityUsingHQIM: YesNo | "";
+  readsHQIMContext: string;
+  readsSupportedLeaders: string[];
+  readsSupportedLeadersOther: string;
+  readsLeaderVisitDuration: string;
+  readsLeaderCapacityFocus: string[];
+  readsSupportedDistrictLeaders: string[];
+  readsSupportedDistrictLeadersOther: string;
+  readsDistrictSupports: string[];
+  mtssPracticesResponses: string[];
+  mtssAdditionalContext: string;
+
+  // NYC Solves coach
+  solvesTouchpoint: string;
+  solvesTeacherVisitDuration: string;
+  solvesSupportedTeacherTypes: string[];
+  solvesGradeContentAreas: string[];
+  solvesTeacherProtocols: string[];
+  solvesIntervisitationDBNs: string;
+  solvesMajorityUsingHQIM: YesNo | "";
+  solvesHQIMContext: string;
+  solvesLeaderSupportDuration: string;
+  solvesLeaderSupportTrack: string;
+  solvesAdditionalSupportDuration: string;
+  solvesAdditionalSupportType: string;
+
   // Cancellation
   canceled: YesNo | "";
   cancelReason: string;

@@ -1,6 +1,19 @@
 import type { ActionFunctionArgs } from "@vercel/remix";
 import type { CoachLogSubmission } from "~/domains/coach-log/model";
 import { insertMondayData } from "~/domains/utils";
+import {
+  readsShowsDistrictBlock,
+  readsShowsLeaderBlock,
+  readsShowsTeacherBlock,
+  SOLVES_INTERVISITATION_PROTOCOL,
+  solvesShowsAdditionalSupport,
+  solvesShowsLeaderBlock,
+  solvesShowsTeacherBlock,
+} from "~/components/coach-log/questions/nyc/constants";
+
+// Joins a multi-select array into the comma-separated string the Monday text
+// columns expect (matching the legacy form's serialization).
+const csv = (values: string[] | undefined) => (values ?? []).join(", ");
 
 // A real session date is YYYY-MM-DD; the "N/A" sentinel must not be written to a
 // Monday date column.
@@ -24,6 +37,43 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     subSchool,
     nycCoachType,
     sessionDate,
+    ecTouchpoint,
+    ecTeacherStrategies,
+    ecLeaderCapacityFocus,
+    readsIsPLSession,
+    readsScheduleProvided,
+    readsHighImpactActivities,
+    readsTouchpoint,
+    readsIsMultiSchool,
+    readsMultiSchoolDBN,
+    readsVisitDuration,
+    readsSupportedTeacherTypes,
+    readsGradeBands,
+    readsTeacherStrategies,
+    readsMTSSFocus,
+    readsMajorityUsingHQIM,
+    readsHQIMContext,
+    readsSupportedLeaders,
+    readsSupportedLeadersOther,
+    readsLeaderVisitDuration,
+    readsLeaderCapacityFocus,
+    readsSupportedDistrictLeaders,
+    readsSupportedDistrictLeadersOther,
+    readsDistrictSupports,
+    mtssPracticesResponses,
+    mtssAdditionalContext,
+    solvesTouchpoint,
+    solvesTeacherVisitDuration,
+    solvesSupportedTeacherTypes,
+    solvesGradeContentAreas,
+    solvesTeacherProtocols,
+    solvesIntervisitationDBNs,
+    solvesMajorityUsingHQIM,
+    solvesHQIMContext,
+    solvesLeaderSupportDuration,
+    solvesLeaderSupportTrack,
+    solvesAdditionalSupportDuration,
+    solvesAdditionalSupportType,
     canceled,
     cancelReason,
     cancelReasonOther,
@@ -58,6 +108,105 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
     if (nycCoachType) parentColumns.text13__1 = nycCoachType; // NYC Coach Type
     if (subSchool) parentColumns.text_mm465e65 = subSchool; // Sub-school
+
+    // ELA Early Childhood coach (multi-selects stored comma-joined, per legacy).
+    if (ecTouchpoint) parentColumns.text_mktgtahx = ecTouchpoint; // Touchpoint type
+    if (ecTeacherStrategies?.length)
+      parentColumns.text_mktgaftm = ecTeacherStrategies.join(", "); // Teacher strategies
+    if (ecLeaderCapacityFocus?.length)
+      parentColumns.text_mktggp36 = ecLeaderCapacityFocus.join(", "); // Leader capacity focus
+
+    // NYC Reads (the client only sends these for a Reads coach). Each touchpoint
+    // block is gated again here so stale hidden values are never written.
+    if (readsTouchpoint) {
+      if (readsIsPLSession) parentColumns.text_mkv0r1t = readsIsPLSession;
+      if (readsScheduleProvided) parentColumns.text_mm1erdxw = readsScheduleProvided;
+      if (readsHighImpactActivities)
+        parentColumns.text_mm1ec7kg = readsHighImpactActivities;
+      parentColumns.text_mktgtahx = readsTouchpoint;
+
+      if (readsShowsTeacherBlock(readsTouchpoint)) {
+        if (readsIsMultiSchool) parentColumns.text_mktgedch = readsIsMultiSchool;
+        if (readsIsMultiSchool === "Yes" && readsMultiSchoolDBN)
+          parentColumns.text_mkvmnx9g = readsMultiSchoolDBN;
+        if (readsVisitDuration) parentColumns.text_mktgt2ah = readsVisitDuration;
+        if (readsSupportedTeacherTypes?.length)
+          parentColumns.text_mktgnqcx = csv(readsSupportedTeacherTypes);
+        if (readsGradeBands?.length)
+          parentColumns.text_mktgz9wm = csv(readsGradeBands);
+        if (readsTeacherStrategies?.length)
+          parentColumns.text_mktgaftm = csv(readsTeacherStrategies);
+        if (readsMTSSFocus) parentColumns.text_mkv0fs1n = readsMTSSFocus;
+        if (readsMajorityUsingHQIM)
+          parentColumns.text_mkv0w2eq = readsMajorityUsingHQIM;
+        if (readsMajorityUsingHQIM === "No" && readsHQIMContext)
+          parentColumns.text_mkxspvf5 = readsHQIMContext;
+      }
+
+      if (readsShowsLeaderBlock(readsTouchpoint)) {
+        if (readsSupportedLeaders?.length)
+          parentColumns.text_mktg8pn8 = csv(readsSupportedLeaders);
+        if (readsSupportedLeadersOther)
+          parentColumns.text_mktgph5d = readsSupportedLeadersOther;
+        if (readsLeaderVisitDuration)
+          parentColumns.text_mktggbxt = readsLeaderVisitDuration;
+        if (readsLeaderCapacityFocus?.length)
+          parentColumns.text_mktggp36 = csv(readsLeaderCapacityFocus);
+      }
+
+      if (readsShowsDistrictBlock(readsTouchpoint)) {
+        if (readsSupportedDistrictLeaders?.length)
+          parentColumns.text_mktgzc4s = csv(readsSupportedDistrictLeaders);
+        if (readsSupportedDistrictLeadersOther)
+          parentColumns.text_mktgexpt = readsSupportedDistrictLeadersOther;
+        if (readsDistrictSupports?.length)
+          parentColumns.text_mktg32xj = csv(readsDistrictSupports);
+      }
+
+      if (mtssPracticesResponses?.some((r) => r))
+        parentColumns.long_text_mkxsd1qs = mtssPracticesResponses.join(" | ");
+      if (mtssAdditionalContext)
+        parentColumns.long_text_mkxsxkdh = mtssAdditionalContext;
+    }
+
+    // NYC Solves (client only sends these for a Solves coach).
+    if (solvesTouchpoint) {
+      parentColumns.text_mkthbvw5 = solvesTouchpoint;
+
+      if (solvesShowsTeacherBlock(solvesTouchpoint)) {
+        if (solvesTeacherVisitDuration)
+          parentColumns.text_mkthtzhb = solvesTeacherVisitDuration;
+        if (solvesSupportedTeacherTypes?.length)
+          parentColumns.text_mkthqes0 = csv(solvesSupportedTeacherTypes);
+        if (solvesGradeContentAreas?.length)
+          parentColumns.text_mkth9zzf = csv(solvesGradeContentAreas);
+        if (solvesTeacherProtocols?.length)
+          parentColumns.text_mkthqrth = csv(solvesTeacherProtocols);
+        if (
+          solvesTeacherProtocols?.includes(SOLVES_INTERVISITATION_PROTOCOL) &&
+          solvesIntervisitationDBNs
+        )
+          parentColumns.text_mkth5zrt = solvesIntervisitationDBNs;
+        if (solvesMajorityUsingHQIM)
+          parentColumns.text_mkttj6kq = solvesMajorityUsingHQIM;
+        if (solvesMajorityUsingHQIM === "No" && solvesHQIMContext)
+          parentColumns.text_mkxsvgng = solvesHQIMContext;
+      }
+
+      if (solvesShowsLeaderBlock(solvesTouchpoint)) {
+        if (solvesLeaderSupportDuration)
+          parentColumns.text_mkth7jye = solvesLeaderSupportDuration;
+        if (solvesLeaderSupportTrack)
+          parentColumns.text_mkthjyrx = solvesLeaderSupportTrack;
+      }
+
+      if (solvesShowsAdditionalSupport(solvesTouchpoint)) {
+        if (solvesAdditionalSupportDuration)
+          parentColumns.text_mkth5kcn = solvesAdditionalSupportDuration;
+        if (solvesAdditionalSupportType)
+          parentColumns.text_mkthwj61 = solvesAdditionalSupportType;
+      }
+    }
 
     if (canceled === "Yes") {
       parentColumns.text51__1 = cancelReason; // Why session did not take place
