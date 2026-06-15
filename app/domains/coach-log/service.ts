@@ -33,6 +33,17 @@ const dateLabel = (ymd: string) =>
     timeZone: "UTC",
   }).format(new Date(`${ymd}T00:00:00Z`));
 
+// The parquet calendar is read from disk, which only works in local dev. On
+// deployed (Vercel) environments we serve these placeholder dates instead, until
+// the AWS-backed session-date source lands.
+const DUMMY_SESSION_DATES: SessionDateOption[] = [
+  "2026-06-01",
+  "2026-06-03",
+  "2026-06-08",
+  "2026-06-10",
+  "2026-06-15",
+].map((ymd) => ({ value: ymd, label: dateLabel(ymd) }));
+
 // Build the school dropdown options for a district. Districts with no schools
 // fall back to a single "N/A" entry; otherwise we prepend an "All Schools"
 // aggregate option (matching the legacy form). The coachee roster lookup
@@ -86,6 +97,11 @@ export function coachLogService(
     },
 
     fetchSessionDates: async (coachName: string, district: string) => {
+      // Deployed environments can't read the parquet from disk — use placeholders.
+      if (process.env.VERCEL) {
+        return { data: DUMMY_SESSION_DATES, error: null };
+      }
+
       const result = await repository.fetchSessionDates(coachName, district);
       if (result.error || !result.data) return result;
 

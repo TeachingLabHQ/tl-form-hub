@@ -30,8 +30,9 @@ const COACHEE_ROSTER_BOARD_ID = 18416567790;
 //   - "Session Date": ISO date (UTC midnight)
 //   - "Coach/Facilitator": coach name (matched to the logged-in mondayProfile)
 //   - "L&R name": site/district label (same format as the district sheet)
-// NOTE(deploy): for Vercel prod this file must be bundled into the serverless
-// function (e.g. via includeFiles) — tracked as a data-source follow-up.
+// NOTE(deploy): disk reads only work in local dev. On Vercel the service layer
+// short-circuits to placeholder dates (see DUMMY_SESSION_DATES in service.ts),
+// so this file isn't read or bundled in deployed environments.
 const SESSION_CALENDAR_PARQUET = path.join(
   process.cwd(),
   "coaching_pl_calendar.parquet"
