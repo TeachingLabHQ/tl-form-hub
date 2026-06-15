@@ -36,8 +36,8 @@ jobs:
           # stuck in an 18-min retry loop inside a `general-purpose` sub-agent.
           claude_args: >-
             --model claude-sonnet-4-6
-            --max-turns 20
-            --allowedTools 'Read,Glob,Grep,Bash(git:*),Bash(gh:*),Bash(grep:*),Bash(rg:*),Bash(find:*),Bash(cat:*),Bash(ls:*),Bash(head:*),Bash(tail:*),Bash(wc:*)'
+            --max-turns 30
+            --allowedTools 'Read,Glob,Grep,Write,Bash(git:*),Bash(gh:*),Bash(grep:*),Bash(rg:*),Bash(find:*),Bash(cat:*),Bash(ls:*),Bash(head:*),Bash(tail:*),Bash(wc:*)'
             --disallowedTools 'Task'
           prompt: |
             Review this pull request. Check for:
@@ -46,7 +46,12 @@ jobs:
             - Unhandled edge cases / missing error handling
             - Readability and maintainability
 
-            Post ONE top-level summary comment on the PR using `gh pr comment <number> --body "..."`.
+            Post ONE top-level summary comment on the PR. To do this reliably:
+            1. Use the Write tool to write the full markdown review to `/tmp/review.md`.
+               (Do NOT try to pass the review body inline through a shell argument —
+               backticks, quotes and ${...} in the markdown break shell quoting.)
+            2. Run exactly: `gh pr comment <number> --body-file /tmp/review.md`
+            Do NOT use heredocs, `cat >`, or python to build the comment.
             Do NOT post inline review comments and do NOT create a pending review (`gh api .../reviews`).
             Do NOT delegate to sub-agents.
           # Surface full tool-call output in the Actions log so we can see
