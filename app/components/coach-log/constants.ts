@@ -144,3 +144,19 @@ export function shouldShowEarlyChildhood(
     nycCoachType === ELA_EARLY_CHILDHOOD_COACH_TYPE
   );
 }
+
+/** NYC Reads question set shows for a Reads coach in an NYC district. */
+export function shouldShowReads(
+  district: string,
+  nycCoachType: string
+): boolean {
+  return isNycCoachTypeDistrict(district) && nycCoachType === READS_COACH_TYPE;
+}
+
+/** NYC Solves question set shows for a Solves coach in an NYC district. */
+export function shouldShowSolves(
+  district: string,
+  nycCoachType: string
+): boolean {
+  return isNycCoachTypeDistrict(district) && nycCoachType === SOLVES_COACH_TYPE;
+}
