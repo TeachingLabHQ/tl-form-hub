@@ -1,5 +1,5 @@
 import { Button, Loader, Notification } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   subSchoolKey,
@@ -45,6 +45,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   // Submission status.
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessful, setIsSuccessful] = useState<boolean | null>(null);
+  const [failedCoachees, setFailedCoachees] = useState<string[]>([]);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
 
   const { district, school, nycCoachType, canceled } = form.values;
@@ -145,6 +146,15 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     };
   }, [district, coachName]);
 
+  // No scheduled dates for this coach + district -> auto-select the "N/A"
+  // sentinel so the required date field can still be submitted.
+  useEffect(() => {
+    if (district && !loadingSessionDates && sessionDateOptions.length === 0) {
+      form.setFieldValue("sessionDate", "N/A");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [district, loadingSessionDates, sessionDateOptions]);
+
   const handleSubmit = async (values: CoachLogValues) => {
     if (!mondayProfile?.name) {
       console.error("Please log in first");
@@ -158,6 +168,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     try {
       setIsSubmitting(true);
       setIsSuccessful(null);
+      setFailedCoachees([]);
 
       const response = await fetch("/api/coach-log/submit", {
         method: "POST",
@@ -187,7 +198,16 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
         }),
       });
 
-      setIsSuccessful(response.ok);
+      if (response.status === 207) {
+        // Partial success: the log saved but some 1:1 rows didn't.
+        const body = (await response.json().catch(() => ({}))) as {
+          failedCoachees?: string[];
+        };
+        setFailedCoachees(body.failedCoachees ?? []);
+        setIsSuccessful(true);
+      } else {
+        setIsSuccessful(response.ok);
+      }
     } catch (e) {
       console.error(e);
       setIsSuccessful(false);
@@ -253,13 +273,24 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
               withCloseButton={false}
             />
           )}
-          {isSuccessful === true && (
+          {isSuccessful === true && failedCoachees.length === 0 && (
             <Notification
               icon={<IconCheck size={20} />}
               color="teal"
               title="Your coach log was submitted successfully!"
               withCloseButton={false}
             />
+          )}
+          {isSuccessful === true && failedCoachees.length > 0 && (
+            <Notification
+              icon={<IconAlertTriangle size={20} />}
+              color="yellow"
+              title="Your coach log was saved, but some 1:1 rows didn't."
+              withCloseButton={false}
+            >
+              These coachees could not be saved: {failedCoachees.join(", ")}.
+              Please re-submit them or contact the technology team.
+            </Notification>
           )}
           {isSuccessful === false && (
             <Notification

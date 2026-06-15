@@ -11,18 +11,23 @@ type Props = {
 /**
  * Date-of-session selector. Options come from the coaching PL calendar, scoped
  * to the logged-in coach + the selected district (fetched once a district is
- * chosen). Values are YYYY-MM-DD so they map straight into the Monday date
- * column on submit.
+ * chosen). Real values are YYYY-MM-DD so they map straight into the Monday date
+ * column on submit. When the calendar has no dates for the coach + district, an
+ * "N/A" option is offered (and auto-selected by the form) so the required field
+ * can still be submitted.
  */
 export const SessionDateQuestion = ({ form, options, loading }: Props) => {
   const district = form.values.district;
+  const noDatesFound = !!district && !loading && options.length === 0;
+
+  const data: SessionDateOption[] = noDatesFound
+    ? [{ value: "N/A", label: "N/A — no scheduled dates found" }]
+    : options;
 
   const placeholder = !district
     ? "Select a district first"
     : loading
     ? "Loading dates..."
-    : options.length === 0
-    ? "No scheduled dates found for you in this district"
     : "Select a date";
 
   return (
@@ -37,7 +42,7 @@ export const SessionDateQuestion = ({ form, options, loading }: Props) => {
       </Text>
       <Select
         placeholder={placeholder}
-        data={options}
+        data={data}
         searchable
         disabled={!district || loading}
         rightSection={loading ? <Loader size="xs" /> : undefined}

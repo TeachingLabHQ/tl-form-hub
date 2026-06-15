@@ -2,6 +2,10 @@ import type { ActionFunctionArgs } from "@vercel/remix";
 import type { CoachLogSubmission } from "~/domains/coach-log/model";
 import { insertMondayData } from "~/domains/utils";
 
+// A real session date is YYYY-MM-DD; the "N/A" sentinel must not be written to a
+// Monday date column.
+const isRealDate = (value: string) => !!value && value !== "N/A";
+
 // Reuses the legacy Coach Log Form board + column schema.
 const BOARD_ID = 18416482214;
 const GROUP_ID = "topics";
@@ -46,7 +50,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       text88__1: district, // District
       text5__1: school, // School
     };
-    if (sessionDate) parentColumns.date__1 = { date: sessionDate };
+    if (isRealDate(sessionDate)) parentColumns.date__1 = { date: sessionDate };
     if (coachMondayId) {
       parentColumns.people__1 = {
         personsAndTeams: [{ id: Number(coachMondayId), kind: "person" }],
@@ -94,13 +98,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const querySub =
         "mutation ($myItemName: String!, $parentID: ID!, $columnVals: JSON!) { create_subitem (parent_item_id: $parentID, item_name: $myItemName, column_values: $columnVals) { id } }";
 
-      await Promise.all(
+      const results = await Promise.allSettled(
         coacheeRows.map((row) => {
           const subColumns: Record<string, unknown> = {
             text__1: row.coacheeName, // Coachee
             text0__1: row.role, // Role
           };
-          if (sessionDate) subColumns.date0 = { date: sessionDate };
+          if (isRealDate(sessionDate)) subColumns.date0 = { date: sessionDate };
           if (row.durationMins)
             subColumns.numbers__1 = parseFloat(row.durationMins); // Duration
 
@@ -112,6 +116,37 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           return insertMondayData(querySub, varsSub);
         })
       );
+
+      // A subitem only succeeds if Monday returns a created id. A GraphQL error
+      // comes back as a resolved 200 with no id (insertMondayData doesn't
+      // throw), so inspect every result rather than trusting Promise resolution.
+      const failedCoachees = results
+        .map((result, i) => {
+          const created =
+            result.status === "fulfilled" &&
+            result.value?.data?.create_subitem?.id;
+          if (created) return null;
+          const coacheeName = coacheeRows[i]?.coacheeName ?? "(unknown)";
+          const reason =
+            result.status === "rejected" ? result.reason : result.value?.errors;
+          console.error(
+            `Coach log subitem create failed for "${coacheeName}":`,
+            reason
+          );
+          return coacheeName;
+        })
+        .filter((name): name is string => name !== null);
+
+      if (failedCoachees.length) {
+        // The parent item was created, so this is a partial failure (207), not a
+        // 500 — returning 500 would invite a resubmit and duplicate the parent.
+        // The client warns the coach which 1:1 rows didn't save.
+        return new Response(JSON.stringify({ parentItemId, failedCoachees }), {
+          status: 207,
+          statusText: `${failedCoachees.length} of ${coacheeRows.length} coachee rows failed to save`,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
     }
 
     return new Response(null, {
