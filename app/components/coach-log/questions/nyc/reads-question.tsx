@@ -31,14 +31,15 @@ export const ReadsQuestion = ({ form, district, school }: Props) => {
   const touchpoint = form.values.readsTouchpoint;
 
   // A Professional Learning Session isn't a coaching activity, so selecting
-  // "Yes" auto-answers the 1:1 and group coaching questions "No".
+  // "Yes" auto-answers the 1:1 and group coaching questions "No". Switching the
+  // answer back off clears those again so the coach isn't left with a silent,
+  // unintended "No".
   const handlePLSessionChange = (value: string | null) => {
     const next = (value ?? "") as YesNo | "";
     form.setFieldValue("readsIsPLSession", next);
-    if (next === "Yes") {
-      form.setFieldValue("did1on1", "No");
-      form.setFieldValue("didGroupCoaching", "No");
-    }
+    const autoAnswer = next === "Yes" ? "No" : "";
+    form.setFieldValue("did1on1", autoAnswer);
+    form.setFieldValue("didGroupCoaching", autoAnswer);
   };
 
   return (

@@ -34,6 +34,9 @@ export const OneOnOneCoachingQuestion = ({
           placeholder="Select Yes or No"
           data={YES_NO_OPTIONS}
           {...form.getInputProps("did1on1")}
+          // Coerce "" -> null so a programmatic reset (e.g. PL session) clears
+          // the displayed selection (Mantine only clears on null).
+          value={form.values.did1on1 || null}
         />
       </div>
 
