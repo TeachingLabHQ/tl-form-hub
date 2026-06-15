@@ -18,6 +18,9 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
           placeholder="Select Yes or No"
           data={YES_NO_OPTIONS}
           {...form.getInputProps("didGroupCoaching")}
+          // Coerce "" -> null so a programmatic reset (e.g. PL session) clears
+          // the displayed selection (Mantine only clears on null).
+          value={form.values.didGroupCoaching || null}
         />
       </div>
 
