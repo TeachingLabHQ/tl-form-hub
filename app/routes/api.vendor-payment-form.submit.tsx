@@ -64,7 +64,7 @@ export async function action({ request }: ActionFunctionArgs) {
     };
 
     // Initialize service and repository
-    const { supabaseClient } = createSupabaseServerClient(request);
+    const { supabaseClient, headers } = createSupabaseServerClient(request);
     const repository = vendorPaymentRepository(supabaseClient);
     const service = vendorPaymentService(repository);
 
@@ -72,10 +72,10 @@ export async function action({ request }: ActionFunctionArgs) {
     const { data, error } = await service.createSubmission(submission);
 
     if (error) {
-      return json({ error: error.message }, { status: 500 });
+      return json({ error: error.message }, { status: 500, headers });
     }
 
-    return json({ data }, { status: 201 });
+    return json({ data }, { status: 201, headers });
   } catch (error) {
     console.error("Error submitting form:", error);
     return json({ error: "Failed to submit form" }, { status: 500 });

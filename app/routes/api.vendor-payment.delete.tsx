@@ -17,14 +17,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   try {
-    const { supabaseClient } = createSupabaseServerClient(request);
+    const { supabaseClient, headers } = createSupabaseServerClient(request);
     const service = vendorPaymentService(vendorPaymentRepository(supabaseClient));
     const { error } = await service.deleteSubmission(paymentRequestId);
     if (error) {
       throw error;
     }
 
-    return json({ success: true });
+    return json({ success: true }, { headers });
   } catch (error) {
     console.error("Error deleting submission:", error);
     return json({ error: "Failed to delete submission" }, { status: 500 });
