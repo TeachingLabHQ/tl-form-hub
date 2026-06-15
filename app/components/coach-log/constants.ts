@@ -30,6 +30,60 @@ export const NYC_COACH_TYPE_OPTIONS = [
 /** Coach types that reveal additional question sets (ported NYC Reads/Solves). */
 export const READS_COACH_TYPE = "Reads Coach";
 export const SOLVES_COACH_TYPE = "Solves Coach/D75 Math Coach";
+export const ELA_EARLY_CHILDHOOD_COACH_TYPE = "ELA Early Childhood Coach";
+
+// ---------------------------------------------------------------------------
+// ELA Early Childhood Coach — touchpoint + capacity-building question set.
+// ---------------------------------------------------------------------------
+
+export const EC_TOUCHPOINT_OPTIONS = [
+  "Teacher AND leader support",
+  "Teacher support ONLY",
+  "School Leader/Leadership Team support ONLY",
+];
+
+/** Strategies used to build capacity with teacher teams (select up to 5). */
+export const TEACHER_STRATEGY_OPTIONS = [
+  "Unit/module internalization",
+  "Lesson internalization",
+  "Deepening understanding of content/standards/instructional shifts",
+  "Lesson rehearsal",
+  "Professional learning sessions",
+  "Modeling",
+  "Side-by-side coaching",
+  "Classroom visits",
+  "Unit reflection",
+  "Book Club",
+  "Student Work Analysis Meetings",
+  "Data meetings",
+];
+export const MAX_TEACHER_STRATEGIES = 5;
+
+/** Primary focus of the capacity building provided to school leaders. */
+export const LEADER_CAPACITY_FOCUS_OPTIONS = [
+  "Strategic planning",
+  "Regular communication check-in",
+  "Classroom learning visits",
+  "Modeling/gradual release of MTSS data team meetings",
+  "Knowledge-building professional learning",
+  "Intervisitation (Pilot MTSS Middle Schools Only)",
+];
+
+/** Touchpoints that include teacher-team support (-> teacher strategies). */
+const EC_TEACHER_TOUCHPOINTS = new Set([
+  "Teacher AND leader support",
+  "Teacher support ONLY",
+]);
+/** Touchpoints that include leader support (-> leader capacity focus). */
+const EC_LEADER_TOUCHPOINTS = new Set([
+  "Teacher AND leader support",
+  "School Leader/Leadership Team support ONLY",
+]);
+
+export const ecShowsTeacherStrategies = (touchpoint: string): boolean =>
+  EC_TEACHER_TOUCHPOINTS.has(touchpoint);
+export const ecShowsLeaderCapacity = (touchpoint: string): boolean =>
+  EC_LEADER_TOUCHPOINTS.has(touchpoint);
 
 export const CANCELLATION_REASON_OPTIONS = [
   "Partner Canceled",
@@ -78,4 +132,15 @@ export function shouldShowSubSchool(
   nycCoachType: string
 ): boolean {
   return isD75District(district) && nycCoachType === SOLVES_COACH_TYPE;
+}
+
+/** ELA Early Childhood question set shows for an EC coach in an NYC district. */
+export function shouldShowEarlyChildhood(
+  district: string,
+  nycCoachType: string
+): boolean {
+  return (
+    isNycCoachTypeDistrict(district) &&
+    nycCoachType === ELA_EARLY_CHILDHOOD_COACH_TYPE
+  );
 }

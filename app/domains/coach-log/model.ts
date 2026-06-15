@@ -65,6 +65,11 @@ export type CoachLogSubmission = {
   nycCoachType: string;
   sessionDate: string;
 
+  // ELA Early Childhood coach
+  ecTouchpoint: string;
+  ecTeacherStrategies: string[];
+  ecLeaderCapacityFocus: string[];
+
   // Cancellation
   canceled: YesNo | "";
   cancelReason: string;

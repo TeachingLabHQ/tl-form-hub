@@ -8,9 +8,14 @@ import {
   type SubSchoolMap,
 } from "~/domains/coach-log/model";
 import { useSession } from "../auth/hooks/useSession";
-import { isNycCoachTypeDistrict, shouldShowSubSchool } from "./constants";
+import {
+  isNycCoachTypeDistrict,
+  shouldShowEarlyChildhood,
+  shouldShowSubSchool,
+} from "./constants";
 import { CancellationQuestion } from "./questions/cancellation-question";
 import { DistrictSchoolQuestion } from "./questions/district-school-question";
+import { EarlyChildhoodQuestion } from "./questions/early-childhood-question";
 import { GroupCoachingQuestion } from "./questions/group-coaching-question";
 import { NycCoachTypeQuestion } from "./questions/nyc-coach-type-question";
 import { OneOnOneCoachingQuestion } from "./questions/one-on-one-coaching-question";
@@ -51,6 +56,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const { district, school, nycCoachType, canceled } = form.values;
   const showNycCoachType = isNycCoachTypeDistrict(district);
   const showSubSchool = shouldShowSubSchool(district, nycCoachType);
+  const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
   const showActivities = canceled !== "Yes";
 
   // Sub-school options are filtered from the loader map by district + school.
@@ -64,6 +70,12 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("groupParticipants", []);
   };
 
+  const resetEarlyChildhood = () => {
+    form.setFieldValue("ecTouchpoint", "");
+    form.setFieldValue("ecTeacherStrategies", []);
+    form.setFieldValue("ecLeaderCapacityFocus", []);
+  };
+
   const handleDistrictChange = (value: string) => {
     form.setFieldValue("district", value);
     form.setFieldValue("school", "");
@@ -71,6 +83,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("subSchool", "");
     form.setFieldValue("sessionDate", "");
     resetCoacheeSelections();
+    resetEarlyChildhood();
   };
 
   const handleSchoolChange = (value: string) => {
@@ -83,6 +96,9 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("nycCoachType", value);
     if (!shouldShowSubSchool(district, value)) {
       form.setFieldValue("subSchool", "");
+    }
+    if (!shouldShowEarlyChildhood(district, value)) {
+      resetEarlyChildhood();
     }
   };
 
@@ -181,6 +197,16 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
           subSchool: showSubSchool ? values.subSchool : "",
           nycCoachType: showNycCoachType ? values.nycCoachType : "",
           sessionDate: values.sessionDate,
+          ecTouchpoint:
+            !cancelledSession && showEarlyChildhood ? values.ecTouchpoint : "",
+          ecTeacherStrategies:
+            !cancelledSession && showEarlyChildhood
+              ? values.ecTeacherStrategies
+              : [],
+          ecLeaderCapacityFocus:
+            !cancelledSession && showEarlyChildhood
+              ? values.ecLeaderCapacityFocus
+              : [],
           canceled: values.canceled,
           cancelReason: cancelledSession ? values.cancelReason : "",
           cancelReasonOther: cancelledSession ? values.cancelReasonOther : "",
@@ -259,6 +285,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 loadingCoachees={loadingCoachees}
               />
               <GroupCoachingQuestion form={form} coacheeOptions={coacheeOptions} />
+              {showEarlyChildhood && <EarlyChildhoodQuestion form={form} />}
             </>
           )}
 

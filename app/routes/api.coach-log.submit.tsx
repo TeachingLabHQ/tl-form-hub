@@ -24,6 +24,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     subSchool,
     nycCoachType,
     sessionDate,
+    ecTouchpoint,
+    ecTeacherStrategies,
+    ecLeaderCapacityFocus,
     canceled,
     cancelReason,
     cancelReasonOther,
@@ -58,6 +61,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
     if (nycCoachType) parentColumns.text13__1 = nycCoachType; // NYC Coach Type
     if (subSchool) parentColumns.text_mm465e65 = subSchool; // Sub-school
+
+    // ELA Early Childhood coach (multi-selects stored comma-joined, per legacy).
+    if (ecTouchpoint) parentColumns.text_mktgtahx = ecTouchpoint; // Touchpoint type
+    if (ecTeacherStrategies?.length)
+      parentColumns.text_mktgaftm = ecTeacherStrategies.join(", "); // Teacher strategies
+    if (ecLeaderCapacityFocus?.length)
+      parentColumns.text_mktggp36 = ecLeaderCapacityFocus.join(", "); // Leader capacity focus
 
     if (canceled === "Yes") {
       parentColumns.text51__1 = cancelReason; // Why session did not take place

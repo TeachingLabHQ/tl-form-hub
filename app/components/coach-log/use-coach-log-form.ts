@@ -1,6 +1,12 @@
 import { useForm, type UseFormReturnType } from "@mantine/form";
 import type { CoacheeRow, YesNo } from "~/domains/coach-log/model";
-import { CANCELED_OTHER_REASON, isNycCoachTypeDistrict } from "./constants";
+import {
+  CANCELED_OTHER_REASON,
+  ecShowsLeaderCapacity,
+  ecShowsTeacherStrategies,
+  isNycCoachTypeDistrict,
+  shouldShowEarlyChildhood,
+} from "./constants";
 
 /** Single source of truth for every Coach Log field. */
 export type CoachLogValues = {
@@ -10,6 +16,11 @@ export type CoachLogValues = {
   nycCoachType: string;
   subSchool: string;
   sessionDate: string;
+
+  // ELA Early Childhood coach
+  ecTouchpoint: string;
+  ecTeacherStrategies: string[];
+  ecLeaderCapacityFocus: string[];
 
   // Cancellation
   canceled: YesNo | "";
@@ -43,6 +54,9 @@ const INITIAL_VALUES: CoachLogValues = {
   nycCoachType: "",
   subSchool: "",
   sessionDate: "",
+  ecTouchpoint: "",
+  ecTeacherStrategies: [],
+  ecLeaderCapacityFocus: [],
   canceled: "",
   cancelReason: "",
   cancelReasonOther: "",
@@ -77,6 +91,26 @@ export function useCoachLogForm() {
           ? "Coach type is required"
           : null,
       sessionDate: required("Date of session is required"),
+
+      ecTouchpoint: whenNotCancelled((value, values) =>
+        shouldShowEarlyChildhood(values.district, values.nycCoachType) && !value
+          ? "Please select a touchpoint type"
+          : null
+      ),
+      ecTeacherStrategies: whenNotCancelled((value: string[], values) =>
+        shouldShowEarlyChildhood(values.district, values.nycCoachType) &&
+        ecShowsTeacherStrategies(values.ecTouchpoint) &&
+        value.length === 0
+          ? "Please select at least one strategy"
+          : null
+      ),
+      ecLeaderCapacityFocus: whenNotCancelled((value: string[], values) =>
+        shouldShowEarlyChildhood(values.district, values.nycCoachType) &&
+        ecShowsLeaderCapacity(values.ecTouchpoint) &&
+        value.length === 0
+          ? "Please select at least one focus area"
+          : null
+      ),
 
       canceled: required("Please select Yes or No"),
       cancelReason: (value, values) =>
