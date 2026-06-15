@@ -1,43 +1,48 @@
-import { Select, Text } from "@mantine/core";
+import { Loader, Select, Text } from "@mantine/core";
+import type { SessionDateOption } from "~/domains/coach-log/model";
 import type { CoachLogForm } from "../use-coach-log-form";
 
 type Props = {
   form: CoachLogForm;
+  options: SessionDateOption[];
+  loading: boolean;
 };
 
 /**
- * Date-of-session selector.
- * TODO(source): options are pulled from the project's logistics board. Using
- * dummy dates for now; values are YYYY-MM-DD so they map straight into the
- * Monday date column on submit.
+ * Date-of-session selector. Options come from the coaching PL calendar, scoped
+ * to the logged-in coach + the selected district (fetched once a district is
+ * chosen). Values are YYYY-MM-DD so they map straight into the Monday date
+ * column on submit.
  */
-const DUMMY_DATE_OPTIONS = [
-  { value: "2026-06-01", label: "Monday, June 1, 2026" },
-  { value: "2026-06-03", label: "Wednesday, June 3, 2026" },
-  { value: "2026-06-08", label: "Monday, June 8, 2026" },
-  { value: "2026-06-10", label: "Wednesday, June 10, 2026" },
-  { value: "2026-06-15", label: "Monday, June 15, 2026" },
-];
+export const SessionDateQuestion = ({ form, options, loading }: Props) => {
+  const district = form.values.district;
 
-export const SessionDateQuestion = ({ form }: Props) => {
+  const placeholder = !district
+    ? "Select a district first"
+    : loading
+    ? "Loading dates..."
+    : options.length === 0
+    ? "No scheduled dates found for you in this district"
+    : "Select a date";
+
   return (
     <div className="flex flex-col gap-1">
       <h1 className="font-medium text-lg">
         Please select the date of your coaching session*
       </h1>
       <Text size="sm" c="white">
-        Note: Dates in this dropdown are pulled directly from the project's
-        logistics board. If the date you need is not listed, please update the
-        expected visit date for this district and school in the logistics board
-        before submitting your log.
+        Note: Dates in this dropdown are pulled from your coaching calendar for
+        the selected district. If the date you need is not listed, please update
+        your scheduled visit for this district before submitting your log.
       </Text>
       <Select
-        placeholder="Select a date"
-        data={DUMMY_DATE_OPTIONS}
+        placeholder={placeholder}
+        data={options}
         searchable
+        disabled={!district || loading}
+        rightSection={loading ? <Loader size="xs" /> : undefined}
         {...form.getInputProps("sessionDate")}
       />
-     
     </div>
   );
 };

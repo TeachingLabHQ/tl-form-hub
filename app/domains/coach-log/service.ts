@@ -1,5 +1,10 @@
 import { Errorable } from "~/utils/errorable";
-import { DistrictWithSchools, SubSchoolMap, subSchoolKey } from "./model";
+import {
+  DistrictWithSchools,
+  SessionDateOption,
+  SubSchoolMap,
+  subSchoolKey,
+} from "./model";
 import { CoachLogRepository } from "./repository";
 
 export interface CoachLogService {
@@ -9,10 +14,24 @@ export interface CoachLogService {
     school: string
   ) => Promise<Errorable<string[]>>;
   fetchSubSchoolMap: () => Promise<Errorable<SubSchoolMap>>;
+  fetchSessionDates: (
+    coachName: string,
+    district: string
+  ) => Promise<Errorable<SessionDateOption[]>>;
 }
 
 const uniqueSorted = (values: string[]) =>
   [...new Set(values)].sort((a, b) => a.localeCompare(b));
+
+// "2026-06-01" -> "Monday, June 1, 2026" (UTC so the calendar date never shifts).
+const dateLabel = (ymd: string) =>
+  new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${ymd}T00:00:00Z`));
 
 // Build the school dropdown options for a district. Districts with no schools
 // fall back to a single "N/A" entry; otherwise we prepend an "All Schools"
@@ -64,6 +83,17 @@ export function coachLogService(
       }
 
       return { data: map, error: null };
+    },
+
+    fetchSessionDates: async (coachName: string, district: string) => {
+      const result = await repository.fetchSessionDates(coachName, district);
+      if (result.error || !result.data) return result;
+
+      const options = uniqueSorted(result.data).map((ymd) => ({
+        value: ymd,
+        label: dateLabel(ymd),
+      }));
+      return { data: options, error: null };
     },
   };
 }

@@ -1,4 +1,6 @@
+import path from "node:path";
 import { google } from "googleapis";
+import { asyncBufferFromFile, parquetReadObjects } from "hyparquet";
 import { Errorable } from "~/utils/errorable";
 import { fetchMondayData } from "~/domains/utils";
 import { DistrictWithSchools, SubSchoolRow } from "./model";
@@ -16,10 +18,47 @@ const SUB_SCHOOL_TAB_GID = 1285523694;
 const SHEETS_READONLY_SCOPE =
   "https://www.googleapis.com/auth/spreadsheets.readonly";
 
-// Coachee/teacher roster board (reused from the legacy coach log form).
-const COACHEE_ROSTER_BOARD_ID = 9707212928;
+// Coachee/teacher roster board: "IN DEV: SY26-27 Participant Roster". Keeps the
+// legacy column IDs (verified on this board): coaching_partners = Site/District,
+// short_text66 = School, text_mkvxqh6c = Updated Participant Name (falls back to
+// text_mktbkbvy = Participant Name).
+const COACHEE_ROSTER_BOARD_ID = 18416567790;
+
+// Interim session-date source: a parquet export of the coaching PL calendar,
+// committed at the repo root. Replaced later by the AWS-backed source. Read from
+// disk at request time and memoized (static interim data).
+//   - "Session Date": ISO date (UTC midnight)
+//   - "Coach/Facilitator": coach name (matched to the logged-in mondayProfile)
+//   - "L&R name": site/district label (same format as the district sheet)
+// NOTE(deploy): for Vercel prod this file must be bundled into the serverless
+// function (e.g. via includeFiles) — tracked as a data-source follow-up.
+const SESSION_CALENDAR_PARQUET = path.join(
+  process.cwd(),
+  "coaching_pl_calendar.parquet"
+);
+
+type CalendarRow = {
+  "Session Date"?: unknown;
+  "Coach/Facilitator"?: unknown;
+  "L&R name"?: unknown;
+};
+
+let calendarRowsCache: CalendarRow[] | null = null;
+async function loadCalendarRows(): Promise<CalendarRow[]> {
+  if (calendarRowsCache) return calendarRowsCache;
+  const file = await asyncBufferFromFile(SESSION_CALENDAR_PARQUET);
+  calendarRowsCache = (await parquetReadObjects({ file })) as CalendarRow[];
+  return calendarRowsCache;
+}
 
 const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase();
+
+// Reduce a Session Date (Date or ISO string, UTC midnight) to YYYY-MM-DD.
+const toYmd = (v: unknown): string => {
+  if (v == null) return "";
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return String(v).slice(0, 10); // "2025-07-14T00:00:00.000Z" -> "2025-07-14"
+};
 
 // Service-account credentials live in two env vars (see .env). Depending on how
 // the value is stored/loaded it can arrive with surrounding whitespace and/or
@@ -57,6 +96,10 @@ export interface CoachLogRepository {
   fetchDistrictsWithSchools(): Promise<Errorable<DistrictWithSchools[]>>;
   fetchCoachees(district: string, school: string): Promise<Errorable<string[]>>;
   fetchSubSchoolRows(): Promise<Errorable<SubSchoolRow[]>>;
+  fetchSessionDates(
+    coachName: string,
+    district: string
+  ): Promise<Errorable<string[]>>;
 }
 
 export function coachLogRepository(): CoachLogRepository {
@@ -175,6 +218,36 @@ export function coachLogRepository(): CoachLogRepository {
         return {
           data: null,
           error: new Error("fetchSubSchoolRows() went wrong"),
+        };
+      }
+    },
+
+    // Session dates for the logged-in coach at the selected district, read from
+    // the coaching PL calendar parquet. Matched on Coach/Facilitator == coach
+    // name and L&R name == district (both normalized). Returns raw YYYY-MM-DD
+    // values; the service dedupes, sorts, and formats labels. (The parquet has
+    // no school column, so dates are not scoped by school.)
+    fetchSessionDates: async (coachName: string, district: string) => {
+      try {
+        const coach = normalize(coachName);
+        const dist = normalize(district);
+
+        const rows = await loadCalendarRows();
+        const dates = rows
+          .filter(
+            (r) =>
+              normalize(r["Coach/Facilitator"]) === coach &&
+              normalize(r["L&R name"]) === dist
+          )
+          .map((r) => toYmd(r["Session Date"]))
+          .filter((d) => d !== "");
+
+        return { data: dates, error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("fetchSessionDates() went wrong"),
         };
       }
     },

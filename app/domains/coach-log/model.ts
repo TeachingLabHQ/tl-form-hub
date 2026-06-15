@@ -31,6 +31,17 @@ export type SubSchoolMap = Record<string, string[]>;
 export const subSchoolKey = (district: string, school: string) =>
   `${district.trim().toLowerCase()}|${school.trim().toLowerCase()}`;
 
+/**
+ * One selectable session date for the date dropdown. `value` is YYYY-MM-DD (maps
+ * straight into the Monday date column); `label` is a human-friendly rendering.
+ * Sourced from the coaching PL calendar, scoped to the logged-in coach + the
+ * selected district.
+ */
+export type SessionDateOption = {
+  value: string;
+  label: string;
+};
+
 /** One 1:1 coaching entry. Each row becomes a Monday subitem on submission. */
 export type CoacheeRow = {
   coacheeName: string;

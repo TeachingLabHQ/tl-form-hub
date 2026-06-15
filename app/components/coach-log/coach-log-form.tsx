@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   subSchoolKey,
   type DistrictWithSchools,
+  type SessionDateOption,
   type SubSchoolMap,
 } from "~/domains/coach-log/model";
 import { useSession } from "../auth/hooks/useSession";
@@ -34,6 +35,13 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const [coacheeOptions, setCoacheeOptions] = useState<string[]>([]);
   const [loadingCoachees, setLoadingCoachees] = useState(false);
 
+  // Session dates depend on the logged-in coach + the selected district.
+  const [sessionDateOptions, setSessionDateOptions] = useState<
+    SessionDateOption[]
+  >([]);
+  const [loadingSessionDates, setLoadingSessionDates] = useState(false);
+  const coachName = mondayProfile?.name ?? "";
+
   // Submission status.
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessful, setIsSuccessful] = useState<boolean | null>(null);
@@ -60,6 +68,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("school", "");
     form.setFieldValue("nycCoachType", "");
     form.setFieldValue("subSchool", "");
+    form.setFieldValue("sessionDate", "");
     resetCoacheeSelections();
   };
 
@@ -105,6 +114,36 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
       cancelledFetch = true;
     };
   }, [district, school]);
+
+  // Fetch session dates whenever a coach + district are both known.
+  useEffect(() => {
+    if (!district || !coachName) {
+      setSessionDateOptions([]);
+      return;
+    }
+
+    let cancelledFetch = false;
+    setLoadingSessionDates(true);
+    fetch("/api/coach-log/session-dates", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coachName, district }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelledFetch) setSessionDateOptions(data.dates || []);
+      })
+      .catch(() => {
+        if (!cancelledFetch) setSessionDateOptions([]);
+      })
+      .finally(() => {
+        if (!cancelledFetch) setLoadingSessionDates(false);
+      });
+
+    return () => {
+      cancelledFetch = true;
+    };
+  }, [district, coachName]);
 
   const handleSubmit = async (values: CoachLogValues) => {
     if (!mondayProfile?.name) {
@@ -184,7 +223,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
             <SubSchoolQuestion form={form} options={subSchoolOptions} />
           )}
 
-          <SessionDateQuestion form={form} />
+          <SessionDateQuestion
+            form={form}
+            options={sessionDateOptions}
+            loading={loadingSessionDates}
+          />
 
           <CancellationQuestion form={form} />
 
