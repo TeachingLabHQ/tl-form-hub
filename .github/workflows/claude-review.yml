@@ -55,5 +55,4 @@ jobs:
             Do NOT post inline review comments and do NOT create a pending review (`gh api .../reviews`).
             Do NOT delegate to sub-agents.
           # Surface full tool-call output in the Actions log so we can see
-          # which tools get denied. Private repo so secret-leak risk is bounded.
           show_full_output: "true"
