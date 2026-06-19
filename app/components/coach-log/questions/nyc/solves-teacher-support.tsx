@@ -1,6 +1,6 @@
 import { MultiSelect, Select, Textarea, TextInput } from "@mantine/core";
 import { YES_NO_OPTIONS } from "../../constants";
-import type { CoachLogForm } from "../../use-coach-log-form";
+import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   JES_GLOSSARY_URL,
   MAX_SOLVES_PROTOCOLS,

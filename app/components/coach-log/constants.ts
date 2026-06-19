@@ -109,6 +109,12 @@ export const YES_NO_OPTIONS = ["Yes", "No"];
 /** Show the NYC Coach Type question only for these district keys. */
 export const NYC_COACH_TYPE_DISTRICT_KEYS = ["9", "11", "12", "13", "16", "25", "75"];
 
+/** NYC districts without a numeric key that also reveal the coach-type question. */
+export const NYC_COACH_TYPE_DISTRICT_LABELS = [
+  "NY_Transfer High Schools",
+  "NY_CUNY/UA",
+];
+
 /** District key that (with a Solves coach) reveals the Sub-school question. */
 export const D75_DISTRICT_KEY = "75";
 
@@ -119,7 +125,10 @@ export function districtKey(district: string): string {
 }
 
 export function isNycCoachTypeDistrict(district: string): boolean {
-  return NYC_COACH_TYPE_DISTRICT_KEYS.includes(districtKey(district));
+  return (
+    NYC_COACH_TYPE_DISTRICT_KEYS.includes(districtKey(district)) ||
+    NYC_COACH_TYPE_DISTRICT_LABELS.includes(String(district ?? "").trim())
+  );
 }
 
 export function isD75District(district: string): boolean {

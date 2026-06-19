@@ -3,7 +3,7 @@ import { google } from "googleapis";
 import { asyncBufferFromFile, parquetReadObjects } from "hyparquet";
 import { Errorable } from "~/utils/errorable";
 import { fetchMondayData } from "~/domains/utils";
-import { DistrictWithSchools, SubSchoolRow } from "./model";
+import { CoachLogIdentity, DistrictWithSchools, SubSchoolRow } from "./model";
 
 // Coach-log reference data lives in one Google Sheet with several tabs. Tabs are
 // identified by gid (sheetId), which we resolve to a tab title before reading
@@ -23,6 +23,12 @@ const SHEETS_READONLY_SCOPE =
 // short_text66 = School, text_mkvxqh6c = Updated Participant Name (falls back to
 // text_mktbkbvy = Participant Name).
 const COACHEE_ROSTER_BOARD_ID = 18416567790;
+
+// Coach Log submission board ("IN DEV: FY27 Coaching Log"). Parent-item columns
+// used for the one-log-per coach/district/school/date duplicate check:
+//   text88__1 = District, text5__1 = School, date__1 = Date, people__1 = Coach
+//   (item name is the coach name). Shared with the submit route.
+export const COACH_LOG_BOARD_ID = 18416482214;
 
 // Interim session-date source: a parquet export of the coaching PL calendar,
 // committed at the repo root. Replaced later by the AWS-backed source. Read from
@@ -101,6 +107,7 @@ export interface CoachLogRepository {
     coachName: string,
     district: string
   ): Promise<Errorable<string[]>>;
+  hasExistingLog(query: CoachLogIdentity): Promise<Errorable<boolean>>;
 }
 
 export function coachLogRepository(): CoachLogRepository {
@@ -250,6 +257,100 @@ export function coachLogRepository(): CoachLogRepository {
           data: null,
           error: new Error("fetchSessionDates() went wrong"),
         };
+      }
+    },
+
+    // True if a coach log already exists for this coach + district + school +
+    // date (one-log-per-day rule; cancelled logs count). Narrows the board to
+    // the district + school via Monday filters, then matches coach + date
+    // exactly in JS (the coach matches on the people column id, falling back to
+    // the item name). Returns false when there's no date to dedupe on.
+    hasExistingLog: async (query: CoachLogIdentity) => {
+      try {
+        const date = query.sessionDate.trim();
+        if (!date) return { data: false, error: null };
+
+        const district = normalize(query.district);
+        const school = normalize(query.school);
+        const coachId = query.coachMondayId.trim();
+        const coachName = normalize(query.coachName);
+
+        // Escape values interpolated into the GraphQL rule strings.
+        const esc = (v: string) =>
+          v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
+        // Filter on the board server-side by district + school + date (exact)
+        // and, when we have one, the coach's Monday profile id. People columns
+        // filter by id only via the "person-<id>" form with any_of (name/raw-id
+        // forms don't match on this board). The result set is 0–1 items; every
+        // field is still verified exactly in JS below.
+        const ruleParts = [
+          `{column_id: "text88__1", operator: contains_text, compare_value: "${esc(query.district)}"}`,
+          `{column_id: "text5__1", operator: contains_text, compare_value: "${esc(query.school)}"}`,
+          `{column_id: "date__1", operator: any_of, compare_value: ["EXACT", "${esc(date)}"]}`,
+        ];
+        if (coachId) {
+          ruleParts.push(
+            `{column_id: "people__1", operator: any_of, compare_value: ["person-${esc(coachId)}"]}`
+          );
+        }
+        const rules = `[${ruleParts.join(", ")}]`;
+
+        const columnIds = `["text88__1","text5__1","date__1","people__1"]`;
+        const buildQuery = (cursor: string | null) =>
+          cursor
+            ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { name column_values(ids:${columnIds}) { id text value } } } }`
+            : `{ boards(ids: ${COACH_LOG_BOARD_ID}) { items_page(limit: 500, query_params: {rules: ${rules}}) { cursor items { name column_values(ids:${columnIds}) { id text value } } } } }`;
+
+        const matchesItem = (item: any): boolean => {
+          const col = (id: string) =>
+            item.column_values.find((c: any) => c.id === id);
+          let itemDate = "";
+          try {
+            itemDate = JSON.parse(col("date__1")?.value || "null")?.date ?? "";
+          } catch {
+            itemDate = "";
+          }
+          // Exact people-column ids (e.g. ["31288444"]) for a precise match
+          // against the logged-in coach's Monday profile id.
+          let peopleIds: string[] = [];
+          try {
+            const parsed = JSON.parse(col("people__1")?.value || "null");
+            peopleIds = (parsed?.personsAndTeams ?? []).map((p: any) =>
+              String(p.id)
+            );
+          } catch {
+            peopleIds = [];
+          }
+
+          const districtOk = normalize(col("text88__1")?.text) === district;
+          const schoolOk = normalize(col("text5__1")?.text) === school;
+          const dateOk = itemDate.trim() === date;
+          // Prefer matching by Monday profile id; fall back to the item name
+          // (the coach name) only when no id is available.
+          const coachOk =
+            coachId !== ""
+              ? peopleIds.includes(coachId)
+              : coachName !== "" && normalize(item.name) === coachName;
+          return districtOk && schoolOk && dateOk && coachOk;
+        };
+
+        let response = await fetchMondayData(buildQuery(null));
+        let page = response.data.boards[0].items_page;
+        if (page.items.some(matchesItem)) return { data: true, error: null };
+
+        let cursor: string | null = page.cursor;
+        while (cursor) {
+          response = await fetchMondayData(buildQuery(cursor));
+          page = response.data.next_items_page;
+          if (page.items.some(matchesItem)) return { data: true, error: null };
+          cursor = page.cursor;
+        }
+
+        return { data: false, error: null };
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("hasExistingLog() went wrong") };
       }
     },
   };

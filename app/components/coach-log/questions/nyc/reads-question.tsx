@@ -1,7 +1,7 @@
 import { Select } from "@mantine/core";
 import type { YesNo } from "~/domains/coach-log/model";
 import { YES_NO_OPTIONS } from "../../constants";
-import type { CoachLogForm } from "../../use-coach-log-form";
+import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   isReadsCapacityBuilderDistrict,
   READS_TOUCHPOINT_OPTIONS,
@@ -45,7 +45,10 @@ export const ReadsQuestion = ({ form, district, school }: Props) => {
 
   return (
     <>
-      <QuestionField label="Are you logging a Professional Learning Session?*">
+      <QuestionField
+        label="Are you logging a Professional Learning Session?*"
+        note="Professional Learning and coaching activities must be logged separately. If you are submitting a Professional Learning session, do not include any coaching activities in this log."
+      >
         <Select
           placeholder="Select Yes or No"
           data={YES_NO_OPTIONS}

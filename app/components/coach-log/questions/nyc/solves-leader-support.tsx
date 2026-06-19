@@ -1,5 +1,5 @@
 import { Select } from "@mantine/core";
-import type { CoachLogForm } from "../../use-coach-log-form";
+import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   SOLVES_LEADER_SUPPORT_DURATION_OPTIONS,
   SOLVES_LEADER_SUPPORT_TRACK_OPTIONS,

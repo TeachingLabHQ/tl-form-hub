@@ -1,4 +1,4 @@
-import { Button, Loader, Notification } from "@mantine/core";
+import { Button, Loader, Notification, Tabs, Text } from "@mantine/core";
 import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -7,8 +7,10 @@ import {
   type SessionDateOption,
   type SubSchoolMap,
 } from "~/domains/coach-log/model";
+import { cn } from "~/utils/utils";
 import { useSession } from "../auth/hooks/useSession";
 import { buildCoachLogSubmission } from "./build-submission";
+import { ParticipantRosterForm } from "./participant-roster-form";
 import {
   isNycCoachTypeDistrict,
   shouldShowEarlyChildhood,
@@ -26,11 +28,12 @@ import { NycCoachTypeQuestion } from "./questions/nyc-coach-type-question";
 import { OneOnOneCoachingQuestion } from "./questions/one-on-one-coaching-question";
 import { SessionDateQuestion } from "./questions/session-date-question";
 import { SubSchoolQuestion } from "./questions/sub-school-question";
+import { useDuplicateCheck } from "./hooks/use-duplicate-check";
 import {
   EMPTY_COACHEE_ROW,
   useCoachLogForm,
   type CoachLogValues,
-} from "./use-coach-log-form";
+} from "./hooks/use-coach-log-form";
 
 type Props = {
   districts: DistrictWithSchools[];
@@ -58,7 +61,29 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const [failedCoachees, setFailedCoachees] = useState<string[]>([]);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
 
-  const { district, school, nycCoachType, canceled } = form.values;
+  const { district, school, nycCoachType, canceled, sessionDate } =
+    form.values;
+
+  // One log per coach + district + school + date — checked as soon as those are
+  // chosen so the coach is warned before filling out the form.
+  const {
+    duplicateExists,
+    checking: checkingDuplicate,
+    checkError: duplicateCheckError,
+    setDuplicateExists,
+  } = useDuplicateCheck({
+    coachMondayId: mondayProfile?.mondayProfileId ?? "",
+    coachName,
+    district,
+    school,
+    sessionDate,
+  });
+
+  // While the check is running or a duplicate exists, the activity questions are
+  // locked so the coach can't fill out a log that won't submit (they can still
+  // change district/school/date above to resolve it).
+  const lockActivities = checkingDuplicate || duplicateExists;
+
   const showNycCoachType = isNycCoachTypeDistrict(district);
   const showSubSchool = shouldShowSubSchool(district, nycCoachType);
   const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
@@ -169,15 +194,6 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     };
   }, [district, coachName]);
 
-  // No scheduled dates for this coach + district -> auto-select the "N/A"
-  // sentinel so the required date field can still be submitted.
-  useEffect(() => {
-    if (district && !loadingSessionDates && sessionDateOptions.length === 0) {
-      form.setFieldValue("sessionDate", "N/A");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [district, loadingSessionDates, sessionDateOptions]);
-
   const handleSubmit = async (values: CoachLogValues) => {
     if (!mondayProfile?.name) {
       console.error("Please log in first");
@@ -209,6 +225,10 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
         };
         setFailedCoachees(body.failedCoachees ?? []);
         setIsSuccessful(true);
+      } else if (response.status === 409) {
+        // A log for this coach + district + school + date already exists.
+        setDuplicateExists(true);
+        setIsSuccessful(null);
       } else {
         setIsSuccessful(response.ok);
       }
@@ -223,93 +243,169 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   return (
     <div className="w-full h-full grid grid-cols-12 gap-8 py-8">
       <div className="col-start-2 col-span-10 h-fit p-8 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white">
-        <form
-          onSubmit={form.onSubmit(handleSubmit, () => setShowErrorBanner(true))}
-          className="flex flex-col gap-4"
-        >
-          <h1 className="font-bold text-3xl">Coach Log Form</h1>
+        <Tabs defaultValue="coach-log">
+          <Tabs.List>
+            <Tabs.Tab value="coach-log" className="hover:bg-white/10">
+              Coach Log
+            </Tabs.Tab>
+            <Tabs.Tab value="roster" className="hover:bg-white/10">
+              Participant Roster Form
+            </Tabs.Tab>
+          </Tabs.List>
 
-          <DistrictSchoolQuestion
-            form={form}
-            districts={districts}
-            onDistrictChange={handleDistrictChange}
-            onSchoolChange={handleSchoolChange}
-          />
-
-          {showNycCoachType && (
-            <NycCoachTypeQuestion
-              form={form}
-              onChange={handleNycCoachTypeChange}
-            />
-          )}
-
-          {showSubSchool && (
-            <SubSchoolQuestion form={form} options={subSchoolOptions} />
-          )}
-
-          <SessionDateQuestion
-            form={form}
-            options={sessionDateOptions}
-            loading={loadingSessionDates}
-          />
-
-          <CancellationQuestion form={form} />
-
-          {showActivities && (
-            <>
-              <OneOnOneCoachingQuestion
-                form={form}
-                coacheeOptions={coacheeOptions}
-                loadingCoachees={loadingCoachees}
-              />
-              <GroupCoachingQuestion form={form} coacheeOptions={coacheeOptions} />
-              {showEarlyChildhood && <EarlyChildhoodQuestion form={form} />}
-              {showReads && (
-                <ReadsQuestion form={form} district={district} school={school} />
+          <Tabs.Panel value="coach-log" pt="lg">
+            <form
+              onSubmit={form.onSubmit(handleSubmit, () =>
+                setShowErrorBanner(true)
               )}
-              {showSolves && <SolvesQuestion form={form} />}
-            </>
-          )}
-
-          {!isSubmitting && <Button type="submit">Submit</Button>}
-          {isSubmitting && <Loader size={30} color="rgba(255, 255, 255, 1)" />}
-
-          {showErrorBanner && (
-            <Notification
-              icon={<IconX size={20} />}
-              color="red"
-              title="Please complete all required fields before submitting."
-              withCloseButton={false}
-            />
-          )}
-          {isSuccessful === true && failedCoachees.length === 0 && (
-            <Notification
-              icon={<IconCheck size={20} />}
-              color="teal"
-              title="Your coach log was submitted successfully!"
-              withCloseButton={false}
-            />
-          )}
-          {isSuccessful === true && failedCoachees.length > 0 && (
-            <Notification
-              icon={<IconAlertTriangle size={20} />}
-              color="yellow"
-              title="Your coach log was saved, but some 1:1 rows didn't."
-              withCloseButton={false}
+              className="flex flex-col gap-4"
             >
-              These coachees could not be saved: {failedCoachees.join(", ")}.
-              Please re-submit them or contact the technology team.
-            </Notification>
-          )}
-          {isSuccessful === false && (
-            <Notification
-              icon={<IconX size={20} />}
-              color="red"
-              title="Something went wrong. Please try again or contact the technology team."
-              withCloseButton={false}
-            />
-          )}
-        </form>
+              <DistrictSchoolQuestion
+                form={form}
+                districts={districts}
+                onDistrictChange={handleDistrictChange}
+                onSchoolChange={handleSchoolChange}
+              />
+
+              {showNycCoachType && (
+                <NycCoachTypeQuestion
+                  form={form}
+                  onChange={handleNycCoachTypeChange}
+                />
+              )}
+
+              {showSubSchool && (
+                <SubSchoolQuestion form={form} options={subSchoolOptions} />
+              )}
+
+              <SessionDateQuestion
+                form={form}
+                options={sessionDateOptions}
+                loading={loadingSessionDates}
+              />
+
+              {checkingDuplicate && (
+                <div className="flex items-center gap-2">
+                  <Loader size="sm" />
+                  <Text size="sm" c="white">
+                    Checking whether a log already exists for this school and
+                    date...
+                  </Text>
+                </div>
+              )}
+
+              {duplicateCheckError && (
+                <Notification
+                  icon={<IconX size={20} />}
+                  color="red"
+                  title="We couldn't verify whether a log already exists for this date."
+                  withCloseButton={false}
+                >
+                  To avoid creating a duplicate submission, we strongly recommend
+                  reaching out to the technology team before submitting this log.
+                </Notification>
+              )}
+
+              <fieldset
+                disabled={lockActivities}
+                className={cn("flex flex-col gap-4 m-0 p-0 border-0 min-w-0", {
+                  "opacity-60 pointer-events-none": lockActivities,
+                })}
+              >
+                <CancellationQuestion form={form} />
+
+                {showActivities && (
+                  <>
+                    <OneOnOneCoachingQuestion
+                      form={form}
+                      coacheeOptions={coacheeOptions}
+                      loadingCoachees={loadingCoachees}
+                    />
+                    <GroupCoachingQuestion
+                      form={form}
+                      coacheeOptions={coacheeOptions}
+                    />
+                    {showEarlyChildhood && (
+                      <EarlyChildhoodQuestion form={form} />
+                    )}
+                    {showReads && (
+                      <ReadsQuestion
+                        form={form}
+                        district={district}
+                        school={school}
+                      />
+                    )}
+                    {showSolves && <SolvesQuestion form={form} />}
+                  </>
+                )}
+              </fieldset>
+
+              {duplicateExists && (
+                <Notification
+                  icon={<IconAlertTriangle size={20} />}
+                  color="yellow"
+                  title="A coach log already exists for this school on this date."
+                  withCloseButton={false}
+                >
+                  Only one log can be submitted per school per day. To make
+                  changes, contact the team.
+                </Notification>
+              )}
+
+              {!isSubmitting && (
+                <Button
+                  type="submit"
+                  disabled={duplicateExists || checkingDuplicate}
+                >
+                  Submit
+                </Button>
+              )}
+              {isSubmitting && (
+                <Loader size={30} color="rgba(255, 255, 255, 1)" />
+              )}
+
+              {showErrorBanner && (
+                <Notification
+                  icon={<IconX size={20} />}
+                  color="red"
+                  title="Please complete all required fields before submitting."
+                  withCloseButton={false}
+                />
+              )}
+              {isSuccessful === true && failedCoachees.length === 0 && (
+                <Notification
+                  icon={<IconCheck size={20} />}
+                  color="teal"
+                  title="Your coach log was submitted successfully!"
+                  withCloseButton={false}
+                />
+              )}
+              {isSuccessful === true && failedCoachees.length > 0 && (
+                <Notification
+                  icon={<IconAlertTriangle size={20} />}
+                  color="yellow"
+                  title="Your coach log was saved, but some 1:1 rows didn't."
+                  withCloseButton={false}
+                >
+                  These coachees could not be saved: {failedCoachees.join(", ")}.
+                  Please re-submit them or contact the technology team.
+                </Notification>
+              )}
+              {isSuccessful === false && (
+                <Notification
+                  icon={<IconX size={20} />}
+                  color="red"
+                  title="Something went wrong. Please try again or contact the technology team."
+                  withCloseButton={false}
+                />
+              )}
+            </form>
+          </Tabs.Panel>
+
+          <Tabs.Panel value="roster" pt="lg">
+            <ParticipantRosterForm />
+          </Tabs.Panel>
+        </Tabs>
       </div>
     </div>
   );

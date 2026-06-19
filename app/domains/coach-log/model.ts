@@ -42,6 +42,19 @@ export type SessionDateOption = {
   label: string;
 };
 
+/**
+ * The fields that uniquely identify a coach log for the duplicate check: one log
+ * per coach + district + school + date. `coachMondayId` is preferred for the
+ * coach match; `coachName` (the item name) is the fallback.
+ */
+export type CoachLogIdentity = {
+  coachMondayId: string;
+  coachName: string;
+  district: string;
+  school: string;
+  sessionDate: string;
+};
+
 /** One 1:1 coaching entry. Each row becomes a Monday subitem on submission. */
 export type CoacheeRow = {
   coacheeName: string;
