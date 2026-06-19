@@ -7,6 +7,7 @@ import {
   type SessionDateOption,
   type SubSchoolMap,
 } from "~/domains/coach-log/model";
+import { cn } from "~/utils/utils";
 import { useSession } from "../auth/hooks/useSession";
 import { buildCoachLogSubmission } from "./build-submission";
 import { ParticipantRosterForm } from "./participant-roster-form";
@@ -68,6 +69,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const {
     duplicateExists,
     checking: checkingDuplicate,
+    checkError: duplicateCheckError,
     setDuplicateExists,
   } = useDuplicateCheck({
     coachMondayId: mondayProfile?.mondayProfileId ?? "",
@@ -76,6 +78,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     school,
     sessionDate,
   });
+
+  // While the check is running or a duplicate exists, the activity questions are
+  // locked so the coach can't fill out a log that won't submit (they can still
+  // change district/school/date above to resolve it).
+  const lockActivities = checkingDuplicate || duplicateExists;
 
   const showNycCoachType = isNycCoachTypeDistrict(district);
   const showSubSchool = shouldShowSubSchool(district, nycCoachType);
@@ -287,30 +294,51 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 </div>
               )}
 
-              <CancellationQuestion form={form} />
-
-              {showActivities && (
-                <>
-                  <OneOnOneCoachingQuestion
-                    form={form}
-                    coacheeOptions={coacheeOptions}
-                    loadingCoachees={loadingCoachees}
-                  />
-                  <GroupCoachingQuestion
-                    form={form}
-                    coacheeOptions={coacheeOptions}
-                  />
-                  {showEarlyChildhood && <EarlyChildhoodQuestion form={form} />}
-                  {showReads && (
-                    <ReadsQuestion
-                      form={form}
-                      district={district}
-                      school={school}
-                    />
-                  )}
-                  {showSolves && <SolvesQuestion form={form} />}
-                </>
+              {duplicateCheckError && (
+                <Notification
+                  icon={<IconX size={20} />}
+                  color="red"
+                  title="We couldn't verify whether a log already exists for this date."
+                  withCloseButton={false}
+                >
+                  To avoid creating a duplicate submission, we strongly recommend
+                  reaching out to the technology team before submitting this log.
+                </Notification>
               )}
+
+              <fieldset
+                disabled={lockActivities}
+                className={cn("flex flex-col gap-4 m-0 p-0 border-0 min-w-0", {
+                  "opacity-60 pointer-events-none": lockActivities,
+                })}
+              >
+                <CancellationQuestion form={form} />
+
+                {showActivities && (
+                  <>
+                    <OneOnOneCoachingQuestion
+                      form={form}
+                      coacheeOptions={coacheeOptions}
+                      loadingCoachees={loadingCoachees}
+                    />
+                    <GroupCoachingQuestion
+                      form={form}
+                      coacheeOptions={coacheeOptions}
+                    />
+                    {showEarlyChildhood && (
+                      <EarlyChildhoodQuestion form={form} />
+                    )}
+                    {showReads && (
+                      <ReadsQuestion
+                        form={form}
+                        district={district}
+                        school={school}
+                      />
+                    )}
+                    {showSolves && <SolvesQuestion form={form} />}
+                  </>
+                )}
+              </fieldset>
 
               {duplicateExists && (
                 <Notification
@@ -320,12 +348,15 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                   withCloseButton={false}
                 >
                   Only one log can be submitted per school per day. To make
-                  changes, update the existing log or contact the team.
+                  changes, contact the team.
                 </Notification>
               )}
 
               {!isSubmitting && (
-                <Button type="submit" disabled={duplicateExists}>
+                <Button
+                  type="submit"
+                  disabled={duplicateExists || checkingDuplicate}
+                >
                   Submit
                 </Button>
               )}

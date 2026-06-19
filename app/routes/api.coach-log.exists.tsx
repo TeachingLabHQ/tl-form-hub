@@ -15,7 +15,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const query = (await request.json()) as Partial<CoachLogIdentity>;
     const { district, school, sessionDate } = query;
     if (!district || !school || !sessionDate) {
-      return json({ exists: false });
+      return json({ exists: false, error: false });
     }
 
     const service = coachLogService(coachLogRepository());
@@ -28,13 +28,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
     if (error) {
       console.error("Error checking for existing coach log:", error);
-      // On error, don't block the coach client-side — the submit route still
-      // enforces the rule.
-      return json({ exists: false });
+      // Surface the failure so the form can warn the coach rather than silently
+      // treating it as "no duplicate".
+      return json({ exists: false, error: true });
     }
-    return json({ exists: data ?? false });
+    return json({ exists: data ?? false, error: false });
   } catch (error) {
     console.error("Error in coach-log exists API:", error);
-    return json({ exists: false }, { status: 500 });
+    return json({ exists: false, error: true }, { status: 500 });
   }
 };
