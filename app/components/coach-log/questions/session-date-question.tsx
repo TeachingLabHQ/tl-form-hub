@@ -36,9 +36,7 @@ export const SessionDateQuestion = ({ form, options, loading }: Props) => {
         Please select the date of your coaching session*
       </h1>
       <Text size="sm" c="white">
-        Note: Dates in this dropdown are pulled from your coaching calendar for
-        the selected district. If the date you need is not listed, please update
-        your scheduled visit for this district before submitting your log.
+        Note: Dates available in this dropdown are pulled directly from your district's Logistics Board in Monday.com. If the date you need is not listed, update the Logistics Board first. Once added there, the date will become available for selection in this form
       </Text>
       <Select
         placeholder={placeholder}
