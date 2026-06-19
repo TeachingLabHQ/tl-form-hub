@@ -1,6 +1,6 @@
 import { Select } from "@mantine/core";
 import { NYC_COACH_TYPE_OPTIONS } from "../constants";
-import type { CoachLogForm } from "../use-coach-log-form";
+import type { CoachLogForm } from "../hooks/use-coach-log-form";
 
 type Props = {
   form: CoachLogForm;

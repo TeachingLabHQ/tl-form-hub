@@ -1,5 +1,5 @@
 import { Select, Text, Textarea } from "@mantine/core";
-import type { CoachLogForm } from "../../use-coach-log-form";
+import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import { MTSS_PRACTICE_STATEMENTS, MTSS_RESPONSE_OPTIONS } from "./constants";
 import { QuestionField } from "./field";
 

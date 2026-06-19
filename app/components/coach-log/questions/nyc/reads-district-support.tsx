@@ -1,5 +1,5 @@
 import { MultiSelect, TextInput } from "@mantine/core";
-import type { CoachLogForm } from "../../use-coach-log-form";
+import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   DISTRICT_SUPPORT_OPTIONS,
   OTHER_LEADER_OPTION,
