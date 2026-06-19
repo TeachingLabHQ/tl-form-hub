@@ -1,7 +1,7 @@
 import { Select } from "@mantine/core";
 import { useMemo } from "react";
 import type { DistrictWithSchools } from "~/domains/coach-log/model";
-import type { CoachLogForm } from "../use-coach-log-form";
+import type { CoachLogForm } from "../hooks/use-coach-log-form";
 
 type Props = {
   form: CoachLogForm;

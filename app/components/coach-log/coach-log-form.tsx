@@ -1,4 +1,4 @@
-import { Button, Loader, Notification, Tabs } from "@mantine/core";
+import { Button, Loader, Notification, Tabs, Text } from "@mantine/core";
 import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -27,11 +27,12 @@ import { NycCoachTypeQuestion } from "./questions/nyc-coach-type-question";
 import { OneOnOneCoachingQuestion } from "./questions/one-on-one-coaching-question";
 import { SessionDateQuestion } from "./questions/session-date-question";
 import { SubSchoolQuestion } from "./questions/sub-school-question";
+import { useDuplicateCheck } from "./hooks/use-duplicate-check";
 import {
   EMPTY_COACHEE_ROW,
   useCoachLogForm,
   type CoachLogValues,
-} from "./use-coach-log-form";
+} from "./hooks/use-coach-log-form";
 
 type Props = {
   districts: DistrictWithSchools[];
@@ -59,7 +60,23 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const [failedCoachees, setFailedCoachees] = useState<string[]>([]);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
 
-  const { district, school, nycCoachType, canceled } = form.values;
+  const { district, school, nycCoachType, canceled, sessionDate } =
+    form.values;
+
+  // One log per coach + district + school + date — checked as soon as those are
+  // chosen so the coach is warned before filling out the form.
+  const {
+    duplicateExists,
+    checking: checkingDuplicate,
+    setDuplicateExists,
+  } = useDuplicateCheck({
+    coachMondayId: mondayProfile?.mondayProfileId ?? "",
+    coachName,
+    district,
+    school,
+    sessionDate,
+  });
+
   const showNycCoachType = isNycCoachTypeDistrict(district);
   const showSubSchool = shouldShowSubSchool(district, nycCoachType);
   const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
@@ -170,15 +187,6 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     };
   }, [district, coachName]);
 
-  // No scheduled dates for this coach + district -> auto-select the "N/A"
-  // sentinel so the required date field can still be submitted.
-  useEffect(() => {
-    if (district && !loadingSessionDates && sessionDateOptions.length === 0) {
-      form.setFieldValue("sessionDate", "N/A");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [district, loadingSessionDates, sessionDateOptions]);
-
   const handleSubmit = async (values: CoachLogValues) => {
     if (!mondayProfile?.name) {
       console.error("Please log in first");
@@ -210,6 +218,10 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
         };
         setFailedCoachees(body.failedCoachees ?? []);
         setIsSuccessful(true);
+      } else if (response.status === 409) {
+        // A log for this coach + district + school + date already exists.
+        setDuplicateExists(true);
+        setIsSuccessful(null);
       } else {
         setIsSuccessful(response.ok);
       }
@@ -265,6 +277,16 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 loading={loadingSessionDates}
               />
 
+              {checkingDuplicate && (
+                <div className="flex items-center gap-2">
+                  <Loader size="sm" />
+                  <Text size="sm" c="white">
+                    Checking whether a log already exists for this school and
+                    date...
+                  </Text>
+                </div>
+              )}
+
               <CancellationQuestion form={form} />
 
               {showActivities && (
@@ -290,7 +312,23 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 </>
               )}
 
-              {!isSubmitting && <Button type="submit">Submit</Button>}
+              {duplicateExists && (
+                <Notification
+                  icon={<IconAlertTriangle size={20} />}
+                  color="yellow"
+                  title="A coach log already exists for this school on this date."
+                  withCloseButton={false}
+                >
+                  Only one log can be submitted per school per day. To make
+                  changes, update the existing log or contact the team.
+                </Notification>
+              )}
+
+              {!isSubmitting && (
+                <Button type="submit" disabled={duplicateExists}>
+                  Submit
+                </Button>
+              )}
               {isSubmitting && (
                 <Loader size={30} color="rgba(255, 255, 255, 1)" />
               )}

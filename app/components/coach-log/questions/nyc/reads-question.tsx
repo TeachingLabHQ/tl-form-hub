@@ -1,7 +1,7 @@
 import { Select } from "@mantine/core";
 import type { YesNo } from "~/domains/coach-log/model";
 import { YES_NO_OPTIONS } from "../../constants";
-import type { CoachLogForm } from "../../use-coach-log-form";
+import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   isReadsCapacityBuilderDistrict,
   READS_TOUCHPOINT_OPTIONS,
