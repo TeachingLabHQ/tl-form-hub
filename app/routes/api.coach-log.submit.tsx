@@ -1,5 +1,10 @@
 import type { ActionFunctionArgs } from "@vercel/remix";
 import type { CoachLogSubmission } from "~/domains/coach-log/model";
+import {
+  COACH_LOG_BOARD_ID,
+  coachLogRepository,
+} from "~/domains/coach-log/repository";
+import { coachLogService } from "~/domains/coach-log/service";
 import { insertMondayData } from "~/domains/utils";
 import {
   readsShowsDistrictBlock,
@@ -15,12 +20,12 @@ import {
 // columns expect (matching the legacy form's serialization).
 const csv = (values: string[] | undefined) => (values ?? []).join(", ");
 
-// A real session date is YYYY-MM-DD; the "N/A" sentinel must not be written to a
-// Monday date column.
-const isRealDate = (value: string) => !!value && value !== "N/A";
+// Session date is YYYY-MM-DD (required); guard against an empty value just in
+// case so we never write a blank date column.
+const isRealDate = (value: string) => !!value;
 
 // Reuses the legacy Coach Log Form board + column schema.
-const BOARD_ID = 18416482214;
+const BOARD_ID = COACH_LOG_BOARD_ID;
 const GROUP_ID = "topics";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -95,6 +100,25 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   }
 
   try {
+    // ---- Duplicate guard ------------------------------------------------
+    // One log per coach + district + school + date (cancelled logs count). This
+    // is the authoritative check; the form also pre-checks for a better UX.
+    const service = coachLogService(coachLogRepository());
+    const duplicate = await service.hasExistingLog({
+      coachMondayId,
+      coachName,
+      district,
+      school,
+      sessionDate,
+    });
+    if (duplicate.data) {
+      return new Response(null, {
+        status: 409,
+        statusText:
+          "A coach log already exists for this school on this date.",
+      });
+    }
+
     // ---- Parent item column values -------------------------------------
     const parentColumns: Record<string, unknown> = {
       text88__1: district, // District

@@ -6,7 +6,7 @@ import {
   shouldShowSolves,
   shouldShowSubSchool,
 } from "./constants";
-import type { CoachLogValues } from "./use-coach-log-form";
+import type { CoachLogValues } from "./hooks/use-coach-log-form";
 
 type Coach = { name: string; mondayProfileId: string };
 

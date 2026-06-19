@@ -4,7 +4,7 @@ import {
   CANCELLATION_REASON_OPTIONS,
   YES_NO_OPTIONS,
 } from "../constants";
-import type { CoachLogForm } from "../use-coach-log-form";
+import type { CoachLogForm } from "../hooks/use-coach-log-form";
 
 type Props = {
   form: CoachLogForm;

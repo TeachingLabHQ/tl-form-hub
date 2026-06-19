@@ -2,7 +2,7 @@ import { Button, Loader, Select, Text } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 import { cn } from "~/utils/utils";
 import { DURATION_OPTIONS, ROLE_OPTIONS, YES_NO_OPTIONS } from "../constants";
-import { EMPTY_COACHEE_ROW, type CoachLogForm } from "../use-coach-log-form";
+import { EMPTY_COACHEE_ROW, type CoachLogForm } from "../hooks/use-coach-log-form";
 
 function gridClass(canDelete: boolean) {
   return cn("grid gap-4 grid-cols-[2fr_1.5fr_1fr]", {

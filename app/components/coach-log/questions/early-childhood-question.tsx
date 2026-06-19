@@ -7,7 +7,7 @@ import {
   ecShowsLeaderCapacity,
   ecShowsTeacherStrategies,
 } from "../constants";
-import type { CoachLogForm } from "../use-coach-log-form";
+import type { CoachLogForm } from "../hooks/use-coach-log-form";
 
 const JES_GLOSSARY_URL =
   "https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2";

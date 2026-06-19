@@ -8,7 +8,7 @@ import {
   shouldShowEarlyChildhood,
   shouldShowReads,
   shouldShowSolves,
-} from "./constants";
+} from "../constants";
 import {
   isReadsCapacityBuilderDistrict,
   OTHER_LEADER_OPTION,
@@ -20,7 +20,7 @@ import {
   solvesShowsAdditionalSupport,
   solvesShowsLeaderBlock,
   solvesShowsTeacherBlock,
-} from "./questions/nyc/constants";
+} from "../questions/nyc/constants";
 
 /** Single source of truth for every Coach Log field. */
 export type CoachLogValues = {

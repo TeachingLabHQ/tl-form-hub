@@ -1,5 +1,5 @@
 import { MultiSelect, Select, TextInput } from "@mantine/core";
-import type { CoachLogForm } from "../../use-coach-log-form";
+import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   JES_GLOSSARY_URL,
   LEADER_CAPACITY_FOCUS_OPTIONS,
