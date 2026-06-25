@@ -1,6 +1,5 @@
-import path from "node:path";
 import { google } from "googleapis";
-import { asyncBufferFromFile, parquetReadObjects } from "hyparquet";
+import { parquetReadObjects } from "hyparquet";
 import { Errorable } from "~/utils/errorable";
 import { fetchMondayData } from "~/domains/utils";
 import { CoachLogIdentity, DistrictWithSchools, SubSchoolRow } from "./model";
@@ -30,19 +29,22 @@ const COACHEE_ROSTER_BOARD_ID = 18416567790;
 //   (item name is the coach name). Shared with the submit route.
 export const COACH_LOG_BOARD_ID = 18416482214;
 
-// Interim session-date source: a parquet export of the coaching PL calendar,
-// committed at the repo root. Replaced later by the AWS-backed source. Read from
-// disk at request time and memoized (static interim data).
+// Session-date source: the coaching PL calendar, served as a parquet export by
+// the TL data service (a Monday webhook mirror — same columns the previously
+// committed parquet held). Authenticated with a token query param.
 //   - "Session Date": ISO date (UTC midnight)
 //   - "Coach/Facilitator": coach name (matched to the logged-in mondayProfile)
 //   - "L&R name": site/district label (same format as the district sheet)
-// NOTE(deploy): disk reads only work in local dev. On Vercel the service layer
-// short-circuits to placeholder dates (see DUMMY_SESSION_DATES in service.ts),
-// so this file isn't read or bundled in deployed environments.
-const SESSION_CALENDAR_PARQUET = path.join(
-  process.cwd(),
-  "coaching_pl_calendar.parquet"
-);
+// The endpoint doesn't support HTTP range requests, so we fetch the whole file
+// (small) and parse it in memory. Fetched via Node's global fetch (undici), so
+// it ignores http(s)_proxy — no proxy needed in dev, unlike the Sheets calls.
+const SESSION_CALENDAR_URL =
+  "https://tl-data.teachinglab.org/monday-webhook/calendar";
+
+// Memoize the parsed calendar per process with a short TTL: it's the same data
+// for every coach/district lookup, but it does change over time, so re-fetch
+// periodically rather than caching for the whole process lifetime.
+const CALENDAR_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type CalendarRow = {
   "Session Date"?: unknown;
@@ -50,12 +52,28 @@ type CalendarRow = {
   "L&R name"?: unknown;
 };
 
-let calendarRowsCache: CalendarRow[] | null = null;
+let calendarCache: { rows: CalendarRow[]; fetchedAt: number } | null = null;
 async function loadCalendarRows(): Promise<CalendarRow[]> {
-  if (calendarRowsCache) return calendarRowsCache;
-  const file = await asyncBufferFromFile(SESSION_CALENDAR_PARQUET);
-  calendarRowsCache = (await parquetReadObjects({ file })) as CalendarRow[];
-  return calendarRowsCache;
+  if (calendarCache && Date.now() - calendarCache.fetchedAt < CALENDAR_CACHE_TTL_MS) {
+    return calendarCache.rows;
+  }
+
+  const token = cleanEnv(process.env.CALENDAR_API_TOKEN);
+  const url = `${SESSION_CALENDAR_URL}?token=${encodeURIComponent(token)}&format=parquet`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Calendar fetch failed: ${res.status} ${res.statusText}`);
+  }
+
+  const buffer = await res.arrayBuffer();
+  const file = {
+    byteLength: buffer.byteLength,
+    slice: (start: number, end?: number) => buffer.slice(start, end),
+  };
+  const rows = (await parquetReadObjects({ file })) as CalendarRow[];
+
+  calendarCache = { rows, fetchedAt: Date.now() };
+  return rows;
 }
 
 const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase();
@@ -107,6 +125,7 @@ export interface CoachLogRepository {
     coachName: string,
     district: string
   ): Promise<Errorable<string[]>>;
+  fetchCoachNames(): Promise<Errorable<string[]>>;
   hasExistingLog(query: CoachLogIdentity): Promise<Errorable<boolean>>;
 }
 
@@ -256,6 +275,26 @@ export function coachLogRepository(): CoachLogRepository {
         return {
           data: null,
           error: new Error("fetchSessionDates() went wrong"),
+        };
+      }
+    },
+
+    // Every distinct Coach/Facilitator in the calendar. Testing-only: lets an
+    // allow-listed admin impersonate any coach to confirm their session dates
+    // populate (see the coach-name override in the form). The service dedupes
+    // and sorts; these are the names session dates are actually matched on.
+    fetchCoachNames: async () => {
+      try {
+        const rows = await loadCalendarRows();
+        const names = rows
+          .map((r) => String(r["Coach/Facilitator"] ?? "").trim())
+          .filter((n) => n !== "");
+        return { data: names, error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("fetchCoachNames() went wrong"),
         };
       }
     },

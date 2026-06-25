@@ -12,6 +12,7 @@ import { useSession } from "../auth/hooks/useSession";
 import { buildCoachLogSubmission } from "./build-submission";
 import { ParticipantRosterForm } from "./participant-roster-form";
 import {
+  canOverrideCoach,
   isNycCoachTypeDistrict,
   shouldShowEarlyChildhood,
   shouldShowReads,
@@ -19,6 +20,7 @@ import {
   shouldShowSubSchool,
 } from "./constants";
 import { CancellationQuestion } from "./questions/cancellation-question";
+import { CoachNameQuestion } from "./questions/coach-name-question";
 import { DistrictSchoolQuestion } from "./questions/district-school-question";
 import { EarlyChildhoodQuestion } from "./questions/early-childhood-question";
 import { ReadsQuestion } from "./questions/nyc/reads-question";
@@ -54,6 +56,17 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   >([]);
   const [loadingSessionDates, setLoadingSessionDates] = useState(false);
   const coachName = mondayProfile?.name ?? "";
+
+  // Testing-only coach override: allow-listed admins get a dropdown of every
+  // calendar coach so they can confirm session dates populate for anyone. The
+  // override only feeds the session-date lookup; the duplicate check and submit
+  // still use the real logged-in coach.
+  const canOverride = canOverrideCoach(mondayProfile?.email);
+  const [coachOverride, setCoachOverride] = useState("");
+  const [coachOptions, setCoachOptions] = useState<string[]>([]);
+  const [loadingCoachOptions, setLoadingCoachOptions] = useState(false);
+  const sessionDateCoachName =
+    canOverride && coachOverride ? coachOverride : coachName;
 
   // Submission status.
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -164,9 +177,32 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     };
   }, [district, school]);
 
+  // Testing-only: load the coach dropdown options once, for allow-listed admins.
+  useEffect(() => {
+    if (!canOverride) return;
+
+    let cancelledFetch = false;
+    setLoadingCoachOptions(true);
+    fetch("/api/coach-log/coach-names")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelledFetch) setCoachOptions(data.coaches || []);
+      })
+      .catch(() => {
+        if (!cancelledFetch) setCoachOptions([]);
+      })
+      .finally(() => {
+        if (!cancelledFetch) setLoadingCoachOptions(false);
+      });
+
+    return () => {
+      cancelledFetch = true;
+    };
+  }, [canOverride]);
+
   // Fetch session dates whenever a coach + district are both known.
   useEffect(() => {
-    if (!district || !coachName) {
+    if (!district || !sessionDateCoachName) {
       setSessionDateOptions([]);
       return;
     }
@@ -176,7 +212,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     fetch("/api/coach-log/session-dates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ coachName, district }),
+      body: JSON.stringify({ coachName: sessionDateCoachName, district }),
     })
       .then((r) => r.json())
       .then((data) => {
@@ -192,7 +228,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     return () => {
       cancelledFetch = true;
     };
-  }, [district, coachName]);
+  }, [district, sessionDateCoachName]);
 
   const handleSubmit = async (values: CoachLogValues) => {
     if (!mondayProfile?.name) {
@@ -260,6 +296,19 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
               )}
               className="flex flex-col gap-4"
             >
+              {canOverride && (
+                <CoachNameQuestion
+                  value={coachOverride}
+                  options={coachOptions}
+                  loading={loadingCoachOptions}
+                  onChange={(value) => {
+                    setCoachOverride(value);
+                    // The new coach has a different date list; drop any stale pick.
+                    form.setFieldValue("sessionDate", "");
+                  }}
+                />
+              )}
+
               <DistrictSchoolQuestion
                 form={form}
                 districts={districts}

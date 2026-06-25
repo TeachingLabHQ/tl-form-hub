@@ -3,8 +3,9 @@ import { coachLogRepository } from "~/domains/coach-log/repository";
 import { coachLogService } from "~/domains/coach-log/service";
 
 // Returns the session-date options for a coach + district, read from the
-// coaching PL calendar. Depends on the logged-in coach (client-side) and the
-// selected district, so it's a client-driven POST rather than a loader.
+// coaching PL calendar (TL data service). Depends on the logged-in coach
+// (client-side) and the selected district, so it's a client-driven POST
+// rather than a loader.
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
     return json({ error: "Method not allowed" }, { status: 405 });

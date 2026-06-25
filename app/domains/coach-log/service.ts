@@ -19,6 +19,7 @@ export interface CoachLogService {
     coachName: string,
     district: string
   ) => Promise<Errorable<SessionDateOption[]>>;
+  fetchCoachNames: () => Promise<Errorable<string[]>>;
   hasExistingLog: (query: CoachLogIdentity) => Promise<Errorable<boolean>>;
 }
 
@@ -34,21 +35,6 @@ const dateLabel = (ymd: string) =>
     day: "numeric",
     timeZone: "UTC",
   }).format(new Date(`${ymd}T00:00:00Z`));
-
-// Placeholder session dates served everywhere until the real (AWS-backed)
-// session-date source is wired up. Used so the date dropdown is always usable.
-const DUMMY_SESSION_DATES: SessionDateOption[] = [
-  "2026-06-01",
-  "2026-06-03",
-  "2026-06-08",
-  "2026-06-10",
-  "2026-06-15",
-  "2026-06-17",
-  "2026-06-19",
-  "2026-06-22",
-  "2026-06-24",
-  "2026-06-26",
-].map((ymd) => ({ value: ymd, label: dateLabel(ymd) }));
 
 // Build the school dropdown options for a district. Districts with no schools
 // fall back to a single "N/A" entry; otherwise we prepend an "All Schools"
@@ -102,12 +88,23 @@ export function coachLogService(
       return { data: map, error: null };
     },
 
-    fetchSessionDates: async () => {
-      // TEMP: the real (AWS) session-date source isn't wired yet and the parquet
-      // only covers some coaches/districts, so serve dummy dates everywhere so
-      // the date dropdown is always usable. Restore the parquet/AWS-backed lookup
-      // (repository.fetchSessionDates) once the real source is available.
-      return { data: DUMMY_SESSION_DATES, error: null };
+    fetchSessionDates: async (coachName: string, district: string) => {
+      const result = await repository.fetchSessionDates(coachName, district);
+      if (result.error || !result.data) return result;
+
+      // Raw YYYY-MM-DD strings -> deduped, sorted, human-labeled options.
+      const options = uniqueSorted(result.data).map((ymd) => ({
+        value: ymd,
+        label: dateLabel(ymd),
+      }));
+
+      return { data: options, error: null };
+    },
+
+    fetchCoachNames: async () => {
+      const result = await repository.fetchCoachNames();
+      if (result.error || !result.data) return result;
+      return { data: uniqueSorted(result.data), error: null };
     },
 
     hasExistingLog: (query) => repository.hasExistingLog(query),
