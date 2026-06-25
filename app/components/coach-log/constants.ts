@@ -30,7 +30,11 @@ export const NYC_COACH_TYPE_OPTIONS = [
 // Testing-only: emails allowed to override the coach identity (pick any coach
 // from a dropdown) so they can verify session dates populate for everyone. For
 // all other users the coach is the logged-in profile and no dropdown shows.
-export const COACH_OVERRIDE_TESTER_EMAILS = ["yancheng.pan@teachinglab.org"];
+export const COACH_OVERRIDE_TESTER_EMAILS = [
+  "yancheng.pan@teachinglab.org",
+  "holly.corwin@teachinglab.org",
+  "duncan.gates@teachinglab.org",
+];
 
 export const canOverrideCoach = (email: string | undefined | null) =>
   !!email &&
