@@ -49,3 +49,9 @@ Server: `MONDAY_API_KEY`, `GOOGLE_SERVICE_CLIENTEMAIL` / `GOOGLE_SERVICE_PRIVATE
 ## Conventions
 - End git commit messages with the standard `Co-Authored-By` trailer; branch off `main` for new work (commit/push only when asked).
 - Keep diffs idiomatic to surrounding code; prefer the domain layering above over inlining external calls in routes/components.
+
+### Ticket → GitHub project board mapping
+When a change targets one of the forms below and you create a GitHub issue/ticket for it, add that ticket to the matching org Project board (`gh project item-add <N> --owner TeachingLabHQ --url <issue-url>`):
+- **Coach log form** → project board **19**
+- **Weekly project log form** → project board **21**
+- **Vendor payment form** (a.k.a. contractor payment form) → project board **22**
