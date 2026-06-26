@@ -2,7 +2,12 @@ import { google } from "googleapis";
 import { parquetReadObjects } from "hyparquet";
 import { Errorable } from "~/utils/errorable";
 import { fetchMondayData } from "~/domains/utils";
-import { CoachLogIdentity, DistrictWithSchools, SubSchoolRow } from "./model";
+import {
+  CoachLogIdentity,
+  CoachOption,
+  DistrictWithSchools,
+  SubSchoolRow,
+} from "./model";
 
 // Coach-log reference data lives in one Google Sheet with several tabs. Tabs are
 // identified by gid (sheetId), which we resolve to a tab title before reading
@@ -125,7 +130,7 @@ export interface CoachLogRepository {
     coachName: string,
     district: string
   ): Promise<Errorable<string[]>>;
-  fetchCoachNames(): Promise<Errorable<string[]>>;
+  fetchCoaches(): Promise<Errorable<CoachOption[]>>;
   hasExistingLog(query: CoachLogIdentity): Promise<Errorable<boolean>>;
 }
 
@@ -279,23 +284,31 @@ export function coachLogRepository(): CoachLogRepository {
       }
     },
 
-    // Every distinct Coach/Facilitator in the calendar. Testing-only: lets an
-    // allow-listed admin impersonate any coach to confirm their session dates
-    // populate (see the coach-name override in the form). The service dedupes
-    // and sorts; these are the names session dates are actually matched on.
-    fetchCoachNames: async () => {
+    // Coaches for the testing-only override, sourced from Monday users (the
+    // legacy form's approach) so each carries a Monday profile id — used to
+    // populate the people column when an allow-listed admin impersonates a
+    // coach. Paginated; the service dedupes and sorts.
+    fetchCoaches: async () => {
       try {
-        const rows = await loadCalendarRows();
-        const names = rows
-          .map((r) => String(r["Coach/Facilitator"] ?? "").trim())
-          .filter((n) => n !== "");
-        return { data: names, error: null };
+        const buildQuery = (page: number) =>
+          `{ users(limit: 500, page: ${page}) { id name } }`;
+
+        const coaches: CoachOption[] = [];
+        for (let page = 1; ; page++) {
+          const res = await fetchMondayData(buildQuery(page));
+          const users: { id: unknown; name: unknown }[] = res?.data?.users ?? [];
+          for (const u of users) {
+            const name = String(u?.name ?? "").trim();
+            const mondayId = String(u?.id ?? "").trim();
+            if (name && mondayId) coaches.push({ name, mondayId });
+          }
+          if (users.length < 500) break;
+        }
+
+        return { data: coaches, error: null };
       } catch (e) {
         console.error(e);
-        return {
-          data: null,
-          error: new Error("fetchCoachNames() went wrong"),
-        };
+        return { data: null, error: new Error("fetchCoaches() went wrong") };
       }
     },
 

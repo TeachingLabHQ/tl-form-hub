@@ -2,22 +2,21 @@ import { json } from "@remix-run/node";
 import { coachLogRepository } from "~/domains/coach-log/repository";
 import { coachLogService } from "~/domains/coach-log/service";
 
-// Returns every distinct coach/facilitator in the coaching PL calendar.
-// Testing-only: the form fetches this just for an allow-listed admin so they can
-// impersonate any coach and confirm session dates populate. It's user-independent
-// reference data with no params, so it's a GET loader rather than a POST action.
+// Returns the coach options (name + Monday profile id) for the testing-only
+// coach override. Sourced from Monday users, so only fetched by the form for an
+// allow-listed admin. User-independent with no params, so it's a GET loader.
 export const loader = async () => {
   try {
     const service = coachLogService(coachLogRepository());
-    const { data, error } = await service.fetchCoachNames();
+    const { data, error } = await service.fetchCoaches();
     if (error) {
-      console.error("Error fetching coach names:", error);
+      console.error("Error fetching coaches:", error);
     }
     return json({ coaches: data || [] });
   } catch (error) {
     console.error("Error in coach-log coach-names API:", error);
     return json(
-      { coaches: [], error: "Failed to fetch coach names" },
+      { coaches: [], error: "Failed to fetch coaches" },
       { status: 500 }
     );
   }

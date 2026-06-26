@@ -43,6 +43,17 @@ export type SessionDateOption = {
 };
 
 /**
+ * A selectable coach for the testing-only coach override. Sourced from Monday
+ * users (legacy form's approach) so it carries the Monday profile id — `name`
+ * is matched against the calendar's Coach/Facilitator for session dates and
+ * becomes the log's item name; `mondayId` populates the people column.
+ */
+export type CoachOption = {
+  name: string;
+  mondayId: string;
+};
+
+/**
  * The fields that uniquely identify a coach log for the duplicate check: one log
  * per coach + district + school + date. `coachMondayId` is preferred for the
  * coach match; `coachName` (the item name) is the fallback.

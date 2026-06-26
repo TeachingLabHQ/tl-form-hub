@@ -1,6 +1,7 @@
 import { Errorable } from "~/utils/errorable";
 import {
   CoachLogIdentity,
+  CoachOption,
   DistrictWithSchools,
   SessionDateOption,
   SubSchoolMap,
@@ -19,7 +20,7 @@ export interface CoachLogService {
     coachName: string,
     district: string
   ) => Promise<Errorable<SessionDateOption[]>>;
-  fetchCoachNames: () => Promise<Errorable<string[]>>;
+  fetchCoaches: () => Promise<Errorable<CoachOption[]>>;
   hasExistingLog: (query: CoachLogIdentity) => Promise<Errorable<boolean>>;
 }
 
@@ -101,10 +102,20 @@ export function coachLogService(
       return { data: options, error: null };
     },
 
-    fetchCoachNames: async () => {
-      const result = await repository.fetchCoachNames();
+    fetchCoaches: async () => {
+      const result = await repository.fetchCoaches();
       if (result.error || !result.data) return result;
-      return { data: uniqueSorted(result.data), error: null };
+
+      // Dedupe by Monday id, then sort by name for the dropdown.
+      const seen = new Set<string>();
+      const unique = result.data.filter((c) => {
+        if (seen.has(c.mondayId)) return false;
+        seen.add(c.mondayId);
+        return true;
+      });
+      unique.sort((a, b) => a.name.localeCompare(b.name));
+
+      return { data: unique, error: null };
     },
 
     hasExistingLog: (query) => repository.hasExistingLog(query),

@@ -2,17 +2,17 @@ import { Loader, Select, Text } from "@mantine/core";
 
 type Props = {
   value: string;
-  options: string[];
+  options: { value: string; label: string }[];
   loading: boolean;
   onChange: (value: string) => void;
 };
 
 /**
  * Coach-identity override — TESTING ONLY. Rendered just for allow-listed admins
- * (see canOverrideCoach). Picking a coach here replaces the logged-in profile
- * name used to look up session dates, so the tester can confirm dates populate
- * for any coach. Options are the distinct Coach/Facilitator names in the
- * coaching PL calendar — i.e. exactly the names session dates are matched on.
+ * (see canOverrideCoach). Picking a coach here replaces the logged-in identity
+ * (name + Monday id) used for session dates, the duplicate guard, and submission,
+ * so the tester can submit a log as any coach. Options come from Monday users;
+ * each option's value is the coach's Monday profile id.
  */
 export const CoachNameQuestion = ({
   value,

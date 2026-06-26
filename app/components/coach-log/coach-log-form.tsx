@@ -3,6 +3,7 @@ import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   subSchoolKey,
+  type CoachOption,
   type DistrictWithSchools,
   type SessionDateOption,
   type SubSchoolMap,
@@ -55,18 +56,25 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     SessionDateOption[]
   >([]);
   const [loadingSessionDates, setLoadingSessionDates] = useState(false);
-  const coachName = mondayProfile?.name ?? "";
 
-  // Testing-only coach override: allow-listed admins get a dropdown of every
-  // calendar coach so they can confirm session dates populate for anyone. The
-  // override only feeds the session-date lookup; the duplicate check and submit
-  // still use the real logged-in coach.
+  // Testing-only coach override: allow-listed admins get a dropdown of Monday
+  // coaches. When one is selected (by Monday id), that coach becomes the
+  // *effective* identity used everywhere — session-date lookup, the duplicate
+  // guard, and submission (item name = selected coach, people column = their
+  // Monday id). Everyone else (and the tester before picking) uses their own
+  // logged-in profile.
   const canOverride = canOverrideCoach(mondayProfile?.email);
-  const [coachOverride, setCoachOverride] = useState("");
-  const [coachOptions, setCoachOptions] = useState<string[]>([]);
+  const [coachOverrideId, setCoachOverrideId] = useState("");
+  const [coachOptions, setCoachOptions] = useState<CoachOption[]>([]);
   const [loadingCoachOptions, setLoadingCoachOptions] = useState(false);
-  const sessionDateCoachName =
-    canOverride && coachOverride ? coachOverride : coachName;
+
+  const overriddenCoach =
+    canOverride && coachOverrideId
+      ? coachOptions.find((c) => c.mondayId === coachOverrideId)
+      : undefined;
+  const coachName = overriddenCoach?.name ?? mondayProfile?.name ?? "";
+  const coachMondayId =
+    overriddenCoach?.mondayId ?? mondayProfile?.mondayProfileId ?? "";
 
   // Submission status.
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -85,7 +93,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     checkError: duplicateCheckError,
     setDuplicateExists,
   } = useDuplicateCheck({
-    coachMondayId: mondayProfile?.mondayProfileId ?? "",
+    coachMondayId,
     coachName,
     district,
     school,
@@ -202,7 +210,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
 
   // Fetch session dates whenever a coach + district are both known.
   useEffect(() => {
-    if (!district || !sessionDateCoachName) {
+    if (!district || !coachName) {
       setSessionDateOptions([]);
       return;
     }
@@ -212,7 +220,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     fetch("/api/coach-log/session-dates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ coachName: sessionDateCoachName, district }),
+      body: JSON.stringify({ coachName, district }),
     })
       .then((r) => r.json())
       .then((data) => {
@@ -228,7 +236,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     return () => {
       cancelledFetch = true;
     };
-  }, [district, sessionDateCoachName]);
+  }, [district, coachName]);
 
   const handleSubmit = async (values: CoachLogValues) => {
     if (!mondayProfile?.name) {
@@ -247,9 +255,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
+          // Effective coach: the override when an allow-listed tester has picked
+          // one, otherwise the logged-in profile.
           buildCoachLogSubmission(values, {
-            name: mondayProfile.name,
-            mondayProfileId: mondayProfile.mondayProfileId || "",
+            name: coachName,
+            mondayProfileId: coachMondayId,
           })
         ),
       });
@@ -298,11 +308,14 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
             >
               {canOverride && (
                 <CoachNameQuestion
-                  value={coachOverride}
-                  options={coachOptions}
+                  value={coachOverrideId}
+                  options={coachOptions.map((c) => ({
+                    value: c.mondayId,
+                    label: c.name,
+                  }))}
                   loading={loadingCoachOptions}
                   onChange={(value) => {
-                    setCoachOverride(value);
+                    setCoachOverrideId(value);
                     // The new coach has a different date list; drop any stale pick.
                     form.setFieldValue("sessionDate", "");
                   }}
