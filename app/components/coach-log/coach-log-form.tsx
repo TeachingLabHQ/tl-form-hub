@@ -101,6 +101,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     district,
     school,
     sessionDate,
+    nycCoachType,
   });
 
   // While the check is running or a duplicate exists, the activity questions are

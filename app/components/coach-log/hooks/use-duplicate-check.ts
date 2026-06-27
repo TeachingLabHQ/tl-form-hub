@@ -15,7 +15,8 @@ import type { CoachLogIdentity } from "~/domains/coach-log/model";
  * authoritative guard still lives in the submit route.
  */
 export function useDuplicateCheck(query: CoachLogIdentity) {
-  const { coachMondayId, coachName, district, school, sessionDate } = query;
+  const { coachMondayId, coachName, district, school, sessionDate, nycCoachType } =
+    query;
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState(false);
@@ -40,6 +41,7 @@ export function useDuplicateCheck(query: CoachLogIdentity) {
         district,
         school,
         sessionDate,
+        nycCoachType,
       }),
     })
       .then((r) => r.json())
@@ -66,7 +68,7 @@ export function useDuplicateCheck(query: CoachLogIdentity) {
     return () => {
       cancelled = true;
     };
-  }, [coachMondayId, coachName, district, school, sessionDate]);
+  }, [coachMondayId, coachName, district, school, sessionDate, nycCoachType]);
 
   return { duplicateExists, checking, checkError, setDuplicateExists };
 }

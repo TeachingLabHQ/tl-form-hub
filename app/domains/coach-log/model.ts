@@ -64,6 +64,10 @@ export type CoachLogIdentity = {
   district: string;
   school: string;
   sessionDate: string;
+  /** NYC Coach Type — the same coach can log different types (e.g. Solves vs
+   * Reads) for the same school/date, so it's part of the duplicate key. Empty
+   * for non-NYC districts (matches other empty-coach-type logs). */
+  nycCoachType: string;
 };
 
 /** One 1:1 coaching entry. Each row becomes a Monday subitem on submission. */
