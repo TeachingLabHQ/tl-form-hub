@@ -29,7 +29,9 @@ import { SolvesQuestion } from "./questions/nyc/solves-question";
 import { GroupCoachingQuestion } from "./questions/group-coaching-question";
 import { NycCoachTypeQuestion } from "./questions/nyc-coach-type-question";
 import { OneOnOneCoachingQuestion } from "./questions/one-on-one-coaching-question";
+import { PlSessionQuestion } from "./questions/pl-session-question";
 import { SessionDateQuestion } from "./questions/session-date-question";
+import { SessionDateCalendarQuestion } from "./questions/session-date-calendar-question";
 import { SubSchoolQuestion } from "./questions/sub-school-question";
 import { useDuplicateCheck } from "./hooks/use-duplicate-check";
 import {
@@ -84,6 +86,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
 
   const { district, school, nycCoachType, canceled, sessionDate } =
     form.values;
+  const readsIsPLSession = form.values.readsIsPLSession;
 
   // One log per coach + district + school + date — checked as soon as those are
   // chosen so the coach is warned before filling out the form.
@@ -122,6 +125,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const showSolves = shouldShowSolves(district, nycCoachType);
   const showActivities = canceled !== "Yes";
 
+  // A Reads coach logging a Professional Learning session: hide the coaching
+  // questions and pick the session date from a free calendar instead of the
+  // scheduled coaching-calendar dropdown.
+  const isPLSession = showReads && readsIsPLSession === "Yes";
+
   const resetCoacheeSelections = () => {
     form.setFieldValue("coacheeRows", [{ ...EMPTY_COACHEE_ROW }]);
     form.setFieldValue("groupParticipants", []);
@@ -147,6 +155,18 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("school", value);
     form.setFieldValue("subSchool", "");
     resetCoacheeSelections();
+  };
+
+  // Selecting "Yes" auto-answers the 1:1 and group coaching questions "No"
+  // (they're hidden but still required), and clears the date since the input
+  // switches between the calendar and the scheduled dropdown.
+  const handlePLSessionChange = (value: string) => {
+    form.setFieldValue("readsIsPLSession", value as CoachLogValues["readsIsPLSession"]);
+    form.setFieldValue("sessionDate", "");
+    if (value === "Yes") {
+      form.setFieldValue("did1on1", "No");
+      form.setFieldValue("didGroupCoaching", "No");
+    }
   };
 
   const handleNycCoachTypeChange = (value: string) => {
@@ -340,15 +360,26 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 />
               )}
 
+              {showReads && (
+                <PlSessionQuestion
+                  form={form}
+                  onChange={handlePLSessionChange}
+                />
+              )}
+
               {showSubSchool && (
                 <SubSchoolQuestion form={form} options={subSchoolOptions} />
               )}
 
-              <SessionDateQuestion
-                form={form}
-                options={sessionDateOptions}
-                loading={loadingSessionDates}
-              />
+              {isPLSession ? (
+                <SessionDateCalendarQuestion form={form} />
+              ) : (
+                <SessionDateQuestion
+                  form={form}
+                  options={sessionDateOptions}
+                  loading={loadingSessionDates}
+                />
+              )}
 
               {checkingDuplicate && (
                 <div className="flex items-center gap-2">
@@ -382,15 +413,19 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
 
                 {showActivities && (
                   <>
-                    <OneOnOneCoachingQuestion
-                      form={form}
-                      coacheeOptions={coacheeOptions}
-                      loadingCoachees={loadingCoachees}
-                    />
-                    <GroupCoachingQuestion
-                      form={form}
-                      coacheeOptions={coacheeOptions}
-                    />
+                    {!isPLSession && (
+                      <>
+                        <OneOnOneCoachingQuestion
+                          form={form}
+                          coacheeOptions={coacheeOptions}
+                          loadingCoachees={loadingCoachees}
+                        />
+                        <GroupCoachingQuestion
+                          form={form}
+                          coacheeOptions={coacheeOptions}
+                        />
+                      </>
+                    )}
                     {showEarlyChildhood && (
                       <EarlyChildhoodQuestion form={form} />
                     )}

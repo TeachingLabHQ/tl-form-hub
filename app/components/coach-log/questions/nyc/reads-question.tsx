@@ -1,5 +1,4 @@
 import { Select } from "@mantine/core";
-import type { YesNo } from "~/domains/coach-log/model";
 import { YES_NO_OPTIONS } from "../../constants";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
@@ -23,41 +22,16 @@ type Props = {
 };
 
 /**
- * NYC Reads coach question set. Orchestrates the standalone questions (PL
- * session, capacity-builder, touchpoint) and delegates each touchpoint branch
- * to a focused sub-block.
+ * NYC Reads coach question set. The "Professional Learning session?" question is
+ * asked earlier (top-level, right after coach type) since it gates the coaching
+ * questions and the session-date input; this set covers capacity-builder,
+ * touchpoint, and the per-touchpoint sub-blocks.
  */
 export const ReadsQuestion = ({ form, district, school }: Props) => {
   const touchpoint = form.values.readsTouchpoint;
 
-  // A Professional Learning Session isn't a coaching activity, so selecting
-  // "Yes" auto-answers the 1:1 and group coaching questions "No". Selecting "No"
-  // (or clearing) leaves them untouched, so a coach who filled those in first
-  // doesn't have their answers overwritten.
-  const handlePLSessionChange = (value: string | null) => {
-    const next = (value ?? "") as YesNo | "";
-    form.setFieldValue("readsIsPLSession", next);
-    if (next === "Yes") {
-      form.setFieldValue("did1on1", "No");
-      form.setFieldValue("didGroupCoaching", "No");
-    }
-  };
-
   return (
     <>
-      <QuestionField
-        label="Are you logging a Professional Learning Session?*"
-        note="Professional Learning and coaching activities must be logged separately. If you are submitting a Professional Learning session, do not include any coaching activities in this log."
-      >
-        <Select
-          placeholder="Select Yes or No"
-          data={YES_NO_OPTIONS}
-          value={form.values.readsIsPLSession || null}
-          onChange={handlePLSessionChange}
-          error={form.errors.readsIsPLSession}
-        />
-      </QuestionField>
-
       {isReadsCapacityBuilderDistrict(district) && (
         <>
           <QuestionField label="Did the capacity builders provide a schedule prior to the visit?*">
