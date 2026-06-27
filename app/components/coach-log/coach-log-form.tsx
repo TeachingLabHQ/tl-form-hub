@@ -105,18 +105,22 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   // change district/school/date above to resolve it).
   const lockActivities = checkingDuplicate || duplicateExists;
 
-  const showNycCoachType = isNycCoachTypeDistrict(district);
-  const showSubSchool = shouldShowSubSchool(district, nycCoachType);
-  const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
-  const showReads = shouldShowReads(district, nycCoachType);
-  const showSolves = shouldShowSolves(district, nycCoachType);
-  const showActivities = canceled !== "Yes";
-
   // Sub-school options are filtered from the loader map by district + school.
   const subSchoolOptions = useMemo(
     () => subSchools[subSchoolKey(district, school)] ?? [],
     [subSchools, district, school]
   );
+
+  const showNycCoachType = isNycCoachTypeDistrict(district);
+  // Sub-school shows for D75 + Solves, but only when the sheet actually has
+  // sub-schools for this district + school combo (otherwise there's nothing to
+  // pick, so we hide the question rather than show an empty dropdown).
+  const showSubSchool =
+    shouldShowSubSchool(district, nycCoachType) && subSchoolOptions.length > 0;
+  const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
+  const showReads = shouldShowReads(district, nycCoachType);
+  const showSolves = shouldShowSolves(district, nycCoachType);
+  const showActivities = canceled !== "Yes";
 
   const resetCoacheeSelections = () => {
     form.setFieldValue("coacheeRows", [{ ...EMPTY_COACHEE_ROW }]);
