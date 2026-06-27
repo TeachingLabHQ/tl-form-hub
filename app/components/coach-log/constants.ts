@@ -27,6 +27,19 @@ export const NYC_COACH_TYPE_OPTIONS = [
   "Math Coach (non-Solves/non-D75)",
 ];
 
+// Testing-only: emails allowed to override the coach identity (pick any coach
+// from a dropdown) so they can verify session dates populate for everyone. For
+// all other users the coach is the logged-in profile and no dropdown shows.
+export const COACH_OVERRIDE_TESTER_EMAILS = [
+  "yancheng.pan@teachinglab.org",
+  "holly.corwin@teachinglab.org",
+  "duncan.gates@teachinglab.org",
+];
+
+export const canOverrideCoach = (email: string | undefined | null) =>
+  !!email &&
+  COACH_OVERRIDE_TESTER_EMAILS.includes(email.trim().toLowerCase());
+
 /** Coach types that reveal additional question sets (ported NYC Reads/Solves). */
 export const READS_COACH_TYPE = "Reads Coach";
 export const SOLVES_COACH_TYPE = "Solves Coach/D75 Math Coach";

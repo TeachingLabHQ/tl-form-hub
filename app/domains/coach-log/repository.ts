@@ -1,9 +1,13 @@
-import path from "node:path";
 import { google } from "googleapis";
-import { asyncBufferFromFile, parquetReadObjects } from "hyparquet";
+import { parquetReadObjects } from "hyparquet";
 import { Errorable } from "~/utils/errorable";
 import { fetchMondayData } from "~/domains/utils";
-import { CoachLogIdentity, DistrictWithSchools, SubSchoolRow } from "./model";
+import {
+  CoachLogIdentity,
+  CoachOption,
+  DistrictWithSchools,
+  SubSchoolRow,
+} from "./model";
 
 // Coach-log reference data lives in one Google Sheet with several tabs. Tabs are
 // identified by gid (sheetId), which we resolve to a tab title before reading
@@ -30,32 +34,54 @@ const COACHEE_ROSTER_BOARD_ID = 18416567790;
 //   (item name is the coach name). Shared with the submit route.
 export const COACH_LOG_BOARD_ID = 18416482214;
 
-// Interim session-date source: a parquet export of the coaching PL calendar,
-// committed at the repo root. Replaced later by the AWS-backed source. Read from
-// disk at request time and memoized (static interim data).
-//   - "Session Date": ISO date (UTC midnight)
-//   - "Coach/Facilitator": coach name (matched to the logged-in mondayProfile)
-//   - "L&R name": site/district label (same format as the district sheet)
-// NOTE(deploy): disk reads only work in local dev. On Vercel the service layer
-// short-circuits to placeholder dates (see DUMMY_SESSION_DATES in service.ts),
-// so this file isn't read or bundled in deployed environments.
-const SESSION_CALENDAR_PARQUET = path.join(
-  process.cwd(),
-  "coaching_pl_calendar.parquet"
-);
+// Session-date source: the FY27 coaching PL calendar, served as a parquet export
+// by the TL data service (a Monday webhook mirror). Authenticated with a token
+// query param. Columns are snake_case:
+//   - session_date: ISO date (UTC midnight)
+//   - coach_facilitator: coach name (matched to the logged-in mondayProfile)
+//   - lr_name: site/district label (same format as the district sheet)
+//   - subsite: free-form school/site label (NOT yet used for filtering — its
+//     values don't match the form's school field; see fetchSessionDates)
+// The endpoint doesn't support HTTP range requests, so we fetch the whole file
+// (small) and parse it in memory. Fetched via Node's global fetch (undici), so
+// it ignores http(s)_proxy — no proxy needed in dev, unlike the Sheets calls.
+const SESSION_CALENDAR_URL =
+  "https://tl-data.teachinglab.org/monday-webhook/calendar_fy27";
+
+// Memoize the parsed calendar per process with a short TTL: it's the same data
+// for every coach/district lookup, but it does change over time, so re-fetch
+// periodically rather than caching for the whole process lifetime.
+const CALENDAR_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type CalendarRow = {
-  "Session Date"?: unknown;
-  "Coach/Facilitator"?: unknown;
-  "L&R name"?: unknown;
+  session_date?: unknown;
+  coach_facilitator?: unknown;
+  lr_name?: unknown;
+  subsite?: unknown;
 };
 
-let calendarRowsCache: CalendarRow[] | null = null;
+let calendarCache: { rows: CalendarRow[]; fetchedAt: number } | null = null;
 async function loadCalendarRows(): Promise<CalendarRow[]> {
-  if (calendarRowsCache) return calendarRowsCache;
-  const file = await asyncBufferFromFile(SESSION_CALENDAR_PARQUET);
-  calendarRowsCache = (await parquetReadObjects({ file })) as CalendarRow[];
-  return calendarRowsCache;
+  if (calendarCache && Date.now() - calendarCache.fetchedAt < CALENDAR_CACHE_TTL_MS) {
+    return calendarCache.rows;
+  }
+
+  const token = cleanEnv(process.env.CALENDAR_API_TOKEN);
+  const url = `${SESSION_CALENDAR_URL}?token=${encodeURIComponent(token)}&format=parquet`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Calendar fetch failed: ${res.status} ${res.statusText}`);
+  }
+
+  const buffer = await res.arrayBuffer();
+  const file = {
+    byteLength: buffer.byteLength,
+    slice: (start: number, end?: number) => buffer.slice(start, end),
+  };
+  const rows = (await parquetReadObjects({ file })) as CalendarRow[];
+
+  calendarCache = { rows, fetchedAt: Date.now() };
+  return rows;
 }
 
 const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase();
@@ -107,6 +133,7 @@ export interface CoachLogRepository {
     coachName: string,
     district: string
   ): Promise<Errorable<string[]>>;
+  fetchCoaches(): Promise<Errorable<CoachOption[]>>;
   hasExistingLog(query: CoachLogIdentity): Promise<Errorable<boolean>>;
 }
 
@@ -231,10 +258,13 @@ export function coachLogRepository(): CoachLogRepository {
     },
 
     // Session dates for the logged-in coach at the selected district, read from
-    // the coaching PL calendar parquet. Matched on Coach/Facilitator == coach
-    // name and L&R name == district (both normalized). Returns raw YYYY-MM-DD
-    // values; the service dedupes, sorts, and formats labels. (The parquet has
-    // no school column, so dates are not scoped by school.)
+    // the coaching PL calendar parquet. Matched on coach_facilitator == coach
+    // name and lr_name == district (both normalized). Returns raw YYYY-MM-DD
+    // values; the service dedupes, sorts, and formats labels.
+    // NOTE: not scoped by school yet. The calendar's `subsite` column carries a
+    // school/site label, but its values (e.g. "M035: _Direct to Teacher") are
+    // free-form and don't match the form's `school` field, so filtering on it
+    // would drop all dates. Wire school scoping once the join is defined.
     fetchSessionDates: async (coachName: string, district: string) => {
       try {
         const coach = normalize(coachName);
@@ -244,10 +274,10 @@ export function coachLogRepository(): CoachLogRepository {
         const dates = rows
           .filter(
             (r) =>
-              normalize(r["Coach/Facilitator"]) === coach &&
-              normalize(r["L&R name"]) === dist
+              normalize(r.coach_facilitator) === coach &&
+              normalize(r.lr_name) === dist
           )
-          .map((r) => toYmd(r["Session Date"]))
+          .map((r) => toYmd(r.session_date))
           .filter((d) => d !== "");
 
         return { data: dates, error: null };
@@ -260,11 +290,41 @@ export function coachLogRepository(): CoachLogRepository {
       }
     },
 
+    // Coaches for the testing-only override, sourced from Monday users (the
+    // legacy form's approach) so each carries a Monday profile id — used to
+    // populate the people column when an allow-listed admin impersonates a
+    // coach. Paginated; the service dedupes and sorts.
+    fetchCoaches: async () => {
+      try {
+        const buildQuery = (page: number) =>
+          `{ users(limit: 500, page: ${page}) { id name } }`;
+
+        const coaches: CoachOption[] = [];
+        for (let page = 1; ; page++) {
+          const res = await fetchMondayData(buildQuery(page));
+          const users: { id: unknown; name: unknown }[] = res?.data?.users ?? [];
+          for (const u of users) {
+            const name = String(u?.name ?? "").trim();
+            const mondayId = String(u?.id ?? "").trim();
+            if (name && mondayId) coaches.push({ name, mondayId });
+          }
+          if (users.length < 500) break;
+        }
+
+        return { data: coaches, error: null };
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("fetchCoaches() went wrong") };
+      }
+    },
+
     // True if a coach log already exists for this coach + district + school +
-    // date (one-log-per-day rule; cancelled logs count). Narrows the board to
-    // the district + school via Monday filters, then matches coach + date
-    // exactly in JS (the coach matches on the people column id, falling back to
-    // the item name). Returns false when there's no date to dedupe on.
+    // date + coach type (one-log-per-day rule; cancelled logs count). Narrows
+    // the board to the district + school via Monday filters, then matches coach
+    // + date + coach type exactly in JS (the coach matches on the people column
+    // id, falling back to the item name). Coach type is part of the key because
+    // one coach can log e.g. a Solves and a Reads session for the same
+    // school/date. Returns false when there's no date to dedupe on.
     hasExistingLog: async (query: CoachLogIdentity) => {
       try {
         const date = query.sessionDate.trim();
@@ -274,6 +334,7 @@ export function coachLogRepository(): CoachLogRepository {
         const school = normalize(query.school);
         const coachId = query.coachMondayId.trim();
         const coachName = normalize(query.coachName);
+        const coachType = normalize(query.nycCoachType);
 
         // Escape values interpolated into the GraphQL rule strings.
         const esc = (v: string) =>
@@ -296,7 +357,7 @@ export function coachLogRepository(): CoachLogRepository {
         }
         const rules = `[${ruleParts.join(", ")}]`;
 
-        const columnIds = `["text88__1","text5__1","date__1","people__1"]`;
+        const columnIds = `["text88__1","text5__1","date__1","people__1","text13__1"]`;
         const buildQuery = (cursor: string | null) =>
           cursor
             ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { name column_values(ids:${columnIds}) { id text value } } } }`
@@ -326,13 +387,16 @@ export function coachLogRepository(): CoachLogRepository {
           const districtOk = normalize(col("text88__1")?.text) === district;
           const schoolOk = normalize(col("text5__1")?.text) === school;
           const dateOk = itemDate.trim() === date;
+          // Coach type must also match (empty == empty for non-NYC districts),
+          // so a coach's Solves and Reads logs for the same day don't collide.
+          const coachTypeOk = normalize(col("text13__1")?.text) === coachType;
           // Prefer matching by Monday profile id; fall back to the item name
           // (the coach name) only when no id is available.
           const coachOk =
             coachId !== ""
               ? peopleIds.includes(coachId)
               : coachName !== "" && normalize(item.name) === coachName;
-          return districtOk && schoolOk && dateOk && coachOk;
+          return districtOk && schoolOk && dateOk && coachOk && coachTypeOk;
         };
 
         let response = await fetchMondayData(buildQuery(null));

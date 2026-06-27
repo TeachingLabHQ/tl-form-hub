@@ -101,8 +101,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     // ---- Duplicate guard ------------------------------------------------
-    // One log per coach + district + school + date (cancelled logs count). This
-    // is the authoritative check; the form also pre-checks for a better UX.
+    // One log per coach + district + school + date + coach type (cancelled logs
+    // count). This is the authoritative check; the form also pre-checks for a
+    // better UX.
     const service = coachLogService(coachLogRepository());
     const duplicate = await service.hasExistingLog({
       coachMondayId,
@@ -110,6 +111,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       district,
       school,
       sessionDate,
+      nycCoachType,
     });
     if (duplicate.data) {
       return new Response(null, {

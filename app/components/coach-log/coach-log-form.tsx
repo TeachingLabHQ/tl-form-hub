@@ -3,6 +3,7 @@ import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   subSchoolKey,
+  type CoachOption,
   type DistrictWithSchools,
   type SessionDateOption,
   type SubSchoolMap,
@@ -12,6 +13,7 @@ import { useSession } from "../auth/hooks/useSession";
 import { buildCoachLogSubmission } from "./build-submission";
 import { ParticipantRosterForm } from "./participant-roster-form";
 import {
+  canOverrideCoach,
   isNycCoachTypeDistrict,
   shouldShowEarlyChildhood,
   shouldShowReads,
@@ -19,6 +21,7 @@ import {
   shouldShowSubSchool,
 } from "./constants";
 import { CancellationQuestion } from "./questions/cancellation-question";
+import { CoachNameQuestion } from "./questions/coach-name-question";
 import { DistrictSchoolQuestion } from "./questions/district-school-question";
 import { EarlyChildhoodQuestion } from "./questions/early-childhood-question";
 import { ReadsQuestion } from "./questions/nyc/reads-question";
@@ -26,7 +29,9 @@ import { SolvesQuestion } from "./questions/nyc/solves-question";
 import { GroupCoachingQuestion } from "./questions/group-coaching-question";
 import { NycCoachTypeQuestion } from "./questions/nyc-coach-type-question";
 import { OneOnOneCoachingQuestion } from "./questions/one-on-one-coaching-question";
+import { PlSessionQuestion } from "./questions/pl-session-question";
 import { SessionDateQuestion } from "./questions/session-date-question";
+import { SessionDateCalendarQuestion } from "./questions/session-date-calendar-question";
 import { SubSchoolQuestion } from "./questions/sub-school-question";
 import { useDuplicateCheck } from "./hooks/use-duplicate-check";
 import {
@@ -53,7 +58,25 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     SessionDateOption[]
   >([]);
   const [loadingSessionDates, setLoadingSessionDates] = useState(false);
-  const coachName = mondayProfile?.name ?? "";
+
+  // Testing-only coach override: allow-listed admins get a dropdown of Monday
+  // coaches. When one is selected (by Monday id), that coach becomes the
+  // *effective* identity used everywhere — session-date lookup, the duplicate
+  // guard, and submission (item name = selected coach, people column = their
+  // Monday id). Everyone else (and the tester before picking) uses their own
+  // logged-in profile.
+  const canOverride = canOverrideCoach(mondayProfile?.email);
+  const [coachOverrideId, setCoachOverrideId] = useState("");
+  const [coachOptions, setCoachOptions] = useState<CoachOption[]>([]);
+  const [loadingCoachOptions, setLoadingCoachOptions] = useState(false);
+
+  const overriddenCoach =
+    canOverride && coachOverrideId
+      ? coachOptions.find((c) => c.mondayId === coachOverrideId)
+      : undefined;
+  const coachName = overriddenCoach?.name ?? mondayProfile?.name ?? "";
+  const coachMondayId =
+    overriddenCoach?.mondayId ?? mondayProfile?.mondayProfileId ?? "";
 
   // Submission status.
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,6 +86,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
 
   const { district, school, nycCoachType, canceled, sessionDate } =
     form.values;
+  const readsIsPLSession = form.values.readsIsPLSession;
 
   // One log per coach + district + school + date — checked as soon as those are
   // chosen so the coach is warned before filling out the form.
@@ -72,11 +96,12 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     checkError: duplicateCheckError,
     setDuplicateExists,
   } = useDuplicateCheck({
-    coachMondayId: mondayProfile?.mondayProfileId ?? "",
+    coachMondayId,
     coachName,
     district,
     school,
     sessionDate,
+    nycCoachType,
   });
 
   // While the check is running or a duplicate exists, the activity questions are
@@ -84,18 +109,27 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   // change district/school/date above to resolve it).
   const lockActivities = checkingDuplicate || duplicateExists;
 
-  const showNycCoachType = isNycCoachTypeDistrict(district);
-  const showSubSchool = shouldShowSubSchool(district, nycCoachType);
-  const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
-  const showReads = shouldShowReads(district, nycCoachType);
-  const showSolves = shouldShowSolves(district, nycCoachType);
-  const showActivities = canceled !== "Yes";
-
   // Sub-school options are filtered from the loader map by district + school.
   const subSchoolOptions = useMemo(
     () => subSchools[subSchoolKey(district, school)] ?? [],
     [subSchools, district, school]
   );
+
+  const showNycCoachType = isNycCoachTypeDistrict(district);
+  // Sub-school shows for D75 + Solves, but only when the sheet actually has
+  // sub-schools for this district + school combo (otherwise there's nothing to
+  // pick, so we hide the question rather than show an empty dropdown).
+  const showSubSchool =
+    shouldShowSubSchool(district, nycCoachType) && subSchoolOptions.length > 0;
+  const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
+  const showReads = shouldShowReads(district, nycCoachType);
+  const showSolves = shouldShowSolves(district, nycCoachType);
+  const showActivities = canceled !== "Yes";
+
+  // A Reads coach logging a Professional Learning session: hide the coaching
+  // questions and pick the session date from a free calendar instead of the
+  // scheduled coaching-calendar dropdown.
+  const isPLSession = showReads && readsIsPLSession === "Yes";
 
   const resetCoacheeSelections = () => {
     form.setFieldValue("coacheeRows", [{ ...EMPTY_COACHEE_ROW }]);
@@ -122,6 +156,18 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     form.setFieldValue("school", value);
     form.setFieldValue("subSchool", "");
     resetCoacheeSelections();
+  };
+
+  // Selecting "Yes" auto-answers the 1:1 and group coaching questions "No"
+  // (they're hidden but still required), and clears the date since the input
+  // switches between the calendar and the scheduled dropdown.
+  const handlePLSessionChange = (value: string) => {
+    form.setFieldValue("readsIsPLSession", value as CoachLogValues["readsIsPLSession"]);
+    form.setFieldValue("sessionDate", "");
+    if (value === "Yes") {
+      form.setFieldValue("did1on1", "No");
+      form.setFieldValue("didGroupCoaching", "No");
+    }
   };
 
   const handleNycCoachTypeChange = (value: string) => {
@@ -163,6 +209,29 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
       cancelledFetch = true;
     };
   }, [district, school]);
+
+  // Testing-only: load the coach dropdown options once, for allow-listed admins.
+  useEffect(() => {
+    if (!canOverride) return;
+
+    let cancelledFetch = false;
+    setLoadingCoachOptions(true);
+    fetch("/api/coach-log/coach-names")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelledFetch) setCoachOptions(data.coaches || []);
+      })
+      .catch(() => {
+        if (!cancelledFetch) setCoachOptions([]);
+      })
+      .finally(() => {
+        if (!cancelledFetch) setLoadingCoachOptions(false);
+      });
+
+    return () => {
+      cancelledFetch = true;
+    };
+  }, [canOverride]);
 
   // Fetch session dates whenever a coach + district are both known.
   useEffect(() => {
@@ -211,9 +280,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
+          // Effective coach: the override when an allow-listed tester has picked
+          // one, otherwise the logged-in profile.
           buildCoachLogSubmission(values, {
-            name: mondayProfile.name,
-            mondayProfileId: mondayProfile.mondayProfileId || "",
+            name: coachName,
+            mondayProfileId: coachMondayId,
           })
         ),
       });
@@ -260,6 +331,22 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
               )}
               className="flex flex-col gap-4"
             >
+              {canOverride && (
+                <CoachNameQuestion
+                  value={coachOverrideId}
+                  options={coachOptions.map((c) => ({
+                    value: c.mondayId,
+                    label: c.name,
+                  }))}
+                  loading={loadingCoachOptions}
+                  onChange={(value) => {
+                    setCoachOverrideId(value);
+                    // The new coach has a different date list; drop any stale pick.
+                    form.setFieldValue("sessionDate", "");
+                  }}
+                />
+              )}
+
               <DistrictSchoolQuestion
                 form={form}
                 districts={districts}
@@ -274,15 +361,26 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 />
               )}
 
+              {showReads && (
+                <PlSessionQuestion
+                  form={form}
+                  onChange={handlePLSessionChange}
+                />
+              )}
+
               {showSubSchool && (
                 <SubSchoolQuestion form={form} options={subSchoolOptions} />
               )}
 
-              <SessionDateQuestion
-                form={form}
-                options={sessionDateOptions}
-                loading={loadingSessionDates}
-              />
+              {isPLSession ? (
+                <SessionDateCalendarQuestion form={form} />
+              ) : (
+                <SessionDateQuestion
+                  form={form}
+                  options={sessionDateOptions}
+                  loading={loadingSessionDates}
+                />
+              )}
 
               {checkingDuplicate && (
                 <div className="flex items-center gap-2">
@@ -316,15 +414,19 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
 
                 {showActivities && (
                   <>
-                    <OneOnOneCoachingQuestion
-                      form={form}
-                      coacheeOptions={coacheeOptions}
-                      loadingCoachees={loadingCoachees}
-                    />
-                    <GroupCoachingQuestion
-                      form={form}
-                      coacheeOptions={coacheeOptions}
-                    />
+                    {!isPLSession && (
+                      <>
+                        <OneOnOneCoachingQuestion
+                          form={form}
+                          coacheeOptions={coacheeOptions}
+                          loadingCoachees={loadingCoachees}
+                        />
+                        <GroupCoachingQuestion
+                          form={form}
+                          coacheeOptions={coacheeOptions}
+                        />
+                      </>
+                    )}
                     {showEarlyChildhood && (
                       <EarlyChildhoodQuestion form={form} />
                     )}
@@ -344,11 +446,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 <Notification
                   icon={<IconAlertTriangle size={20} />}
                   color="yellow"
-                  title="A coach log already exists for this school on this date."
+                  title="A coaching log for this district, site, and coach has already been submitted for this date."
                   withCloseButton={false}
                 >
-                  Only one log can be submitted per school per day. To make
-                  changes, contact the team.
+                  Please reach out to your project CPM or PMST member if you need
+                  to edit or view this log.
                 </Notification>
               )}
 

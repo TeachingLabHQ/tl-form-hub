@@ -25,6 +25,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       district,
       school,
       sessionDate,
+      nycCoachType: query.nycCoachType ?? "",
     });
     if (error) {
       console.error("Error checking for existing coach log:", error);
