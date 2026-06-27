@@ -445,11 +445,11 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                 <Notification
                   icon={<IconAlertTriangle size={20} />}
                   color="yellow"
-                  title="A coach log already exists for this school on this date."
+                  title="A coaching log for this district, site, and coach has already been submitted for this date."
                   withCloseButton={false}
                 >
-                  Only one log can be submitted per school per day. To make
-                  changes, contact the team.
+                  Please reach out to your project CPM or PMST member if you need
+                  to edit or view this log.
                 </Notification>
               )}
 
