@@ -34,17 +34,19 @@ const COACHEE_ROSTER_BOARD_ID = 18416567790;
 //   (item name is the coach name). Shared with the submit route.
 export const COACH_LOG_BOARD_ID = 18416482214;
 
-// Session-date source: the coaching PL calendar, served as a parquet export by
-// the TL data service (a Monday webhook mirror — same columns the previously
-// committed parquet held). Authenticated with a token query param.
-//   - "Session Date": ISO date (UTC midnight)
-//   - "Coach/Facilitator": coach name (matched to the logged-in mondayProfile)
-//   - "L&R name": site/district label (same format as the district sheet)
+// Session-date source: the FY27 coaching PL calendar, served as a parquet export
+// by the TL data service (a Monday webhook mirror). Authenticated with a token
+// query param. Columns are snake_case:
+//   - session_date: ISO date (UTC midnight)
+//   - coach_facilitator: coach name (matched to the logged-in mondayProfile)
+//   - lr_name: site/district label (same format as the district sheet)
+//   - subsite: free-form school/site label (NOT yet used for filtering — its
+//     values don't match the form's school field; see fetchSessionDates)
 // The endpoint doesn't support HTTP range requests, so we fetch the whole file
 // (small) and parse it in memory. Fetched via Node's global fetch (undici), so
 // it ignores http(s)_proxy — no proxy needed in dev, unlike the Sheets calls.
 const SESSION_CALENDAR_URL =
-  "https://tl-data.teachinglab.org/monday-webhook/calendar";
+  "https://tl-data.teachinglab.org/monday-webhook/calendar_fy27";
 
 // Memoize the parsed calendar per process with a short TTL: it's the same data
 // for every coach/district lookup, but it does change over time, so re-fetch
@@ -52,9 +54,10 @@ const SESSION_CALENDAR_URL =
 const CALENDAR_CACHE_TTL_MS = 5 * 60 * 1000;
 
 type CalendarRow = {
-  "Session Date"?: unknown;
-  "Coach/Facilitator"?: unknown;
-  "L&R name"?: unknown;
+  session_date?: unknown;
+  coach_facilitator?: unknown;
+  lr_name?: unknown;
+  subsite?: unknown;
 };
 
 let calendarCache: { rows: CalendarRow[]; fetchedAt: number } | null = null;
@@ -255,10 +258,13 @@ export function coachLogRepository(): CoachLogRepository {
     },
 
     // Session dates for the logged-in coach at the selected district, read from
-    // the coaching PL calendar parquet. Matched on Coach/Facilitator == coach
-    // name and L&R name == district (both normalized). Returns raw YYYY-MM-DD
-    // values; the service dedupes, sorts, and formats labels. (The parquet has
-    // no school column, so dates are not scoped by school.)
+    // the coaching PL calendar parquet. Matched on coach_facilitator == coach
+    // name and lr_name == district (both normalized). Returns raw YYYY-MM-DD
+    // values; the service dedupes, sorts, and formats labels.
+    // NOTE: not scoped by school yet. The calendar's `subsite` column carries a
+    // school/site label, but its values (e.g. "M035: _Direct to Teacher") are
+    // free-form and don't match the form's `school` field, so filtering on it
+    // would drop all dates. Wire school scoping once the join is defined.
     fetchSessionDates: async (coachName: string, district: string) => {
       try {
         const coach = normalize(coachName);
@@ -268,10 +274,10 @@ export function coachLogRepository(): CoachLogRepository {
         const dates = rows
           .filter(
             (r) =>
-              normalize(r["Coach/Facilitator"]) === coach &&
-              normalize(r["L&R name"]) === dist
+              normalize(r.coach_facilitator) === coach &&
+              normalize(r.lr_name) === dist
           )
-          .map((r) => toYmd(r["Session Date"]))
+          .map((r) => toYmd(r.session_date))
           .filter((d) => d !== "");
 
         return { data: dates, error: null };
