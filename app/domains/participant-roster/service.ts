@@ -15,6 +15,11 @@ export interface ParticipantRosterService {
   submitParticipant(
     submission: ParticipantRosterSubmission
   ): Promise<Errorable<string>>;
+  participantExists(
+    email: string,
+    district: string,
+    school: string
+  ): Promise<Errorable<boolean>>;
 }
 
 export function participantRosterService(
@@ -53,5 +58,8 @@ export function participantRosterService(
 
       return repository.createParticipant(entry);
     },
+
+    participantExists: (email, district, school) =>
+      repository.participantExists(email, district, school),
   };
 }

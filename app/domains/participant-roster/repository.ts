@@ -1,5 +1,5 @@
 import { Errorable } from "~/utils/errorable";
-import { insertMondayData } from "~/domains/utils";
+import { fetchMondayData, insertMondayData } from "~/domains/utils";
 import { ParticipantRosterEntry } from "./model";
 
 // Participant/teacher roster board ("IN DEV: SY26-27 Participant Roster") — the
@@ -21,8 +21,17 @@ const ROSTER_GROUP_ID = "group_mktb1yqy";
 // board, but our option lists already match the existing labels exactly.
 const labels = (values: string[]) => values.join(",");
 
+const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase();
+
 export interface ParticipantRosterRepository {
   createParticipant(entry: ParticipantRosterEntry): Promise<Errorable<string>>;
+  /** True if a participant with this email is already on the roster for the
+   * same district + school (the one-entry-per-coachee guard). */
+  participantExists(
+    email: string,
+    district: string,
+    school: string
+  ): Promise<Errorable<boolean>>;
 }
 
 export function participantRosterRepository(): ParticipantRosterRepository {
@@ -77,6 +86,59 @@ export function participantRosterRepository(): ParticipantRosterRepository {
         return {
           data: null,
           error: new Error("createParticipant() went wrong"),
+        };
+      }
+    },
+
+    // Duplicate-coachee guard: narrow the board server-side by email + district
+    // + school (all support contains_text — email is near-unique, so the result
+    // set is ~0-1 items), then confirm an exact match in JS since contains_text
+    // is a substring match (e.g. "NY_D1" would also match "NY_D11"). Returns
+    // false when there's no email to match on.
+    participantExists: async (email, district, school) => {
+      try {
+        const wantEmail = normalize(email);
+        if (!wantEmail) return { data: false, error: null };
+        const wantDistrict = normalize(district);
+        const wantSchool = normalize(school);
+
+        const esc = (v: string) =>
+          v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        const rules = `[{column_id: "email_mktht3ax", operator: contains_text, compare_value: "${esc(email)}"}, {column_id: "coaching_partners", operator: contains_text, compare_value: "${esc(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${esc(school)}"}]`;
+        const columnIds = `["email_mktht3ax","coaching_partners","short_text66"]`;
+        const buildQuery = (cursor: string | null) =>
+          cursor
+            ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { column_values(ids:${columnIds}) { id text } } } }`
+            : `{ boards(ids: ${PARTICIPANT_ROSTER_BOARD_ID}) { items_page(limit: 500, query_params: {rules: ${rules}}) { cursor items { column_values(ids:${columnIds}) { id text } } } } }`;
+
+        const matches = (item: any): boolean => {
+          const col = (id: string) =>
+            item.column_values.find((c: any) => c.id === id);
+          return (
+            normalize(col("email_mktht3ax")?.text) === wantEmail &&
+            normalize(col("coaching_partners")?.text) === wantDistrict &&
+            normalize(col("short_text66")?.text) === wantSchool
+          );
+        };
+
+        let response = await fetchMondayData(buildQuery(null));
+        let page = response.data.boards[0].items_page;
+        if (page.items.some(matches)) return { data: true, error: null };
+
+        let cursor: string | null = page.cursor;
+        while (cursor) {
+          response = await fetchMondayData(buildQuery(cursor));
+          page = response.data.next_items_page;
+          if (page.items.some(matches)) return { data: true, error: null };
+          cursor = page.cursor;
+        }
+
+        return { data: false, error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("participantExists() went wrong"),
         };
       }
     },

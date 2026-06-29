@@ -7,7 +7,7 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import type { DistrictWithSchools } from "~/domains/coach-log/model";
 import { useSession } from "../../auth/hooks/useSession";
@@ -51,6 +51,7 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessful, setIsSuccessful] = useState<boolean | null>(null);
+  const [isDuplicate, setIsDuplicate] = useState(false);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
   // Bumped after a successful submit to remount the form. form.reset() clears
   // the values, but a controlled searchable Select keeps its displayed text
@@ -77,6 +78,7 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
 
   const handleSubmit = async (values: ParticipantRosterValues) => {
     setShowErrorBanner(false);
+    setIsDuplicate(false);
     try {
       setIsSubmitting(true);
       setIsSuccessful(null);
@@ -91,6 +93,13 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
           })
         ),
       });
+
+      // Already on the roster for this district + school — keep the form filled
+      // so the coach can adjust rather than resubmitting.
+      if (response.status === 409) {
+        setIsDuplicate(true);
+        return;
+      }
 
       setIsSuccessful(response.ok);
       if (response.ok) {
@@ -250,6 +259,19 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
           title="Please complete all required fields before submitting."
           withCloseButton={false}
         />
+      )}
+      {isDuplicate && (
+        <Notification
+          icon={<IconAlertTriangle size={20} />}
+          color="yellow"
+          title="This participant is already on the roster for this district and school."
+          withCloseButton={false}
+        >
+          <Text size="sm">
+            A coachee with this email has already been submitted for this school.
+            To make changes, contact the team.
+          </Text>
+        </Notification>
       )}
       {isSuccessful === true && (
         <Notification

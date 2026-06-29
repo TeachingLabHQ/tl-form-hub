@@ -25,6 +25,28 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const service = participantRosterService(participantRosterRepository());
+
+    // One entry per coachee: block if this email is already on the roster for
+    // the same district + school. (Authoritative check; the form surfaces it.)
+    const duplicate = await service.participantExists(
+      body.email,
+      body.district,
+      body.school
+    );
+    if (duplicate.error) {
+      console.error("Error checking for existing participant:", duplicate.error);
+      return json(
+        { ok: false, error: "Could not verify whether this participant already exists" },
+        { status: 500 }
+      );
+    }
+    if (duplicate.data) {
+      return json(
+        { ok: false, duplicate: true, error: "Participant already on the roster" },
+        { status: 409 }
+      );
+    }
+
     const { data, error } = await service.submitParticipant(body);
     if (error || !data) {
       console.error("Error creating participant roster entry:", error);
