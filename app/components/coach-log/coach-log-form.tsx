@@ -3,7 +3,6 @@ import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   subSchoolKey,
-  type CoachOption,
   type DistrictWithSchools,
   type SessionDateOption,
   type SubSchoolMap,
@@ -11,9 +10,8 @@ import {
 import { cn } from "~/utils/utils";
 import { useSession } from "../auth/hooks/useSession";
 import { buildCoachLogSubmission } from "./build-submission";
-import { ParticipantRosterForm } from "./participant-roster-form";
+import { ParticipantRosterForm } from "./participant-roster/participant-roster-form";
 import {
-  canOverrideCoach,
   isNycCoachTypeDistrict,
   shouldShowEarlyChildhood,
   shouldShowReads,
@@ -33,6 +31,7 @@ import { PlSessionQuestion } from "./questions/pl-session-question";
 import { SessionDateQuestion } from "./questions/session-date-question";
 import { SessionDateCalendarQuestion } from "./questions/session-date-calendar-question";
 import { SubSchoolQuestion } from "./questions/sub-school-question";
+import { useCoachOverride } from "./hooks/use-coach-override";
 import { useDuplicateCheck } from "./hooks/use-duplicate-check";
 import {
   EMPTY_COACHEE_ROW,
@@ -60,23 +59,19 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const [loadingSessionDates, setLoadingSessionDates] = useState(false);
 
   // Testing-only coach override: allow-listed admins get a dropdown of Monday
-  // coaches. When one is selected (by Monday id), that coach becomes the
-  // *effective* identity used everywhere — session-date lookup, the duplicate
-  // guard, and submission (item name = selected coach, people column = their
-  // Monday id). Everyone else (and the tester before picking) uses their own
-  // logged-in profile.
-  const canOverride = canOverrideCoach(mondayProfile?.email);
-  const [coachOverrideId, setCoachOverrideId] = useState("");
-  const [coachOptions, setCoachOptions] = useState<CoachOption[]>([]);
-  const [loadingCoachOptions, setLoadingCoachOptions] = useState(false);
-
-  const overriddenCoach =
-    canOverride && coachOverrideId
-      ? coachOptions.find((c) => c.mondayId === coachOverrideId)
-      : undefined;
-  const coachName = overriddenCoach?.name ?? mondayProfile?.name ?? "";
-  const coachMondayId =
-    overriddenCoach?.mondayId ?? mondayProfile?.mondayProfileId ?? "";
+  // coaches. The selected coach becomes the *effective* identity used
+  // everywhere — session-date lookup, the duplicate guard, and submission (item
+  // name = selected coach, people column = their Monday id). Everyone else (and
+  // the tester before picking) uses their own logged-in profile.
+  const {
+    canOverride,
+    coachOverrideId,
+    setCoachOverrideId,
+    coachOptions,
+    loadingCoachOptions,
+    coachName,
+    coachMondayId,
+  } = useCoachOverride();
 
   // Submission status.
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -209,29 +204,6 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
       cancelledFetch = true;
     };
   }, [district, school]);
-
-  // Testing-only: load the coach dropdown options once, for allow-listed admins.
-  useEffect(() => {
-    if (!canOverride) return;
-
-    let cancelledFetch = false;
-    setLoadingCoachOptions(true);
-    fetch("/api/coach-log/coach-names")
-      .then((r) => r.json())
-      .then((data) => {
-        if (!cancelledFetch) setCoachOptions(data.coaches || []);
-      })
-      .catch(() => {
-        if (!cancelledFetch) setCoachOptions([]);
-      })
-      .finally(() => {
-        if (!cancelledFetch) setLoadingCoachOptions(false);
-      });
-
-    return () => {
-      cancelledFetch = true;
-    };
-  }, [canOverride]);
 
   // Fetch session dates whenever a coach + district are both known.
   useEffect(() => {
@@ -505,7 +477,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
           </Tabs.Panel>
 
           <Tabs.Panel value="roster" pt="lg">
-            <ParticipantRosterForm />
+            <ParticipantRosterForm districts={districts} />
           </Tabs.Panel>
         </Tabs>
       </div>
