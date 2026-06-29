@@ -50,6 +50,9 @@ Server: `MONDAY_API_KEY`, `GOOGLE_SERVICE_CLIENTEMAIL` / `GOOGLE_SERVICE_PRIVATE
 - End git commit messages with the standard `Co-Authored-By` trailer; branch off `main` for new work (commit/push only when asked).
 - Keep diffs idiomatic to surrounding code; prefer the domain layering above over inlining external calls in routes/components.
 
+### Gotcha — Mantine `searchable` Select doesn't visually clear on reset
+A Mantine v7 `searchable` `Select` keeps an internal `searchValue` (the text shown in the input) that's separate from the controlled `value`. Clearing the value programmatically (`form.reset()` or `setFieldValue(field, "")`) updates the form state correctly but leaves the old text displayed until the field is focused again. This is a **display-only** bug — submitted data is already correct. It affects `searchable` single Selects only; `TextInput`, `MultiSelect`, and non-searchable Selects re-sync fine. Note `form.key()` only forces a remount in `useForm`'s **uncontrolled** mode — in `controlled` mode (what the forms here use) it's stable and won't help. Fix by remounting the field with your own changing `key`: bump a `resetKey` counter on successful submit and put it on the `<form>`, and/or key a dependent select by its parent value (e.g. `key={`school-${district}`}` so the school field remounts when the district changes). See `app/components/coach-log/participant-roster/participant-roster-form.tsx`.
+
 ### Ticket → GitHub project board mapping
 When a change targets one of the forms below and you create a GitHub issue/ticket for it, add that ticket to the matching org Project board (`gh project item-add <N> --owner TeachingLabHQ --url <issue-url>`):
 - **Coach log form** → project board **19**
