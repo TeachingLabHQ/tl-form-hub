@@ -272,19 +272,16 @@ export const shouldExcludeVendorPaymentDate = (date: Date): boolean => {
   const dateMonth = date.getMonth();
   const dateYear = date.getFullYear();
   
-    // If today is 5th or earlier, allow prior month dates + ALL current month dates
+    // If today is 5th or earlier, only allow prior month dates (the prior month is
+    // still being finalized until the 5th). Current month dates stay locked until
+    // the 6th so nothing can be logged for the current month before then.
     if (currentDay <= 5) {
       const priorMonth = currentMonth === 0 ? 11 : currentMonth - 1;
       const priorMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
-      
+
       // Allow all prior month dates
       if (dateYear === priorMonthYear && dateMonth === priorMonth) {
         return false; // Don't exclude prior month dates
-      }
-      
-      // Allow ALL current month dates (including future dates)
-      if (dateYear === currentYear && dateMonth === currentMonth) {
-        return false; // Don't exclude any current month dates
       }
     } else {
       // If today is 6th or later, only allow current month dates from today onwards
@@ -295,6 +292,31 @@ export const shouldExcludeVendorPaymentDate = (date: Date): boolean => {
   
   // Exclude all other dates
   return true;
+};
+
+/**
+ * Default date to pre-select in the work date picker.
+ * Before the 6th, current-month dates are locked (see shouldExcludeVendorPaymentDate),
+ * so default to the last day of the previous month — a valid, selectable date —
+ * instead of today, which would otherwise let users submit for the current month.
+ */
+export const getDefaultVendorPaymentDate = (): Date => {
+  const today = new Date();
+  if (today.getDate() <= 5) {
+    // Day 0 of the current month resolves to the last day of the previous month.
+    return new Date(today.getFullYear(), today.getMonth(), 0);
+  }
+  return today;
+};
+
+/**
+ * Whether to show the notice asking coaches to hold off on July submissions
+ * until July 15. Shows only through July 15 and clears itself afterwards.
+ */
+export const shouldShowJulyHoldNotice = (): boolean => {
+  const today = new Date();
+  const JULY = 6; // zero-based month index
+  return today.getMonth() === JULY && today.getDate() <= 15;
 };
 
 export const filterVendorPaymentProjects = (projects: string[]): string[] => {
