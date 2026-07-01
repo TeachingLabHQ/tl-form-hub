@@ -212,7 +212,7 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
                     withCloseButton={false}
                     className="mt-2"
                   >
-                    Please hold off on submitting July entries until July 15.
+                    Please hold off on submitting July entries until July 16.
                   </Notification>
                 )}
               </div>

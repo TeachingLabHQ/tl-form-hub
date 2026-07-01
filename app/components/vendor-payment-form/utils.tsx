@@ -311,7 +311,7 @@ export const getDefaultVendorPaymentDate = (): Date => {
 
 /**
  * Whether to show the notice asking coaches to hold off on July submissions
- * until July 15. Shows only through July 15 and clears itself afterwards.
+ * until July 16. Shows through July 15 and clears itself once July unlocks on the 16th.
  */
 export const shouldShowJulyHoldNotice = (): boolean => {
   const today = new Date();
