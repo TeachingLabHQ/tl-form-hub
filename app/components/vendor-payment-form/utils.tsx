@@ -272,10 +272,10 @@ export const shouldExcludeVendorPaymentDate = (date: Date): boolean => {
   const dateMonth = date.getMonth();
   const dateYear = date.getFullYear();
   
-    // If today is 5th or earlier, only allow prior month dates (the prior month is
-    // still being finalized until the 5th). Current month dates stay locked until
-    // the 6th so nothing can be logged for the current month before then.
-    if (currentDay <= 5) {
+    // If today is the 15th or earlier, only allow prior month dates (the prior
+    // month is still being finalized). Current month dates stay locked until the
+    // 16th so nothing can be logged for the current month before then.
+    if (currentDay <= 15) {
       const priorMonth = currentMonth === 0 ? 11 : currentMonth - 1;
       const priorMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
@@ -284,9 +284,9 @@ export const shouldExcludeVendorPaymentDate = (date: Date): boolean => {
         return false; // Don't exclude prior month dates
       }
     } else {
-      // If today is 6th or later, only allow current month dates from today onwards
+      // If today is the 16th or later, only allow current month dates
       if (dateYear === currentYear && dateMonth === currentMonth ) {
-        return false; // Don't exclude current month dates from today onwards
+        return false; // Don't exclude current month dates
       }
     }
   
@@ -296,13 +296,13 @@ export const shouldExcludeVendorPaymentDate = (date: Date): boolean => {
 
 /**
  * Default date to pre-select in the work date picker.
- * Before the 6th, current-month dates are locked (see shouldExcludeVendorPaymentDate),
+ * Before the 16th, current-month dates are locked (see shouldExcludeVendorPaymentDate),
  * so default to the last day of the previous month — a valid, selectable date —
  * instead of today, which would otherwise let users submit for the current month.
  */
 export const getDefaultVendorPaymentDate = (): Date => {
   const today = new Date();
-  if (today.getDate() <= 5) {
+  if (today.getDate() <= 15) {
     // Day 0 of the current month resolves to the last day of the previous month.
     return new Date(today.getFullYear(), today.getMonth(), 0);
   }
