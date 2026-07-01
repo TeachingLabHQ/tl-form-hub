@@ -150,6 +150,9 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const handleSchoolChange = (value: string) => {
     form.setFieldValue("school", value);
     form.setFieldValue("subSchool", "");
+    // Session dates are scoped by school, so the current date may no longer be
+    // valid for the new school.
+    form.setFieldValue("sessionDate", "");
     resetCoacheeSelections();
   };
 
@@ -205,7 +208,8 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     };
   }, [district, school]);
 
-  // Fetch session dates whenever a coach + district are both known.
+  // Fetch session dates whenever a coach + district are both known. The dates
+  // are scoped by school too, so re-fetch when the school changes.
   useEffect(() => {
     if (!district || !coachName) {
       setSessionDateOptions([]);
@@ -217,7 +221,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     fetch("/api/coach-log/session-dates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ coachName, district }),
+      body: JSON.stringify({ coachName, district, school }),
     })
       .then((r) => r.json())
       .then((data) => {
@@ -233,7 +237,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     return () => {
       cancelledFetch = true;
     };
-  }, [district, coachName]);
+  }, [district, coachName, school]);
 
   const handleSubmit = async (values: CoachLogValues) => {
     if (!mondayProfile?.name) {

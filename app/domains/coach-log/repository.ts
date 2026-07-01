@@ -6,6 +6,7 @@ import {
   CoachLogIdentity,
   CoachOption,
   DistrictWithSchools,
+  SessionDateRow,
   SubSchoolRow,
 } from "./model";
 
@@ -132,7 +133,7 @@ export interface CoachLogRepository {
   fetchSessionDates(
     coachName: string,
     district: string
-  ): Promise<Errorable<string[]>>;
+  ): Promise<Errorable<SessionDateRow[]>>;
   fetchCoaches(): Promise<Errorable<CoachOption[]>>;
   hasExistingLog(query: CoachLogIdentity): Promise<Errorable<boolean>>;
 }
@@ -259,26 +260,27 @@ export function coachLogRepository(): CoachLogRepository {
 
     // Session dates for the logged-in coach at the selected district, read from
     // the coaching PL calendar parquet. Matched on coach_facilitator == coach
-    // name and lr_name == district (both normalized). Returns raw YYYY-MM-DD
-    // values; the service dedupes, sorts, and formats labels.
-    // NOTE: not scoped by school yet. The calendar's `subsite` column carries a
-    // school/site label, but its values (e.g. "M035: _Direct to Teacher") are
-    // free-form and don't match the form's `school` field, so filtering on it
-    // would drop all dates. Wire school scoping once the join is defined.
+    // name and lr_name == district (both normalized). Returns each row's raw
+    // YYYY-MM-DD date plus its free-form `subsite` label; the service resolves
+    // the subsite to a canonical school (to scope by school), then dedupes,
+    // sorts, and formats labels.
     fetchSessionDates: async (coachName: string, district: string) => {
       try {
         const coach = normalize(coachName);
         const dist = normalize(district);
 
         const rows = await loadCalendarRows();
-        const dates = rows
+        const dates: SessionDateRow[] = rows
           .filter(
             (r) =>
               normalize(r.coach_facilitator) === coach &&
               normalize(r.lr_name) === dist
           )
-          .map((r) => toYmd(r.session_date))
-          .filter((d) => d !== "");
+          .map((r) => ({
+            date: toYmd(r.session_date),
+            subsite: String(r.subsite ?? "").trim(),
+          }))
+          .filter((r) => r.date !== "");
 
         return { data: dates, error: null };
       } catch (e) {
