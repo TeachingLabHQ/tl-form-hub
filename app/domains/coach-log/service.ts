@@ -18,7 +18,8 @@ export interface CoachLogService {
   fetchSubSchoolMap: () => Promise<Errorable<SubSchoolMap>>;
   fetchSessionDates: (
     coachName: string,
-    district: string
+    district: string,
+    school: string
   ) => Promise<Errorable<SessionDateOption[]>>;
   fetchCoaches: () => Promise<Errorable<CoachOption[]>>;
   hasExistingLog: (query: CoachLogIdentity) => Promise<Errorable<boolean>>;
@@ -26,6 +27,40 @@ export interface CoachLogService {
 
 const uniqueSorted = (values: string[]) =>
   [...new Set(values)].sort((a, b) => a.localeCompare(b));
+
+/**
+ * Resolve a calendar `subsite` label to one of a district's canonical school
+ * names (from the district/school sheet). The calendar decorates the school name
+ * with a trailing site detail — e.g. "Force Elementary_Coaching",
+ * "Force Elementary; Coaching" — and the separator is inconsistent (underscore,
+ * semicolon, colon, space), while school names can themselves contain those
+ * characters. So instead of splitting the string we match it against the known
+ * school list: return the longest canonical school whose name is a prefix of the
+ * subsite (up to a non-alphanumeric boundary, so "Forest" never matches
+ * "Forestville"). Longest wins so "Lincoln Elementary_Coaching" resolves to
+ * "Lincoln Elementary" rather than a shorter "Lincoln". Returns "" when nothing
+ * matches (e.g. district-level rows like "M035: _Direct to Teacher").
+ */
+const resolveSubsiteSchool = (subsite: string, schools: string[]): string => {
+  const s = subsite.trim().toLowerCase();
+  if (!s) return "";
+
+  let best = "";
+  for (const school of schools) {
+    const c = school.trim().toLowerCase();
+    if (!c || c.length <= best.length) continue;
+    if (s === c) {
+      best = school;
+      continue;
+    }
+    // Prefix match, but only at a word boundary: the char after the school name
+    // must be a separator (non-alphanumeric), not the middle of a longer word.
+    if (s.startsWith(c) && /^[^a-z0-9]/.test(s.slice(c.length))) {
+      best = school;
+    }
+  }
+  return best;
+};
 
 // "2026-06-01" -> "Monday, June 1, 2026" (UTC so the calendar date never shifts).
 const dateLabel = (ymd: string) =>
@@ -89,12 +124,41 @@ export function coachLogService(
       return { data: map, error: null };
     },
 
-    fetchSessionDates: async (coachName: string, district: string) => {
+    fetchSessionDates: async (
+      coachName: string,
+      district: string,
+      school: string
+    ) => {
       const result = await repository.fetchSessionDates(coachName, district);
       if (result.error || !result.data) return result;
 
+      let rows = result.data;
+
+      // Scope to the selected school when a specific one is chosen. "All Schools"
+      // and "N/A" are aggregate/placeholder options (see schoolOptions), so they
+      // keep every date for the district. We resolve each row's free-form
+      // `subsite` against the district's canonical school list rather than
+      // parsing it — see resolveSubsiteSchool.
+      const selected = school.trim();
+      if (selected && selected !== "All Schools" && selected !== "N/A") {
+        const districtsResult = await repository.fetchDistrictsWithSchools();
+        if (districtsResult.error || !districtsResult.data) {
+          return { data: null, error: districtsResult.error };
+        }
+        const canonicalSchools =
+          districtsResult.data.find(
+            (d) => d.district.trim().toLowerCase() === district.trim().toLowerCase()
+          )?.schools ?? [];
+        const target = selected.toLowerCase();
+        rows = rows.filter(
+          (r) =>
+            resolveSubsiteSchool(r.subsite, canonicalSchools).toLowerCase() ===
+            target
+        );
+      }
+
       // Raw YYYY-MM-DD strings -> deduped, sorted, human-labeled options.
-      const options = uniqueSorted(result.data).map((ymd) => ({
+      const options = uniqueSorted(rows.map((r) => r.date)).map((ymd) => ({
         value: ymd,
         label: dateLabel(ymd),
       }));

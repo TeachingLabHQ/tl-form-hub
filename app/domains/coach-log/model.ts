@@ -35,11 +35,21 @@ export const subSchoolKey = (district: string, school: string) =>
  * One selectable session date for the date dropdown. `value` is YYYY-MM-DD (maps
  * straight into the Monday date column); `label` is a human-friendly rendering.
  * Sourced from the coaching PL calendar, scoped to the logged-in coach + the
- * selected district.
+ * selected district + school.
  */
 export type SessionDateOption = {
   value: string;
   label: string;
+};
+
+/**
+ * A raw calendar row matched to a coach + district: the session date (YYYY-MM-DD)
+ * and the free-form `subsite` label. The service resolves `subsite` to a canonical
+ * school (see resolveSubsiteSchool in the service) to scope dates by school.
+ */
+export type SessionDateRow = {
+  date: string;
+  subsite: string;
 };
 
 /**
