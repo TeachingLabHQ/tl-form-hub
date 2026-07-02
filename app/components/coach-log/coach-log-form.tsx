@@ -1,4 +1,5 @@
 import { Button, Loader, Notification, Tabs, Text } from "@mantine/core";
+import { useSearchParams } from "@remix-run/react";
 import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -44,9 +45,36 @@ type Props = {
   subSchools: SubSchoolMap;
 };
 
+// Tabs are mirrored into the URL (?tab=) so each tab has a shareable deep link
+// — e.g. the participant roster can be handed out as /coach-log-form?tab=roster
+// without asking people to open the coach log and click the tab first.
+const TAB_VALUES = ["coach-log", "roster"] as const;
+const DEFAULT_TAB = "coach-log";
+
 export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const { mondayProfile } = useSession();
   const form = useCoachLogForm();
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab = TAB_VALUES.includes(tabParam as (typeof TAB_VALUES)[number])
+    ? tabParam
+    : DEFAULT_TAB;
+
+  const handleTabChange = (value: string | null) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (!value || value === DEFAULT_TAB) {
+          next.delete("tab");
+        } else {
+          next.set("tab", value);
+        }
+        return next;
+      },
+      { replace: true, preventScrollReset: true }
+    );
+  };
 
   // Reference data (not form state) — coachees depend on district + school.
   const [coacheeOptions, setCoacheeOptions] = useState<string[]>([]);
@@ -290,7 +318,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   return (
     <div className="w-full h-full grid grid-cols-12 gap-8 py-8">
       <div className="col-start-2 col-span-10 h-fit p-8 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white">
-        <Tabs defaultValue="coach-log">
+        <Tabs value={activeTab} onChange={handleTabChange}>
           <Tabs.List>
             <Tabs.Tab value="coach-log" className="hover:bg-white/10">
               Coach Log
