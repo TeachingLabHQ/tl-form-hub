@@ -1,5 +1,5 @@
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, type ShouldRevalidateFunction } from "@remix-run/react";
 import { useSession } from "~/components/auth/hooks/useSession";
 import { CoachLogForm } from "~/components/coach-log/coach-log-form";
 import { coachLogRepository } from "~/domains/coach-log/repository";
@@ -29,6 +29,15 @@ export const loader = async () => {
     subSchools: subSchools.data ?? {},
   });
 };
+
+// The loader only returns static reference data (districts/sub-schools) that
+// doesn't depend on the URL. Skip revalidation when we're just navigating within
+// the same page — e.g. the ?tab= switch — so tab changes are instant instead of
+// waiting on a fresh Google Sheets fetch.
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  currentUrl,
+  nextUrl,
+}) => currentUrl.pathname !== nextUrl.pathname;
 
 export default function CoachLogFormRoute() {
   const { mondayProfile, isLoading: isSessionLoading } = useSession();
