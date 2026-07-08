@@ -16,7 +16,8 @@ export async function sendProjectEmail(
     pdf: Uint8Array,
     docx: Uint8Array,
   ): Promise<void> {
-    const recipientEmail = ["yancheng.pan@teachinglab.org", "accountspayable@teachinglab.org", personSummary.cf_email];
+    const recipientEmail = ["yancheng.pan@teachinglab.org", "accountspayable@teachinglab.org"];
+    if (personSummary.cf_email) recipientEmail.push(personSummary.cf_email);
     console.log(`Starting email sending for ${personSummary.cf_name} (${personSummary.cf_email}) on project: ${projectName}`);
     try {
       const supportEmail = Deno.env.get("SUPPORT_EMAIL") || "support@example.com";
