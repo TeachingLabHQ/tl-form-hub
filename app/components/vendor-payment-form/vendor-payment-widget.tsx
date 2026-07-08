@@ -88,6 +88,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -101,6 +102,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -114,6 +116,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -127,6 +130,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -140,6 +144,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -153,6 +158,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -193,7 +199,14 @@ export const VendorPaymentWidget = ({
           <div className={gridClass(canDelete)}>
             <Select
               value={row.task || null}
-              onChange={(value) => updateRow({ task: value || "" })}
+              onChange={(value) => {
+                const parsed = value ? JSON.parse(value) : null;
+                const update: Partial<VendorPaymentRow> = { task: value || "" };
+                if (parsed?.fixedHours != null) {
+                  update.workHours = parsed.fixedHours.toString();
+                }
+                updateRow(update);
+              }}
               placeholder="Select a task"
               data={listOfAvailableTasks.map((option) => ({
                 value: JSON.stringify(option),
@@ -224,6 +237,7 @@ export const VendorPaymentWidget = ({
               placeholder="Enter work hours"
               max={taskData?.maxHours ?? undefined}
               min={0}
+              readOnly={taskData?.fixedHours != null}
               error={
                 isValidated === false &&
                 (!row.workHours || Number(row.workHours) === 0)

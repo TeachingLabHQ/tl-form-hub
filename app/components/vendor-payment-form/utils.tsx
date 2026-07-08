@@ -5,6 +5,7 @@ export const storedTaskSchema = z.object({
   taskName: z.string(),
   rate: z.number(),
   maxHours: z.number().nullable(),
+  fixedHours: z.number().nullable().optional(),
 });
 
 export type StoredTask = z.infer<typeof storedTaskSchema>;
@@ -43,7 +44,8 @@ export type TaskDetails = {
     "Tier 2": number | null;
     "Tier 3": number | null;
     "Tier 4": number | null;
-  }|null;
+  } | null;
+  fixedHours?: number | null;
 };
 
 export const facilitationTaskOptions: TaskDetails[] = [
@@ -53,62 +55,44 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 2": null,
     "Tier 3": null,
     "Tier 4": null,
-    maxHours: {
-      "Tier 1": 1,
-      "Tier 2": null,
-      "Tier 3": null,
-      "Tier 4": null,
-    },
+    maxHours: null,
+    fixedHours: 1,
   },
   {
-    taskName:
-      "Lead coaching activities: 1-1 coaching sessions, micro group PL, or walkthrough",
-    "Tier 1": 110,
-    "Tier 2": 125,
-    "Tier 3": 140,
-    "Tier 4": null,
-    maxHours: {
-      "Tier 1": 6,
-      "Tier 2": 6,
-      "Tier 3": 6,
-      "Tier 4": null,
-    },
-  },
-  {
-    taskName:
-      "Lead coaching preparation & follow-up: internalization or preparation for coaching sessions; follow-up activities; completion of Coaching Action Plans and Coaching Logs",
-    "Tier 1": 50,
-    "Tier 2": 50,
-    "Tier 3": 50,
-    "Tier 4": null,
-    maxHours: {
-      "Tier 1": 1.5,
-      "Tier 2": 1.5,
-      "Tier 3": 1.5,
-      "Tier 4": null,
-    },
-  },
-  {
-    taskName: "Lead Facilitation of group Professional Learning course",
-    "Tier 1": 150,
-    "Tier 2": 165,
-    "Tier 3": 180,
-    "Tier 4": null,
-    maxHours: {
-      "Tier 1": 6,
-      "Tier 2": 6,
-      "Tier 3": 6,
-      "Tier 4": null,
-    },
-  },
-  {
-    taskName:
-      "Tech/Support Facilitation of group Professional Learning courses",
-    "Tier 1": 50,
-    "Tier 2": 50,
-    "Tier 3": 50,
+    taskName: "1/3 Day: ~2hrs C/F",
+    "Tier 1": 350,
+    "Tier 2": 370,
+    "Tier 3": 400,
     "Tier 4": null,
     maxHours: null,
+    fixedHours: 1,
+  },
+  {
+    taskName: "1/2 Day: ~3hrs C/F",
+    "Tier 1": 500,
+    "Tier 2": 540,
+    "Tier 3": 585,
+    "Tier 4": null,
+    maxHours: null,
+    fixedHours: 1,
+  },
+  {
+    taskName: "Full Day: ~6hrs C/F",
+    "Tier 1": 1000,
+    "Tier 2": 1080,
+    "Tier 3": 1170,
+    "Tier 4": null,
+    maxHours: null,
+    fixedHours: 1,
+  },
+  {
+    taskName: "Extended Day: 6hrs+ C/F",
+    "Tier 1": 1150,
+    "Tier 2": 1250,
+    "Tier 3": 1320,
+    "Tier 4": null,
+    maxHours: null,
+    fixedHours: 1,
   },
   {
     taskName: "Second Facilitation of group Professional Learning courses",
@@ -140,7 +124,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     maxHours: null,
   },
   {
-    taskName: "Site Context + Support: Meetings and collaborations with project team members and/or partners to support the overall project success",
+    taskName: "Collaboration",
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
