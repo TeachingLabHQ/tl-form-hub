@@ -4,6 +4,9 @@ import { PersonProjectSummary } from "./types.ts";
 // Initialize Resend client
 const resend = new Resend(Deno.env.get("RESEND_API_KEY")); // Env var dones't work for localhost testing
 
+const escHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 
 
 // --- Updated Email Sending Function ---
@@ -41,10 +44,10 @@ export async function sendProjectEmail(
         html: `
           <h1>Teaching Lab - Payment Summary</h1>
           <p>Hello,</p>
-          <p>Please find attached your payment summary for project <strong>${projectName}</strong> for the period ending ${reportMonthYear}.</p>
+          <p>Please find attached your payment summary for project <strong>${escHtml(projectName)}</strong> for the period ending ${escHtml(reportMonthYear)}.</p>
           <p>Total payment for the project member in this period: <strong>$${personSummary.totalPayForProject.toFixed(2)}</strong></p>
           <p>Two versions of the invoice are attached: a PDF for your records and an editable Word document in case you need to make any corrections.</p>
-          <p>If you have any questions, please contact ${supportEmail}.</p>
+          <p>If you have any questions, please contact ${escHtml(supportEmail)}.</p>
           <p>Best regards,<br>Teaching Lab FinanceTeam</p>
         `,
         attachments: [
