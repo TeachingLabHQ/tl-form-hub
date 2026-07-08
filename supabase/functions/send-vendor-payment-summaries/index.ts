@@ -8,6 +8,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { generateProjectPDF } from "./pdf-generator.ts";
+import { generateProjectDocx } from "./docx-generator.ts";
 import { sendProjectEmail } from "./utils.ts";
 import { PersonProjectSummary } from "./types.ts";
 
@@ -292,12 +293,18 @@ try {
           const pdf = await generateProjectPDF(projectName, personSummary, logId); // Pass person-specific summary
           console.log(`-- PDF generated successfully for ${personEmail}/${projectName}`);
 
+          // Generate editable DOCX for the contractor
+          console.log(`-- Generating DOCX for ${personEmail} on project ${projectName}`);
+          const docx = await generateProjectDocx(projectName, personSummary, logId);
+          console.log(`-- DOCX generated successfully for ${personEmail}/${projectName}`);
+
           // Send email to this person for this project
           console.log(`-- Sending email to ${personEmail} for project ${projectName}`);
           await sendProjectEmail(
             projectName,
             personSummary, // Pass the necessary summary details
             pdf,
+            docx,
           );
           console.log(`-- Email sent successfully to ${personEmail} for project ${projectName}`);
 
