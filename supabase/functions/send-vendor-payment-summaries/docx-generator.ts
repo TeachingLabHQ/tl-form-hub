@@ -1,7 +1,6 @@
 import {
   AlignmentType,
   Document,
-  HeadingLevel,
   Packer,
   Paragraph,
   ShadingType,
@@ -32,6 +31,10 @@ function formatDateOnlyNoTz(input: string): string {
 function isContentDevelopmentTask(taskName: string): boolean {
   return taskName.trim().replace(/^task\s*[–-]\s*/i, "").trim().toLowerCase() === "content development";
 }
+
+// A4 content width with 1" margins: (8.27 - 2) * 1440 = 9029 DXA
+// Column proportions match the PDF: 15% / 25% / 25% / 12% / 11% / 12%
+const COL_WIDTHS_DXA = [1354, 2257, 2257, 1083, 993, 1083];
 
 export async function generateProjectDocx(
   projectName: string,
@@ -68,22 +71,25 @@ export async function generateProjectDocx(
     );
     const showContentDevelopmentBreakdown = totals.contentDevelopment > 0;
 
+    const headerCols = [
+      { label: "Date",     align: AlignmentType.LEFT },
+      { label: "Task",     align: AlignmentType.LEFT },
+      { label: "Note",     align: AlignmentType.LEFT },
+      { label: "Hours",    align: AlignmentType.RIGHT },
+      { label: "Rate",     align: AlignmentType.RIGHT },
+      { label: "Subtotal", align: AlignmentType.RIGHT },
+    ];
+
     const headerRow = new TableRow({
       tableHeader: true,
-      children: [
-        { label: "Date", align: AlignmentType.LEFT },
-        { label: "Task", align: AlignmentType.LEFT },
-        { label: "Note", align: AlignmentType.LEFT },
-        { label: "Hours", align: AlignmentType.RIGHT },
-        { label: "Rate", align: AlignmentType.RIGHT },
-        { label: "Subtotal", align: AlignmentType.RIGHT },
-      ].map(({ label, align }) =>
+      children: headerCols.map(({ label, align }, i) =>
         new TableCell({
+          width: { size: COL_WIDTHS_DXA[i], type: WidthType.DXA },
           shading: { fill: "F2F2F2", type: ShadingType.CLEAR, color: "auto" },
           children: [
             new Paragraph({
               alignment: align,
-              children: [new TextRun({ text: label, bold: true, size: 20 })],
+              children: [new TextRun({ text: label, bold: true, size: 22, color: "000000" })],
             }),
           ],
         })
@@ -98,14 +104,20 @@ export async function generateProjectDocx(
         dateDisplay = formatDateOnlyNoTz(personSummary.submission_date);
       }
 
+      const cell = (text: string, align = AlignmentType.LEFT, colIndex: number) =>
+        new TableCell({
+          width: { size: COL_WIDTHS_DXA[colIndex], type: WidthType.DXA },
+          children: [new Paragraph({ alignment: align, children: [new TextRun({ text, size: 20, color: "000000" })] })],
+        });
+
       return new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: dateDisplay, size: 18 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: entry.task_name, size: 18 })] })] }),
-          new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: entry.note ?? "", size: 18 })] })] }),
-          new TableCell({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: entry.work_hours.toString(), size: 18 })] })] }),
-          new TableCell({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `$${entry.rate.toFixed(2)}`, size: 18 })] })] }),
-          new TableCell({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `$${entry.entry_pay.toFixed(2)}`, size: 18 })] })] }),
+          cell(dateDisplay,                       AlignmentType.LEFT,  0),
+          cell(entry.task_name,                   AlignmentType.LEFT,  1),
+          cell(entry.note ?? "",                  AlignmentType.LEFT,  2),
+          cell(entry.work_hours.toString(),        AlignmentType.RIGHT, 3),
+          cell(`$${entry.rate.toFixed(2)}`,        AlignmentType.RIGHT, 4),
+          cell(`$${entry.entry_pay.toFixed(2)}`,   AlignmentType.RIGHT, 5),
         ],
       });
     });
@@ -115,48 +127,50 @@ export async function generateProjectDocx(
       totalsParagraphs.push(
         new Paragraph({
           alignment: AlignmentType.RIGHT,
-          children: [new TextRun({ text: `Total Content Development: $ ${formatMoney(totals.contentDevelopment)}`, size: 22 })],
+          children: [new TextRun({ text: `Total Content Development: $ ${formatMoney(totals.contentDevelopment)}`, size: 24, color: "000000" })],
         }),
         new Paragraph({
           alignment: AlignmentType.RIGHT,
-          children: [new TextRun({ text: `Total Other Services: $ ${formatMoney(totals.otherServices)}`, size: 22 })],
+          children: [new TextRun({ text: `Total Other Services: $ ${formatMoney(totals.otherServices)}`, size: 24, color: "000000" })],
         }),
       );
     }
     totalsParagraphs.push(
       new Paragraph({
         alignment: AlignmentType.RIGHT,
-        children: [new TextRun({ text: `Total Payment: $ ${formatMoney(personSummary.totalPayForProject)}`, bold: true, size: 26 })],
+        children: [new TextRun({ text: `Total Payment: $ ${formatMoney(personSummary.totalPayForProject)}`, bold: true, size: 28, color: "000000" })],
       }),
     );
 
     const doc = new Document({
       sections: [{
         children: [
+          // Title — plain bold paragraph, no Word heading style
           new Paragraph({
-            heading: HeadingLevel.HEADING_1,
-            children: [new TextRun({ text: `${personSummary.cf_name} - Payment Summary`, bold: true })],
+            spacing: { after: 160 },
+            children: [new TextRun({ text: `${personSummary.cf_name} - Payment Summary`, bold: true, size: 40, color: "000000" })],
           }),
           new Paragraph({
-            heading: HeadingLevel.HEADING_2,
-            children: [new TextRun({ text: `Project: ${projectName}`, bold: true })],
+            spacing: { after: 160 },
+            children: [new TextRun({ text: `Project: ${projectName}`, bold: true, size: 32, color: "000000" })],
           }),
-          new Paragraph({ children: [new TextRun({ text: `Invoice #: ${invoiceNumber}` })] }),
-          new Paragraph({ children: [new TextRun({ text: `Report Month: ${reportMonth}` })] }),
-          new Paragraph({ children: [new TextRun({ text: `Invoice Date: ${invoiceDate}` })] }),
-          new Paragraph({ children: [new TextRun({ text: "Bill to: Teaching Lab" })] }),
-          new Paragraph({ children: [new TextRun({ text: `Coach/Facilitator: ${personSummary.cf_name} (${personSummary.cf_email})` })] }),
-          new Paragraph({ children: [new TextRun({ text: `Tier: ${personSummary.cf_tier}` })] }),
+          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: `Invoice #: ${invoiceNumber}`, size: 24, color: "000000" })] }),
+          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: `Report Month: ${reportMonth}`, size: 24, color: "000000" })] }),
+          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: `Invoice Date: ${invoiceDate}`, size: 24, color: "000000" })] }),
+          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: "Bill to: Teaching Lab", size: 24, color: "000000" })] }),
+          new Paragraph({ spacing: { after: 100 }, children: [new TextRun({ text: `Coach/Facilitator: ${personSummary.cf_name} (${personSummary.cf_email})`, size: 24, color: "000000" })] }),
+          new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Tier: ${personSummary.cf_tier}`, size: 24, color: "000000" })] }),
           new Paragraph({ text: "" }),
           new Table({
-            width: { size: 100, type: WidthType.PERCENTAGE },
+            width: { size: 9027, type: WidthType.DXA },
+            columnWidths: COL_WIDTHS_DXA,
             rows: [headerRow, ...entryRows],
           }),
           new Paragraph({ text: "" }),
           ...totalsParagraphs,
           new Paragraph({ text: "" }),
-          new Paragraph({ children: [new TextRun({ text: "This is an automated payment summary from Teaching Lab.", color: "808080", size: 16 })] }),
-          new Paragraph({ children: [new TextRun({ text: "Please contact accountspayable@teachinglab.org for any questions.", color: "808080", size: 16 })] }),
+          new Paragraph({ children: [new TextRun({ text: "This is an automated payment summary from Teaching Lab.", color: "808080", size: 18 })] }),
+          new Paragraph({ children: [new TextRun({ text: "Please contact accountspayable@teachinglab.org for any questions.", color: "808080", size: 18 })] }),
         ],
       }],
     });
