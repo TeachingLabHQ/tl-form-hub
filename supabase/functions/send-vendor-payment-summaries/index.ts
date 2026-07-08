@@ -125,7 +125,7 @@ try {
         );
       }
 
-      // Get previous month (since this function runs on the 6th of each month to process previous month's data)
+      // Get previous month (since this function runs on the 3rd of each month to process previous month's data)
       const currentDate = new Date();
       const previousMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
       const previousMonthISO = previousMonth.toISOString();
