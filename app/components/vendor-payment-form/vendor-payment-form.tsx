@@ -189,8 +189,8 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
               <div className="flex flex-col gap-2">
                 <h1 className="font-bold text-3xl">Project Consultant Payment Form</h1>
                 <p className="text-white">This form is intended for contractors serving as coaches, facilitators, content developers and designers, and data evaluation consultants. Once submitted, it will be sent to the invoicing system at month-end for CPM approval and payment processing.</p>
-               <p className="text-white">FY26 Facilitation Payment Guide:<br/>
-                Please review the <a href="https://docs.google.com/document/d/1N8FOqieDQWt0sGJH1pFqyMnWv4Rb4ykmuvlhBShWrfA/edit?tab=t.0" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>FY26 Facilitation Payment Guide</a> for detailed information about payment processes and term definitions.</p>
+               <p className="text-white">FY27 Facilitation Payment Guide:<br/>
+                Please review the <a href="https://docs.google.com/document/d/1qxZ8BClhZgaj1Ol1p1Dc5EfrIzmBtiiAYNz2I9CogW8/edit?tab=t.0#heading=h.afbcr7vh5ok3" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>FY26 Facilitation Payment Guide</a> for detailed information about payment processes and term definitions.</p>
               </div>
 
               <div className="mb-4">
