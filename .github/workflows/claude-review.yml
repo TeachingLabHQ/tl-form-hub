@@ -28,32 +28,40 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           trigger_phrase: "@claude"
-          # Sonnet 4.6 + max-turns 20: faster + cheaper than Opus default,
+          # Sonnet 4.6 + max-turns 30: faster + cheaper than Opus default,
           # caps runaway reviews. Tune later if review depth drops.
           # allowedTools: bounded to read-only ops Claude needs during review.
-          # disallowedTools 'Task': prevents sub-agent spawning. Sub-agents have
-          # their own turn budget so they bypass --max-turns. Previous run got
-          # stuck in an 18-min retry loop inside a `general-purpose` sub-agent.
+          # disallowedTools:
+          #   - 'Task': prevents sub-agent spawning. Sub-agents have their own
+          #     turn budget so they bypass --max-turns. A previous run got stuck
+          #     in an 18-min retry loop inside a `general-purpose` sub-agent.
+          #   - 'Skill','SlashCommand': stop Claude from invoking the built-in
+          #     `/review` skill, which is INTERACTIVE — in CI it returned "ask
+          #     the user which PR to review", so Claude posted nothing. We want
+          #     it to review the diff inline instead (see prompt).
           claude_args: >-
             --model claude-sonnet-4-6
             --max-turns 30
             --allowedTools 'Read,Glob,Grep,Write,Bash(git:*),Bash(gh:*),Bash(grep:*),Bash(rg:*),Bash(find:*),Bash(cat:*),Bash(ls:*),Bash(head:*),Bash(tail:*),Bash(wc:*)'
-            --disallowedTools 'Task'
+            --disallowedTools 'Task,Skill,SlashCommand'
           prompt: |
-            Review this pull request. Check for:
-            - Logic errors and bugs
-            - Security vulnerabilities (XSS, injection, secret leaks)
-            - Unhandled edge cases / missing error handling
-            - Readability and maintainability
+            Review pull request #${{ github.event.pull_request.number || github.event.issue.number }} in this repository, then post ONE top-level summary comment on it.
 
-            Post ONE top-level summary comment on the PR. To do this reliably:
-            1. Use the Write tool to write the full markdown review to `/tmp/review.md`.
-               (Do NOT try to pass the review body inline through a shell argument —
-               backticks, quotes and ${...} in the markdown break shell quoting.)
-            2. Run exactly: `gh pr comment <number> --body-file /tmp/review.md`
-            Do NOT use heredocs, `cat >`, or python to build the comment.
+            Do NOT use the `/review` slash command or any Skill — review the diff yourself, directly. Do NOT ask which PR to review (it is #${{ github.event.pull_request.number || github.event.issue.number }}). Do NOT delegate to sub-agents.
+
+            Steps:
+            1. Get the changes with `gh pr diff ${{ github.event.pull_request.number || github.event.issue.number }}`, and read changed files with Read/Grep as needed for context.
+            2. Review for:
+               - Logic errors and bugs
+               - Security vulnerabilities (XSS, injection, secret leaks)
+               - Unhandled edge cases / missing error handling
+               - Readability and maintainability
+            3. Use the Write tool to write the full markdown review to `/tmp/review.md`.
+               (Do NOT pass the review body inline through a shell argument —
+               backticks, quotes and ${...} in the markdown break shell quoting.
+               Do NOT use heredocs, `cat >`, or python to build the comment.)
+            4. Post it by running exactly: `gh pr comment ${{ github.event.pull_request.number || github.event.issue.number }} --body-file /tmp/review.md`
             Do NOT post inline review comments and do NOT create a pending review (`gh api .../reviews`).
-            Do NOT delegate to sub-agents.
           # Surface full tool-call output in the Actions log so we can see
           # which tools get denied. Private repo so secret-leak risk is bounded.
           show_full_output: "true"
