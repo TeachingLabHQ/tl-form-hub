@@ -20,6 +20,8 @@ import {
   presentationDesignTaskOptions,
   StoredTask,
   TaskDetails,
+  TL_INTERNAL_ONLY_TASKS,
+  TL_INTERNAL_PROJECT,
 } from "./utils";
 
 type VendorPaymentRow = {
@@ -194,6 +196,8 @@ export const VendorPaymentWidget = ({
       )}
       renderRow={(row, _index, { canDelete, updateRow, deleteRow }) => {
         const taskData = parseStoredTask(row.task);
+        const isInternalOnlyTask =
+          !!taskData && TL_INTERNAL_ONLY_TASKS.includes(taskData.taskName);
         return (
         <div className="flex flex-col gap-2">
           <div className={gridClass(canDelete)}>
@@ -204,6 +208,13 @@ export const VendorPaymentWidget = ({
                 const update: Partial<VendorPaymentRow> = { task: value || "" };
                 if (parsed?.fixedHours != null) {
                   update.workHours = parsed.fixedHours.toString();
+                }
+                if (parsed && TL_INTERNAL_ONLY_TASKS.includes(parsed.taskName)) {
+                  update.project = TL_INTERNAL_PROJECT;
+                } else if (row.project === TL_INTERNAL_PROJECT) {
+                  // Clear the locked project when switching away from a
+                  // TL_Internal-only task
+                  update.project = "";
                 }
                 updateRow(update);
               }}
@@ -221,7 +232,12 @@ export const VendorPaymentWidget = ({
               value={row.project || null}
               onChange={(value) => updateRow({ project: value || "" })}
               placeholder="Select a project"
-              data={projectOptions}
+              data={
+                isInternalOnlyTask
+                  ? [{ value: TL_INTERNAL_PROJECT, label: TL_INTERNAL_PROJECT }]
+                  : projectOptions
+              }
+              disabled={isInternalOnlyTask}
               searchable
               error={
                 isValidated === false && !row.project

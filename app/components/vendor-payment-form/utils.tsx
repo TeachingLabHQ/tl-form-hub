@@ -48,6 +48,14 @@ export type TaskDetails = {
   fixedHours?: number | null;
 };
 
+// Tasks that are always billed to the TL_Internal project; the project
+// selector is locked to TL_INTERNAL_PROJECT for these tasks
+export const TL_INTERNAL_PROJECT = "TL_Internal";
+export const TL_INTERNAL_ONLY_TASKS = [
+  "Onboarding",
+  "Learning Opportunities w/ Facilitation Team",
+];
+
 export const facilitationTaskOptions: TaskDetails[] = [
   {
     taskName: "Onboarding",
@@ -95,31 +103,10 @@ export const facilitationTaskOptions: TaskDetails[] = [
     fixedHours: 1,
   },
   {
-    taskName: "Second Facilitation of group Professional Learning courses",
-    "Tier 1": 100,
-    "Tier 2": null,
-    "Tier 3": null,
-    "Tier 4": null,
-    maxHours: {
-      "Tier 1": 6,
-      "Tier 2": null,
-      "Tier 3": null,
-      "Tier 4": null,
-    },
-  },
-  {
     taskName: "Mentoring of other Facilitation Contractors",
     "Tier 1": null,
     "Tier 2": 80,
     "Tier 3": 80,
-    "Tier 4": null,
-    maxHours: null,
-  },
-  {
-    taskName: "Tech/Support Facilitation of virtual group PL courses",
-    "Tier 1": 50,
-    "Tier 2": 50,
-    "Tier 3": 50,
     "Tier 4": null,
     maxHours: null,
   },
@@ -132,7 +119,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     maxHours: null,
   },
   {
-    taskName: "Content Training: Training to internalize the content of PL courses, curricula, or coaching framework. ",
+    taskName: "Content Training",
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
@@ -140,7 +127,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     maxHours: null,
   },
   {
-    taskName: "Learning Opportunities: Quarterly Paid Office Hours, Book Clubs, Observations, Kick Offs, etc.",
+    taskName: "Learning Opportunities w/ Facilitation Team",
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
@@ -222,14 +209,6 @@ export const dataEvaluationTaskOptions: TaskDetails[] = [
   {
     taskName: "Data Evaluation",
     "Tier 1": 27,
-    "Tier 2": null,
-    "Tier 3": null,
-    "Tier 4": null,
-    maxHours: null,
-  },
-  {
-    taskName: "Analysis, Visualization & Interpretation",
-    "Tier 1": 30,
     "Tier 2": null,
     "Tier 3": null,
     "Tier 4": null,
