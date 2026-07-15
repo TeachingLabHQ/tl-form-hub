@@ -1,17 +1,15 @@
 import { Button, Notification, Tabs } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useFetcher, useNavigate, useLoaderData } from "@remix-run/react";
-import { IconCheck, IconInfoCircle, IconX } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import React, { useEffect, useMemo, useState } from "react";
 import { CoachFacilitatorDetails } from "~/domains/coachFacilitator/repository";
 import { Reminders } from "../weekly-project-log/reminders";
 import { PaymentHistory } from "./payment-history/payment-history";
 import {
-  getDefaultVendorPaymentDate,
   parseStoredTask,
   REMINDER_ITEMS,
   shouldExcludeVendorPaymentDate,
-  shouldShowJulyHoldNotice,
 } from "./utils";
 import { VendorPaymentWidget } from "./vendor-payment-widget";
 import { loader } from "~/routes/vendor-payment-form";
@@ -29,9 +27,7 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [workDate, setWorkDate] = useState<Date | null>(
-    getDefaultVendorPaymentDate()
-  );
+  const [workDate, setWorkDate] = useState<Date | null>(new Date());
   const [activeTab, setActiveTab] = useState("new");
   const [vendorPaymentEntries, setVendorPaymentEntries] = useState([
     {
@@ -204,17 +200,6 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
                   excludeDate={shouldExcludeVendorPaymentDate}
                   error={isValidated === true && !workDate ? "Date is required" : null}
                 />
-                {shouldShowJulyHoldNotice() && (
-                  <Notification
-                    icon={<IconInfoCircle size={20} />}
-                    color="yellow"
-                    title="July submissions on hold"
-                    withCloseButton={false}
-                    className="mt-2"
-                  >
-                    Please hold off on submitting July entries until July 16.
-                  </Notification>
-                )}
               </div>
 
               <VendorPaymentWidget
