@@ -20,8 +20,6 @@ export async function sendProjectEmail(
     if (personSummary.cf_email) recipientEmail.push(personSummary.cf_email);
     console.log(`Starting email sending for ${personSummary.cf_name} (${personSummary.cf_email}) on project: ${projectName}`);
     try {
-      const supportEmail = Deno.env.get("SUPPORT_EMAIL") || "support@example.com";
-
       const toBase64 = (bytes: Uint8Array): string => {
         let binary = "";
         const chunkSize = 8192;
@@ -41,15 +39,15 @@ export async function sendProjectEmail(
       const emailData = {
         from: "Teaching Lab Payments <yancheng.pan@teachinglab.org>", // Use sender name
         to: recipientEmail,
-        subject: `Your Teaching Lab Payment Summary - ${projectName} - ${reportMonthYear}`, // Person-specific subject
+        subject: `Teaching Lab – Consultant Invoice Copy`,
         html: `
-          <h1>Teaching Lab - Payment Summary</h1>
           <p>Hello,</p>
-          <p>Please find attached your payment summary for project <strong>${escHtml(projectName)}</strong> for the period ending ${escHtml(reportMonthYear)}.</p>
-          <p>Total payment for the project member in this period: <strong>$${personSummary.totalPayForProject.toFixed(2)}</strong></p>
-          <p>Two versions of the invoice are attached: a PDF for your records and an editable Word document in case you need to make any corrections.</p>
-          <p>If you have any questions, please contact ${escHtml(supportEmail)}.</p>
-          <p>Best regards,<br>Teaching Lab FinanceTeam</p>
+          <p>Please find attached a copy of your Consultant Invoice for the project <strong>${escHtml(projectName)}</strong> for the period ending ${escHtml(reportMonthYear)}.</p>
+          <p>Total payment for this period: <strong>$${personSummary.totalPayForProject.toFixed(2)}</strong></p>
+          <p>This invoice is provided for your records. No action is required.</p>
+          <p>If you have any questions, please contact finance@teachinglab.org.</p>
+          <p>Thank you,</p>
+          <p>Teaching Lab Finance Team</p>
         `,
         attachments: [
           {
