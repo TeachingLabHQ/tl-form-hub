@@ -20,6 +20,8 @@ import {
   presentationDesignTaskOptions,
   StoredTask,
   TaskDetails,
+  TL_INTERNAL_ONLY_TASKS,
+  TL_INTERNAL_PROJECT,
 } from "./utils";
 
 type VendorPaymentRow = {
@@ -88,6 +90,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -101,6 +104,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -114,6 +118,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -127,6 +132,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -140,6 +146,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -153,6 +160,7 @@ export const VendorPaymentWidget = ({
               maxHours:
                 task.maxHours?.[tier.value as "Tier 1" | "Tier 2" | "Tier 3" | "Tier 4"] ||
                 null,
+              fixedHours: task.fixedHours ?? null,
             });
           }
         });
@@ -188,12 +196,28 @@ export const VendorPaymentWidget = ({
       )}
       renderRow={(row, _index, { canDelete, updateRow, deleteRow }) => {
         const taskData = parseStoredTask(row.task);
+        const isInternalOnlyTask =
+          !!taskData && TL_INTERNAL_ONLY_TASKS.includes(taskData.taskName);
         return (
         <div className="flex flex-col gap-2">
           <div className={gridClass(canDelete)}>
             <Select
               value={row.task || null}
-              onChange={(value) => updateRow({ task: value || "" })}
+              onChange={(value) => {
+                const parsed = value ? JSON.parse(value) : null;
+                const update: Partial<VendorPaymentRow> = { task: value || "" };
+                if (parsed?.fixedHours != null) {
+                  update.workHours = parsed.fixedHours.toString();
+                }
+                if (parsed && TL_INTERNAL_ONLY_TASKS.includes(parsed.taskName)) {
+                  update.project = TL_INTERNAL_PROJECT;
+                } else if (row.project === TL_INTERNAL_PROJECT) {
+                  // Clear the locked project when switching away from a
+                  // TL_Internal-only task
+                  update.project = "";
+                }
+                updateRow(update);
+              }}
               placeholder="Select a task"
               data={listOfAvailableTasks.map((option) => ({
                 value: JSON.stringify(option),
@@ -208,7 +232,12 @@ export const VendorPaymentWidget = ({
               value={row.project || null}
               onChange={(value) => updateRow({ project: value || "" })}
               placeholder="Select a project"
-              data={projectOptions}
+              data={
+                isInternalOnlyTask
+                  ? [{ value: TL_INTERNAL_PROJECT, label: TL_INTERNAL_PROJECT }]
+                  : projectOptions
+              }
+              disabled={isInternalOnlyTask}
               searchable
               error={
                 isValidated === false && !row.project
@@ -224,6 +253,7 @@ export const VendorPaymentWidget = ({
               placeholder="Enter work hours"
               max={taskData?.maxHours ?? undefined}
               min={0}
+              readOnly={taskData?.fixedHours != null}
               error={
                 isValidated === false &&
                 (!row.workHours || Number(row.workHours) === 0)

@@ -208,7 +208,7 @@ See `supabase/migrations/` for detailed schema definitions.
 The project includes automated email functionality via Supabase Edge Functions:
 
 - **Function**: `send-vendor-payment-summaries`
-- **Trigger**: Monthly cron job (6th of each month)
+- **Trigger**: Monthly cron job (3rd of each month)
 - **Batch Size**: 15 emails per invocation
 - **Rate Limiting**: 600ms delay between emails
 

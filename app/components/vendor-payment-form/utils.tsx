@@ -5,6 +5,7 @@ export const storedTaskSchema = z.object({
   taskName: z.string(),
   rate: z.number(),
   maxHours: z.number().nullable(),
+  fixedHours: z.number().nullable().optional(),
 });
 
 export type StoredTask = z.infer<typeof storedTaskSchema>;
@@ -43,8 +44,17 @@ export type TaskDetails = {
     "Tier 2": number | null;
     "Tier 3": number | null;
     "Tier 4": number | null;
-  }|null;
+  } | null;
+  fixedHours?: number | null;
 };
+
+// Tasks that are always billed to the TL_Internal project; the project
+// selector is locked to TL_INTERNAL_PROJECT for these tasks
+export const TL_INTERNAL_PROJECT = "TL_Internal";
+export const TL_INTERNAL_ONLY_TASKS = [
+  "Onboarding",
+  "Learning Opportunities w/ Facilitation Team",
+];
 
 export const facilitationTaskOptions: TaskDetails[] = [
   {
@@ -53,75 +63,44 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 2": null,
     "Tier 3": null,
     "Tier 4": null,
-    maxHours: {
-      "Tier 1": 1,
-      "Tier 2": null,
-      "Tier 3": null,
-      "Tier 4": null,
-    },
+    maxHours: null,
+    fixedHours: 1,
   },
   {
-    taskName:
-      "Lead coaching activities: 1-1 coaching sessions, micro group PL, or walkthrough",
-    "Tier 1": 110,
-    "Tier 2": 125,
-    "Tier 3": 140,
-    "Tier 4": null,
-    maxHours: {
-      "Tier 1": 6,
-      "Tier 2": 6,
-      "Tier 3": 6,
-      "Tier 4": null,
-    },
-  },
-  {
-    taskName:
-      "Lead coaching preparation & follow-up: internalization or preparation for coaching sessions; follow-up activities; completion of Coaching Action Plans and Coaching Logs",
-    "Tier 1": 50,
-    "Tier 2": 50,
-    "Tier 3": 50,
-    "Tier 4": null,
-    maxHours: {
-      "Tier 1": 1.5,
-      "Tier 2": 1.5,
-      "Tier 3": 1.5,
-      "Tier 4": null,
-    },
-  },
-  {
-    taskName: "Lead Facilitation of group Professional Learning course",
-    "Tier 1": 150,
-    "Tier 2": 165,
-    "Tier 3": 180,
-    "Tier 4": null,
-    maxHours: {
-      "Tier 1": 6,
-      "Tier 2": 6,
-      "Tier 3": 6,
-      "Tier 4": null,
-    },
-  },
-  {
-    taskName:
-      "Tech/Support Facilitation of group Professional Learning courses",
-    "Tier 1": 50,
-    "Tier 2": 50,
-    "Tier 3": 50,
+    taskName: "1/3 Day: ~2hrs C/F",
+    "Tier 1": 350,
+    "Tier 2": 370,
+    "Tier 3": 400,
     "Tier 4": null,
     maxHours: null,
+    fixedHours: 1,
   },
   {
-    taskName: "Second Facilitation of group Professional Learning courses",
-    "Tier 1": 100,
-    "Tier 2": null,
-    "Tier 3": null,
+    taskName: "1/2 Day: ~3hrs C/F",
+    "Tier 1": 500,
+    "Tier 2": 540,
+    "Tier 3": 585,
     "Tier 4": null,
-    maxHours: {
-      "Tier 1": 6,
-      "Tier 2": null,
-      "Tier 3": null,
-      "Tier 4": null,
-    },
+    maxHours: null,
+    fixedHours: 1,
+  },
+  {
+    taskName: "Full Day: ~6hrs C/F",
+    "Tier 1": 1000,
+    "Tier 2": 1080,
+    "Tier 3": 1170,
+    "Tier 4": null,
+    maxHours: null,
+    fixedHours: 1,
+  },
+  {
+    taskName: "Extended Day: 6hrs+ C/F",
+    "Tier 1": 1150,
+    "Tier 2": 1250,
+    "Tier 3": 1320,
+    "Tier 4": null,
+    maxHours: null,
+    fixedHours: 1,
   },
   {
     taskName: "Mentoring of other Facilitation Contractors",
@@ -132,7 +111,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     maxHours: null,
   },
   {
-    taskName: "Tech/Support Facilitation of virtual group PL courses",
+    taskName: "Collaboration",
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
@@ -140,7 +119,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     maxHours: null,
   },
   {
-    taskName: "Site Context + Support: Meetings and collaborations with project team members and/or partners to support the overall project success",
+    taskName: "Content Training",
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
@@ -148,15 +127,7 @@ export const facilitationTaskOptions: TaskDetails[] = [
     maxHours: null,
   },
   {
-    taskName: "Content Training: Training to internalize the content of PL courses, curricula, or coaching framework. ",
-    "Tier 1": 50,
-    "Tier 2": 50,
-    "Tier 3": 50,
-    "Tier 4": null,
-    maxHours: null,
-  },
-  {
-    taskName: "Learning Opportunities: Quarterly Paid Office Hours, Book Clubs, Observations, Kick Offs, etc.",
+    taskName: "Learning Opportunities w/ Facilitation Team",
     "Tier 1": 50,
     "Tier 2": 50,
     "Tier 3": 50,
@@ -243,14 +214,6 @@ export const dataEvaluationTaskOptions: TaskDetails[] = [
     "Tier 4": null,
     maxHours: null,
   },
-  {
-    taskName: "Analysis, Visualization & Interpretation",
-    "Tier 1": 30,
-    "Tier 2": null,
-    "Tier 3": null,
-    "Tier 4": null,
-    maxHours: null,
-  },
 ]
 
 
@@ -258,7 +221,7 @@ export const REMINDER_ITEMS: ReminderItem[] = [
   {
     title: "Submission Deadline:",
     content:
-      `Please log your hours and submit your payment on the same day you work. To ensure accuracy, review your "Submission History" regularly. If you need to correct your hours for a specific day, you must delete the incorrect entry and resubmit the correct hours for that day.\nAll submissions must be reviewed and finalized by the 5th of each month. On the 6th, all entries from the previous month will be automatically submitted for payment processing.\nIf you missed the monthly submission deadline, please contact the finance team: finance@teachinglab.org`,
+      `Please log your hours and submit your payment on the same day you work. To ensure accuracy, review your "Submission History" regularly. If you need to correct your hours for a specific day, you must delete the incorrect entry and resubmit the correct hours for that day.\nAll submissions must be reviewed and finalized by the 2nd of each month. On the 3rd, all entries from the previous month will be automatically submitted for payment processing.\nIf you missed the monthly submission deadline, please contact the finance team: finance@teachinglab.org`,
   },
  
 ];
@@ -271,52 +234,25 @@ export const shouldExcludeVendorPaymentDate = (date: Date): boolean => {
   
   const dateMonth = date.getMonth();
   const dateYear = date.getFullYear();
-  
-    // If today is the 15th or earlier, only allow prior month dates (the prior
-    // month is still being finalized). Current month dates stay locked until the
-    // 16th so nothing can be logged for the current month before then.
-    if (currentDay <= 15) {
-      const priorMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-      const priorMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
-      // Allow all prior month dates
-      if (dateYear === priorMonthYear && dateMonth === priorMonth) {
-        return false; // Don't exclude prior month dates
-      }
-    } else {
-      // If today is the 16th or later, only allow current month dates
-      if (dateYear === currentYear && dateMonth === currentMonth ) {
-        return false; // Don't exclude current month dates
-      }
+  // Current month dates are always allowed
+  if (dateYear === currentYear && dateMonth === currentMonth) {
+    return false;
+  }
+
+  // Through the 2nd, also allow prior month dates (the prior month is still
+  // being finalized; entries auto-submit for payment on the 3rd)
+  if (currentDay <= 2) {
+    const priorMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const priorMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    if (dateYear === priorMonthYear && dateMonth === priorMonth) {
+      return false;
     }
-  
+  }
+
   // Exclude all other dates
   return true;
-};
-
-/**
- * Default date to pre-select in the work date picker.
- * Before the 16th, current-month dates are locked (see shouldExcludeVendorPaymentDate),
- * so default to the last day of the previous month — a valid, selectable date —
- * instead of today, which would otherwise let users submit for the current month.
- */
-export const getDefaultVendorPaymentDate = (): Date => {
-  const today = new Date();
-  if (today.getDate() <= 15) {
-    // Day 0 of the current month resolves to the last day of the previous month.
-    return new Date(today.getFullYear(), today.getMonth(), 0);
-  }
-  return today;
-};
-
-/**
- * Whether to show the notice asking coaches to hold off on July submissions
- * until July 16. Shows through July 15 and clears itself once July unlocks on the 16th.
- */
-export const shouldShowJulyHoldNotice = (): boolean => {
-  const today = new Date();
-  const JULY = 6; // zero-based month index
-  return today.getMonth() === JULY && today.getDate() <= 15;
 };
 
 export const filterVendorPaymentProjects = (projects: string[]): string[] => {

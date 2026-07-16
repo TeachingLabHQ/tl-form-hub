@@ -22,39 +22,66 @@ export function coachFacilitatorRepository(): CoachFacilitatorRepository {
   return {
     fetchCoachFacilitatorDetails: async (email: string) => {
       try {
+        //NOTE: Not using Monday API filtering by email because it doesn't support filtering mirror columns (lookup42)
+        const itemFields = `
+          items {
+            name
+            column_values(
+              ids: ["lookup42", "lookup_mkr45vx5", "color_mkr4h6fc", "color_mkr4ss46", "color_mkr4a2k5", "color_mkr4rtg", "color_mkrd296b", "boolean_mm40wz9b"]
+            ) {
+              id
+              text
+              ... on MirrorValue {
+                display_value
+                id
+              }
+              ... on CheckboxValue {
+                checked
+              }
+            }
+          }`;
+
         // Query to fetch coach/facilitator details from Monday board
         const query = `{
           boards(ids: 4084773997) {
             groups(ids: ["1680715772_coach_facilitator_d"]) {
               items_page(limit: 500) {
-                items {
-                  name
-                  column_values(
-                    ids: ["lookup42", "lookup_mkr45vx5", "color_mkr4h6fc", "color_mkr4ss46", "color_mkr4a2k5", "color_mkr4rtg", "color_mkrd296b"]
-                  ) {
-                    id
-                    text
-                    ... on MirrorValue {
-                      display_value
-                      id
-                    }
-                  }
-                }
+                cursor
+                ${itemFields}
               }
             }
           }
         }`;
 
-        const result = await fetchMondayData(query);
-        const items = result.data.boards[0].groups[0].items_page.items;
+        const findByEmail = (items: any[]) =>
+          items.find((item: any) => {
+            // Only accounts marked "Active in FY27" are considered
+            const isActive = item.column_values.find(
+              (col: any) => col.id === "boolean_mm40wz9b"
+            )?.checked === true;
+            const emailValuefromMonday = item.column_values.find(
+              (col: any) => col.id === "lookup42"
+            )?.display_value;
+            return isActive && compareTwoStrings(emailValuefromMonday || "", email);
+          });
 
-        // Find the matching item by email
-        const matchingItem = items.find((item: any) => {
-          const emailValuefromMonday = item.column_values.find(
-            (col: any) => col.id === "lookup42"
-          )?.display_value;
-          return compareTwoStrings(emailValuefromMonday || "", email);
-        });
+        const result = await fetchMondayData(query);
+        const firstPage = result.data.boards[0].groups[0].items_page;
+        let matchingItem = findByEmail(firstPage.items);
+        let cursor: string | null = firstPage.cursor;
+
+        // Page through the rest of the group until a match is found
+        while (!matchingItem && cursor) {
+          const cursorQuery = `{
+            next_items_page(limit: 500, cursor: "${cursor}") {
+              cursor
+              ${itemFields}
+            }
+          }`;
+          const nextResult = await fetchMondayData(cursorQuery);
+          matchingItem = findByEmail(nextResult.data.next_items_page.items);
+          cursor = nextResult.data.next_items_page.cursor;
+        }
 
         if (!matchingItem) {
           return { data: null, error: null };
