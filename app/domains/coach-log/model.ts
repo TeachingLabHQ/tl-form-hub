@@ -159,7 +159,7 @@ export type CoachLogSubmission = {
   // Group coaching
   didGroupCoaching: YesNo | "";
   groupParticipants: string[];
-  groupParticipantRole: string;
+  groupParticipantRole: string[];
   groupTopic: string;
   groupDurationMins: string;
 };

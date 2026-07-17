@@ -109,7 +109,7 @@ export function buildCoachLogSubmission(
     // Group coaching
     didGroupCoaching: cancelled ? "" : values.didGroupCoaching,
     groupParticipants: sendGroup ? values.groupParticipants : [],
-    groupParticipantRole: sendGroup ? values.groupParticipantRole : "",
+    groupParticipantRole: sendGroup ? values.groupParticipantRole : [],
     groupTopic: sendGroup ? values.groupTopic : "",
     groupDurationMins: sendGroup ? values.groupDurationMins : "",
   };

@@ -38,9 +38,10 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
 
           <div className="flex flex-col gap-1">
             <h1 className="font-medium text-lg">Participants were:*</h1>
-            <Select
+            <MultiSelect
               placeholder="Select a role"
               data={ROLE_OPTIONS}
+              searchable
               {...form.getInputProps("groupParticipantRole")}
             />
           </div>

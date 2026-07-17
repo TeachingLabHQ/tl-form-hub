@@ -242,7 +242,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     if (didGroupCoaching === "Yes") {
       parentColumns.text7__1 = groupParticipants.join(", "); // Participants
-      parentColumns.text29__1 = groupParticipantRole; // Participant role
+      parentColumns.text29__1 = groupParticipantRole.join(", "); // Participant role
       parentColumns.text76__1 = groupTopic; // Topic of session
       if (groupDurationMins)
         parentColumns.numbers1__1 = parseFloat(groupDurationMins); // Duration

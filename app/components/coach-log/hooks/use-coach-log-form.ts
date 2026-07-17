@@ -87,7 +87,7 @@ export type CoachLogValues = {
   // Group coaching
   didGroupCoaching: YesNo | "";
   groupParticipants: string[];
-  groupParticipantRole: string;
+  groupParticipantRole: string[];
   groupTopic: string;
   groupDurationMins: string;
 };
@@ -151,7 +151,7 @@ const INITIAL_VALUES: CoachLogValues = {
   coacheeRows: [{ ...EMPTY_COACHEE_ROW }],
   didGroupCoaching: "",
   groupParticipants: [],
-  groupParticipantRole: "",
+  groupParticipantRole: [],
   groupTopic: "",
   groupDurationMins: "",
 };
@@ -455,8 +455,10 @@ export function useCoachLogForm() {
           ? "At least one participant is required"
           : null
       ),
-      groupParticipantRole: whenNotCancelled((value, values) =>
-        values.didGroupCoaching === "Yes" && !value ? "Role is required" : null
+      groupParticipantRole: whenNotCancelled((value: string[], values) =>
+        values.didGroupCoaching === "Yes" && value.length === 0
+          ? "Role is required"
+          : null
       ),
       groupTopic: whenNotCancelled((value, values) =>
         values.didGroupCoaching === "Yes" && !value
