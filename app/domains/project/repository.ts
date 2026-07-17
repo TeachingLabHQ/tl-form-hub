@@ -193,13 +193,14 @@ export function projectRepository(): ProjectRepository {
         //NOTE: Not using Monday API filtering by employeeId because it doesn't support filtering lookup columns
         let query = "";
            query = `{
-            boards(ids: 9709949287) {
+            boards(ids: 18418027639) {
               items_page(
                 limit: 500
                 query_params: {
                   rules: [
                     {
                       column_id: "group"
+                      # TODO: group id for the new FY board is not confirmed yet
                       compare_value: ["group_mkv0sxxj"]
                       operator: any_of
                     }
@@ -211,10 +212,11 @@ export function projectRepository(): ProjectRepository {
                   id
                   name
                   column_values(ids: [
-                    "lookup_mksmfdnr", 
+                    # TODO: employee email column may change on the new board — not confirmed yet
+                    "lookup_mksmfdnr",
                     "lookup_mkpvs1wj",
-                    "numeric_mknhqm6d", 
-                    "dropdown_mkttdgrw", 
+                    "numeric_mknhqm6d",
+                    "dropdown_mkttdgrw",
                     "color_mknhq0s3"
                   ]) {
                     id
@@ -249,10 +251,11 @@ export function projectRepository(): ProjectRepository {
                 id
                 name
                 column_values(ids: [
-                  "lookup_mksmfdnr", 
+                  # TODO: employee email column may change on the new board — not confirmed yet
+                  "lookup_mksmfdnr",
                   "lookup_mkpvs1wj",
-                  "numeric_mknhqm6d", 
-                  "dropdown_mkttdgrw", 
+                  "numeric_mknhqm6d",
+                  "dropdown_mkttdgrw",
                   "color_mknhq0s3"
                 ]) {
                   id
@@ -293,7 +296,7 @@ export function projectRepository(): ProjectRepository {
     fetchProjectColumnBAD: async (): Promise<Errorable<Record<string, string>>> => {
       try {
         const query = `{
-          boards(ids: 9709949287) {
+          boards(ids: 18418027639) {
             items_page(limit: 500) {
               cursor
               items {
