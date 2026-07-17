@@ -299,13 +299,6 @@ export function projectRepository(): ProjectRepository {
               items {
                 id
                 name
-                column_values(types: dropdown) {
-                  ... on DropdownValue {
-                    column {
-                      id
-                    }
-                  }
-                }
               }
             }
           }
@@ -323,13 +316,6 @@ export function projectRepository(): ProjectRepository {
               items {
                 id
                 name
-                column_values(types: dropdown) {
-                  ... on DropdownValue {
-                    column {
-                      id
-                    }
-                  }
-                }
               }
             }
           }`;
