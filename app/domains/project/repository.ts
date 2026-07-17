@@ -11,7 +11,6 @@ export interface ProjectRepository {
   fetchAllProjects(): Promise<Errorable<projectsByTypes[]>>;
   fetchProgramProjects(mondayProfileId: string): Promise<Errorable<ProgramProject[]>>;
   fetchAllBudgetedHours(): Promise<Errorable<any>>;
-  fetchProjectColumnBAD(): Promise<Errorable<Record<string, string>>>;
   fetchProjectSourceNames(): Promise<Errorable<string[]>>;
 }
 
@@ -288,89 +287,6 @@ export function projectRepository(): ProjectRepository {
         return {
           data: null,
           error: new Error("fetchAllBudgetedHours() went wrong"),
-        };
-      }
-    },
-    //NOTE: separate query because can't read dropdown column when fetching with column ids filter
-    //UPDATE: to delete, you are now able to fetch the column with the fitler now
-    fetchProjectColumnBAD: async (): Promise<Errorable<Record<string, string>>> => {
-      try {
-        const query = `{
-          boards(ids: 18418027639) {
-            items_page(limit: 500) {
-              cursor
-              items {
-                id
-                name
-                column_values(types: dropdown) {
-                  id
-                  column { id type title }
-                  text
-                  ... on DropdownValue {
-                    values { id label }
-                  }
-                }
-              }
-            }
-          }
-        }`;
-
-        let rawMondayData = await fetchMondayData(query);
-        let cursor: string | null = rawMondayData.data.boards[0].items_page.cursor;
-        let allItems = rawMondayData.data.boards[0].items_page.items;
-
-        // Handle pagination if there are more results
-        while (cursor) {
-          const cursorQuery = `{
-            next_items_page(limit: 500, cursor: "${cursor}") {
-              cursor
-              items {
-                id
-                name
-                column_values(types: dropdown) {
-                  id
-                  column { id type title }
-                  text
-                  ... on DropdownValue {
-                    values { id label }
-                  }
-                }
-              }
-            }
-          }`;
-
-          const rawAdditionalData = await fetchMondayData(cursorQuery);
-          allItems.push(...rawAdditionalData.data.next_items_page.items);
-          cursor = rawAdditionalData.data.next_items_page.cursor;
-        }
-     
-        // Create a mapping of item ID to project name
-        const projectNamesMap: Record<string, string> = {};
-        
-        allItems.forEach((item: any) => {
-          // Find the dropdown column for project names (dropdown_mkttdgrw)
-          // Search through all column_values to find the one with the correct column ID
-          const projectNameColumn = item.column_values?.find(
-            (colValue: any) => colValue.column?.id === "dropdown_mkttdgrw"
-          );
-          
-          // Extract project name from dropdown values array
-          if (projectNameColumn && projectNameColumn.values && projectNameColumn.values.length > 0) {
-            // Get the label from the first value in the dropdown
-            const projectName = projectNameColumn.values[0]?.label;
-            if (projectName) {
-              projectNamesMap[item.id] = projectName;
-            }
-          }
-        });
-
-        console.log(`Fetched project names for ${Object.keys(projectNamesMap).length} items`);
-        return { data: projectNamesMap, error: null };
-      } catch (e) {
-        console.error("Error in fetchProjectNames:", e);
-        return {
-          data: null,
-          error: new Error("fetchProjectNames() went wrong"),
         };
       }
     },
