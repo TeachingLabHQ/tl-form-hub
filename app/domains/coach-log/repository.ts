@@ -321,12 +321,14 @@ export function coachLogRepository(): CoachLogRepository {
     },
 
     // True if a coach log already exists for this coach + district + school +
-    // date + coach type (one-log-per-day rule; cancelled logs count). Narrows
-    // the board to the district + school via Monday filters, then matches coach
-    // + date + coach type exactly in JS (the coach matches on the people column
-    // id, falling back to the item name). Coach type is part of the key because
-    // one coach can log e.g. a Solves and a Reads session for the same
-    // school/date. Returns false when there's no date to dedupe on.
+    // date + coach type + sub-school (one-log-per-day rule; cancelled logs
+    // count). Narrows the board to the district + school via Monday filters,
+    // then matches coach + date + coach type + sub-school exactly in JS (the
+    // coach matches on the people column id, falling back to the item name).
+    // Coach type is part of the key because one coach can log e.g. a Solves and
+    // a Reads session for the same school/date; sub-school likewise lets a coach
+    // log different sub-schools for the same school/date (empty == empty when
+    // sub-school doesn't apply). Returns false when there's no date to dedupe on.
     hasExistingLog: async (query: CoachLogIdentity) => {
       try {
         const date = query.sessionDate.trim();
@@ -337,6 +339,7 @@ export function coachLogRepository(): CoachLogRepository {
         const coachId = query.coachMondayId.trim();
         const coachName = normalize(query.coachName);
         const coachType = normalize(query.nycCoachType);
+        const subSchool = normalize(query.subSchool);
 
         // Escape values interpolated into the GraphQL rule strings.
         const esc = (v: string) =>
@@ -359,7 +362,7 @@ export function coachLogRepository(): CoachLogRepository {
         }
         const rules = `[${ruleParts.join(", ")}]`;
 
-        const columnIds = `["text88__1","text5__1","date__1","people__1","text13__1"]`;
+        const columnIds = `["text88__1","text5__1","date__1","people__1","text13__1","text_mm465e65"]`;
         const buildQuery = (cursor: string | null) =>
           cursor
             ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { name column_values(ids:${columnIds}) { id text value } } } }`
@@ -392,13 +395,25 @@ export function coachLogRepository(): CoachLogRepository {
           // Coach type must also match (empty == empty for non-NYC districts),
           // so a coach's Solves and Reads logs for the same day don't collide.
           const coachTypeOk = normalize(col("text13__1")?.text) === coachType;
+          // Sub-school must also match (empty == empty when it doesn't apply),
+          // so a coach's logs for different sub-schools of the same school/date
+          // don't collide.
+          const subSchoolOk =
+            normalize(col("text_mm465e65")?.text) === subSchool;
           // Prefer matching by Monday profile id; fall back to the item name
           // (the coach name) only when no id is available.
           const coachOk =
             coachId !== ""
               ? peopleIds.includes(coachId)
               : coachName !== "" && normalize(item.name) === coachName;
-          return districtOk && schoolOk && dateOk && coachOk && coachTypeOk;
+          return (
+            districtOk &&
+            schoolOk &&
+            dateOk &&
+            coachOk &&
+            coachTypeOk &&
+            subSchoolOk
+          );
         };
 
         let response = await fetchMondayData(buildQuery(null));

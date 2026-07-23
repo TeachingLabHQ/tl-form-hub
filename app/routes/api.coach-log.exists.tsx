@@ -4,8 +4,8 @@ import { coachLogRepository } from "~/domains/coach-log/repository";
 import { coachLogService } from "~/domains/coach-log/service";
 
 // Pre-submit check: does a coach log already exist for this coach + district +
-// school + date? Used by the form to warn early and disable Submit. The submit
-// route enforces the same rule authoritatively.
+// school + sub-school + date? Used by the form to warn early and disable Submit.
+// The submit route enforces the same rule authoritatively.
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
     return json({ error: "Method not allowed" }, { status: 405 });
@@ -26,6 +26,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       school,
       sessionDate,
       nycCoachType: query.nycCoachType ?? "",
+      subSchool: query.subSchool ?? "",
     });
     if (error) {
       console.error("Error checking for existing coach log:", error);

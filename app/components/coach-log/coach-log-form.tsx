@@ -107,12 +107,26 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const [failedCoachees, setFailedCoachees] = useState<string[]>([]);
   const [showErrorBanner, setShowErrorBanner] = useState(false);
 
-  const { district, school, nycCoachType, canceled, sessionDate } =
+  const { district, school, nycCoachType, canceled, sessionDate, subSchool } =
     form.values;
   const readsIsPLSession = form.values.readsIsPLSession;
 
-  // One log per coach + district + school + date — checked as soon as those are
-  // chosen so the coach is warned before filling out the form.
+  // Sub-school options are filtered from the loader map by district + school.
+  const subSchoolOptions = useMemo(
+    () => subSchools[subSchoolKey(district, school)] ?? [],
+    [subSchools, district, school]
+  );
+
+  // Sub-school shows for D75 + Solves, but only when the sheet actually has
+  // sub-schools for this district + school combo (otherwise there's nothing to
+  // pick, so we hide the question rather than show an empty dropdown).
+  const showSubSchool =
+    shouldShowSubSchool(district, nycCoachType) && subSchoolOptions.length > 0;
+
+  // One log per coach + district + school + date — plus sub-school when the form
+  // requires one, so different sub-schools on the same date aren't collapsed
+  // into a single log. Checked as soon as those are chosen so the coach is
+  // warned before filling out the form.
   const {
     duplicateExists,
     checking: checkingDuplicate,
@@ -125,6 +139,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
     school,
     sessionDate,
     nycCoachType,
+    subSchool: showSubSchool ? subSchool : "",
   });
 
   // While the check is running or a duplicate exists, the activity questions are
@@ -132,18 +147,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   // change district/school/date above to resolve it).
   const lockActivities = checkingDuplicate || duplicateExists;
 
-  // Sub-school options are filtered from the loader map by district + school.
-  const subSchoolOptions = useMemo(
-    () => subSchools[subSchoolKey(district, school)] ?? [],
-    [subSchools, district, school]
-  );
-
   const showNycCoachType = isNycCoachTypeDistrict(district);
-  // Sub-school shows for D75 + Solves, but only when the sheet actually has
-  // sub-schools for this district + school combo (otherwise there's nothing to
-  // pick, so we hide the question rather than show an empty dropdown).
-  const showSubSchool =
-    shouldShowSubSchool(district, nycCoachType) && subSchoolOptions.length > 0;
   const showEarlyChildhood = shouldShowEarlyChildhood(district, nycCoachType);
   const showReads = shouldShowReads(district, nycCoachType);
   const showSolves = shouldShowSolves(district, nycCoachType);
