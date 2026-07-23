@@ -3,8 +3,8 @@ import type { CoachLogIdentity } from "~/domains/coach-log/model";
 
 /**
  * Checks whether a coach log already exists for this coach + district + school +
- * date (the one-log-per-day rule). Re-runs whenever any of those change, calling
- * the `/api/coach-log/exists` endpoint, and exposes:
+ * sub-school + date (the one-log-per-day rule). Re-runs whenever any of those
+ * change, calling the `/api/coach-log/exists` endpoint, and exposes:
  *  - `duplicateExists`: true when a matching log was found
  *  - `checking`: true while the check is in flight
  *  - `checkError`: true when the check couldn't complete (so the form can warn
@@ -15,8 +15,15 @@ import type { CoachLogIdentity } from "~/domains/coach-log/model";
  * authoritative guard still lives in the submit route.
  */
 export function useDuplicateCheck(query: CoachLogIdentity) {
-  const { coachMondayId, coachName, district, school, sessionDate, nycCoachType } =
-    query;
+  const {
+    coachMondayId,
+    coachName,
+    district,
+    school,
+    sessionDate,
+    nycCoachType,
+    subSchool,
+  } = query;
   const [duplicateExists, setDuplicateExists] = useState(false);
   const [checking, setChecking] = useState(false);
   const [checkError, setCheckError] = useState(false);
@@ -42,6 +49,7 @@ export function useDuplicateCheck(query: CoachLogIdentity) {
         school,
         sessionDate,
         nycCoachType,
+        subSchool,
       }),
     })
       .then((r) => r.json())
@@ -68,7 +76,15 @@ export function useDuplicateCheck(query: CoachLogIdentity) {
     return () => {
       cancelled = true;
     };
-  }, [coachMondayId, coachName, district, school, sessionDate, nycCoachType]);
+  }, [
+    coachMondayId,
+    coachName,
+    district,
+    school,
+    sessionDate,
+    nycCoachType,
+    subSchool,
+  ]);
 
   return { duplicateExists, checking, checkError, setDuplicateExists };
 }

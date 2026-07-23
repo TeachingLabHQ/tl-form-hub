@@ -101,9 +101,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     // ---- Duplicate guard ------------------------------------------------
-    // One log per coach + district + school + date + coach type (cancelled logs
-    // count). This is the authoritative check; the form also pre-checks for a
-    // better UX.
+    // One log per coach + district + school + date + coach type + sub-school
+    // (cancelled logs count). This is the authoritative check; the form also
+    // pre-checks for a better UX. `subSchool` is already gated to "" by the
+    // client when sub-school doesn't apply, so it only narrows the key for
+    // D75 + Solves logs.
     const service = coachLogService(coachLogRepository());
     const duplicate = await service.hasExistingLog({
       coachMondayId,
@@ -112,6 +114,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       school,
       sessionDate,
       nycCoachType,
+      subSchool,
     });
     if (duplicate.data) {
       return new Response(null, {

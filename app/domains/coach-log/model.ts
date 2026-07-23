@@ -65,8 +65,8 @@ export type CoachOption = {
 
 /**
  * The fields that uniquely identify a coach log for the duplicate check: one log
- * per coach + district + school + date. `coachMondayId` is preferred for the
- * coach match; `coachName` (the item name) is the fallback.
+ * per coach + district + school + sub-school + date. `coachMondayId` is preferred
+ * for the coach match; `coachName` (the item name) is the fallback.
  */
 export type CoachLogIdentity = {
   coachMondayId: string;
@@ -78,6 +78,11 @@ export type CoachLogIdentity = {
    * Reads) for the same school/date, so it's part of the duplicate key. Empty
    * for non-NYC districts (matches other empty-coach-type logs). */
   nycCoachType: string;
+  /** Sub-school — when the form requires one (D75 + Solves), the same coach can
+   * log different sub-schools for the same school/date, so it's part of the
+   * duplicate key. Empty when sub-school doesn't apply (matches other
+   * empty-sub-school logs). */
+  subSchool: string;
 };
 
 /** One 1:1 coaching entry. Each row becomes a Monday subitem on submission. */
