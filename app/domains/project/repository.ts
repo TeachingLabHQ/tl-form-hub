@@ -199,8 +199,7 @@ export function projectRepository(): ProjectRepository {
                   rules: [
                     {
                       column_id: "group"
-                      # TODO: group id for the new FY board is not confirmed yet
-                      compare_value: ["group_mkv0sxxj"]
+                      compare_value: ["group_mm4cyf8"]
                       operator: any_of
                     }
                   ]
@@ -211,11 +210,10 @@ export function projectRepository(): ProjectRepository {
                   id
                   name
                   column_values(ids: [
-                    # TODO: employee email column may change on the new board — not confirmed yet
-                    "lookup_mksmfdnr",
+                    "lookup_mm5b2k23",
                     "lookup_mkpvs1wj",
                     "numeric_mknhqm6d",
-                    "dropdown_mkttdgrw",
+                    "dropdown_mm5h458x",
                     "color_mknhq0s3"
                   ]) {
                     id
@@ -250,11 +248,10 @@ export function projectRepository(): ProjectRepository {
                 id
                 name
                 column_values(ids: [
-                  # TODO: employee email column may change on the new board — not confirmed yet
-                  "lookup_mksmfdnr",
+                  "lookup_mm5b2k23",
                   "lookup_mkpvs1wj",
                   "numeric_mknhqm6d",
-                  "dropdown_mkttdgrw",
+                  "dropdown_mm5h458x",
                   "color_mknhq0s3"
                 ]) {
                   id

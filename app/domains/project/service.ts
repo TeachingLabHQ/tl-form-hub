@@ -6,7 +6,7 @@ export interface ProjectService {
   fetchAllProjects: () => Promise<{ data: projectsByTypes[] | null }>;
   fetchProgramProjects: () => Promise<{ data: string[] | null | undefined }>;
   fetchProgramProjectsStaffing: (mondayProfileId: string) => Promise<Errorable<ProgramProject[]>>;
-  // Prefer designated employee ID (lookup_mkpvs1wj). Fall back to employee email (lookup_mksmfdnr).
+  // Prefer designated employee ID (lookup_mkpvs1wj). Fall back to employee email (lookup_mm5b2k23).
   fetchBudgetedHoursByEmployee: (
     employeeId?: string | null,
     employeeEmail?: string | null
@@ -33,7 +33,7 @@ function buildBudgetedHoursIndex(allItems: any[]): BudgetedHoursIndex {
 
     // Transform item to EmployeeBudgetedHours format
     const emailValue =
-      item.column_values?.find((col: any) => col.id === "lookup_mksmfdnr")?.display_value ||
+      item.column_values?.find((col: any) => col.id === "lookup_mm5b2k23")?.display_value ||
       "";
     const emailValueTrimmed = typeof emailValue === "string" ? emailValue.trim().toLowerCase() : "";
 
@@ -44,7 +44,7 @@ function buildBudgetedHoursIndex(allItems: any[]): BudgetedHoursIndex {
       itemId: item.id,
       itemName: item.name,
       email: emailValueTrimmed,
-      projectName: item.column_values?.find((col: any) => col.id === "dropdown_mkttdgrw")?.text || "",
+      projectName: item.column_values?.find((col: any) => col.id === "dropdown_mm5h458x")?.text || "",
       projectRole: item.column_values?.find((col: any) => col.id === "color_mknhq0s3")?.label || 
                    item.column_values?.find((col: any) => col.id === "color_mknhq0s3")?.text || "",
       budgetedHours: parseFloat(item.column_values?.find((col: any) => col.id === "numeric_mknhqm6d")?.text || "0") || 0
