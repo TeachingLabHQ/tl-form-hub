@@ -2,6 +2,7 @@ import { json } from "@remix-run/node";
 import { useLoaderData, type ShouldRevalidateFunction } from "@remix-run/react";
 import { useSession } from "~/components/auth/hooks/useSession";
 import { CoachLogForm } from "~/components/coach-log/coach-log-form";
+import { AccessDeniedState } from "~/components/vendor-payment-form/access-denied-state";
 import { coachLogRepository } from "~/domains/coach-log/repository";
 import { coachLogService } from "~/domains/coach-log/service";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
@@ -45,6 +46,16 @@ export default function CoachLogFormRoute() {
 
   if (isSessionLoading || mondayProfile === null) {
     return <LoadingSpinner message="Loading session..." />;
+  }
+
+  // FTE/PTE employees are resolved via the employee board's "people" column,
+  // which links their Monday user account. Coaches/facilitators resolved via
+  // the coach/facilitator board fallback never have this link (that board
+  // doesn't carry a person id), so only require it outside that fallback path.
+  if (mondayProfile.businessFunction !== "contractor" && !mondayProfile.mondayProfileId) {
+    return (
+      <AccessDeniedState errorMessage="Your Monday profile isn't fully linked yet (missing the People-column assignment on the Employee board), so we can't attribute coach log submissions to you. Please contact the operations team to get this fixed, then try again." />
+    );
   }
 
   return (

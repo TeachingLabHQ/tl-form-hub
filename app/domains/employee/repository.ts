@@ -48,7 +48,7 @@ export function employeeRepository(): EmployeeRepository {
           result.data.boards[0].items_page.items[0]["column_values"].find(
             (column: { id: string; persons_and_teams: { id: string }[] }) =>
               column.id === "people"
-          )?.persons_and_teams[0]["id"] || "";
+          )?.persons_and_teams[0]?.id || "";
         const employeeId: string =
           result.data.boards[0].items_page.items[0]["column_values"].find(
             (column: { id: string; text: string }) => column.id === "text_mkpt2c0x"
