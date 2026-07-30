@@ -177,11 +177,12 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
                 style={{ marginBottom: 16 }}
               />
               <Title order={3} mb="xs">
-                Coach Log
+                Coach Log & Participant Roster
               </Title>
               <Text mb="md" style={{ flex: 1 }}>
                 Log your weekly coaching sessions, including 1:1 and group
-                coaching, session details, and program-specific information.
+                coaching, session details, and program-specific information —
+                and add new participants to the coaching roster.
               </Text>
               <Button
                 component={Link}
@@ -189,7 +190,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
               >
-                Submit Coach Log
+                Submit Coach Log or Roster
               </Button>
             </Flex>
           </Card>
