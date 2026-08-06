@@ -184,9 +184,13 @@ export function coachLogRepository(): CoachLogRepository {
         const districtFilter = normalize(district);
         const schoolFilter = normalize(school);
 
-        let rules = `[{column_id: "coaching_partners", operator: contains_terms, compare_value: ["${districtFilter}"]}`;
+        // Escape values interpolated into the GraphQL rule strings.
+        const esc = (v: string) =>
+          v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
+        let rules = `[{column_id: "coaching_partners", operator: contains_terms, compare_value: ["${esc(districtFilter)}"]}`;
         if (schoolFilter && schoolFilter !== "all schools") {
-          rules += `, {column_id: "short_text66", operator: contains_text, compare_value: ["${schoolFilter}"]}`;
+          rules += `, {column_id: "short_text66", operator: contains_text, compare_value: ["${esc(schoolFilter)}"]}`;
         }
         rules += `]`;
 
