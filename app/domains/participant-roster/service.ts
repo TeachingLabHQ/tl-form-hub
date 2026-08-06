@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Errorable } from "~/utils/errorable";
 import {
   ParticipantRosterEntry,
@@ -20,13 +21,17 @@ export interface ParticipantRosterService {
     district: string,
     school: string
   ): Promise<Errorable<boolean>>;
+  fetchGroupCoachingNames(
+    district: string,
+    school: string
+  ): Promise<Errorable<string[]>>;
 }
 
 export function participantRosterService(
   repository: ParticipantRosterRepository
 ): ParticipantRosterService {
   return {
-    submitParticipant: (submission) => {
+    submitParticipant: async (submission) => {
       // Resolve "Other" write-ins: the single-select role becomes the typed
       // text; in the multi-select content areas, "Other" is swapped for it.
       const role =
@@ -42,6 +47,15 @@ export function participantRosterService(
         submission.lastName
       )}`.trim();
 
+      // New group name -> generate its Nisa Group ID; a name already on the
+      // roster -> reuse the existing id so the whole group shares one.
+      const groupCoachingName = submission.groupCoachingName.trim();
+      let nisaGroupId = "";
+      if (groupCoachingName) {
+        const existing = await repository.findGroupId(groupCoachingName);
+        nisaGroupId = existing.data ?? randomUUID();
+      }
+
       const entry: ParticipantRosterEntry = {
         coachMondayId: submission.coachMondayId,
         responderEmail: submission.responderEmail,
@@ -51,7 +65,8 @@ export function participantRosterService(
         supports: submission.supports,
         contentAreas,
         grades: submission.grades,
-        groupNumbers: submission.groupNumbers,
+        groupCoachingName,
+        nisaGroupId,
         district: submission.district,
         school: submission.school,
       };
@@ -61,5 +76,8 @@ export function participantRosterService(
 
     participantExists: (email, district, school) =>
       repository.participantExists(email, district, school),
+
+    fetchGroupCoachingNames: (district, school) =>
+      repository.fetchGroupCoachingNames(district, school),
   };
 }

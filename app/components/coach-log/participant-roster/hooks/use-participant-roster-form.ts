@@ -11,7 +11,7 @@ export type ParticipantRosterValues = {
   contentAreas: string[];
   contentAreaOther: string;
   grades: string[];
-  groupNumbers: string[];
+  groupCoachingName: string;
   district: string;
   school: string;
 };
@@ -26,7 +26,7 @@ const INITIAL_VALUES: ParticipantRosterValues = {
   contentAreas: [],
   contentAreaOther: "",
   grades: [],
-  groupNumbers: [],
+  groupCoachingName: "",
   district: "",
   school: "",
 };

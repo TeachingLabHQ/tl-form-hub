@@ -25,7 +25,7 @@ export function buildParticipantRosterSubmission(
     contentAreas: values.contentAreas,
     contentAreaOther: values.contentAreaOther,
     grades: values.grades,
-    groupNumbers: values.groupNumbers,
+    groupCoachingName: values.groupCoachingName.trim(),
     district: values.district,
     school: values.school,
   };

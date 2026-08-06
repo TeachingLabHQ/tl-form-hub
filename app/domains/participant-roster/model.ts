@@ -18,7 +18,7 @@ export type ParticipantRosterSubmission = {
   contentAreas: string[];
   contentAreaOther: string;
   grades: string[];
-  groupNumbers: string[];
+  groupCoachingName: string;
   district: string;
   school: string;
 };
@@ -36,7 +36,10 @@ export type ParticipantRosterEntry = {
   supports: string[];
   contentAreas: string[];
   grades: string[];
-  groupNumbers: string[];
+  groupCoachingName: string;
+  /** UUID for the participant's group, shared by every roster entry with the
+   * same groupCoachingName so Nisa can treat them as one group. */
+  nisaGroupId: string;
   district: string;
   school: string;
 };
