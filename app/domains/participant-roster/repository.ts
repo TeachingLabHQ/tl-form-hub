@@ -10,8 +10,8 @@ import { ParticipantRosterEntry } from "./model";
 //   email_mktht3ax     = Participant Email     email_mkthfrq7 = Responder's Email
 //   dropdown_mkth66bp  = Participant Role       dropdown_mktbega2 = Service Type
 //   dropdown_mkth57c8  = Content Area           dropdown_mktbacaf = Grade Level(s)
-//   dropdown_mkwt4nzg  = Group Coaching Number  coaching_partners = Site/District
-//   short_text66       = School
+//   coaching_partners  = Site/District           short_text66 = School
+//   text_mm5w13st      = Group Coaching Name     text_mm5w6tnt = Nisa Group ID
 export const PARTICIPANT_ROSTER_BOARD_ID = 18416567790;
 const ROSTER_GROUP_ID = "group_mktb1yqy";
 
@@ -23,6 +23,9 @@ const labels = (values: string[]) => values.join(",");
 
 const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase();
 
+const escQueryValue = (v: string) =>
+  v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
 export interface ParticipantRosterRepository {
   createParticipant(entry: ParticipantRosterEntry): Promise<Errorable<string>>;
   /** True if a participant with this email is already on the roster for the
@@ -32,6 +35,15 @@ export interface ParticipantRosterRepository {
     district: string,
     school: string
   ): Promise<Errorable<boolean>>;
+  /** The existing Nisa Group ID for another roster entry with this exact
+   * Group Coaching Name, or null if the name is new to the board. */
+  findGroupId(groupCoachingName: string): Promise<Errorable<string | null>>;
+  /** Distinct Group Coaching Names already on the roster for this district +
+   * school, for the group-name autocomplete. */
+  fetchGroupCoachingNames(
+    district: string,
+    school: string
+  ): Promise<Errorable<string[]>>;
 }
 
 export function participantRosterRepository(): ParticipantRosterRepository {
@@ -61,8 +73,10 @@ export function participantRosterRepository(): ParticipantRosterRepository {
           columns.dropdown_mkth57c8 = labels(entry.contentAreas); // Content Area
         if (entry.grades.length)
           columns.dropdown_mktbacaf = labels(entry.grades); // Grade Level(s)
-        if (entry.groupNumbers.length)
-          columns.dropdown_mkwt4nzg = labels(entry.groupNumbers); // Group Number
+        if (entry.groupCoachingName) {
+          columns.text_mm5w13st = entry.groupCoachingName; // Group Coaching Name
+          columns.text_mm5w6tnt = entry.nisaGroupId; // Nisa Group ID
+        }
 
         const query =
           "mutation ($itemName: String!, $columnVals: JSON!, $groupName: String!) { create_item (board_id: " +
@@ -102,9 +116,7 @@ export function participantRosterRepository(): ParticipantRosterRepository {
         const wantDistrict = normalize(district);
         const wantSchool = normalize(school);
 
-        const esc = (v: string) =>
-          v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-        const rules = `[{column_id: "email_mktht3ax", operator: contains_text, compare_value: "${esc(email)}"}, {column_id: "coaching_partners", operator: contains_text, compare_value: "${esc(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${esc(school)}"}]`;
+        const rules = `[{column_id: "email_mktht3ax", operator: contains_text, compare_value: "${escQueryValue(email)}"}, {column_id: "coaching_partners", operator: contains_text, compare_value: "${escQueryValue(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${escQueryValue(school)}"}]`;
         const columnIds = `["email_mktht3ax","coaching_partners","short_text66"]`;
         const buildQuery = (cursor: string | null) =>
           cursor
@@ -139,6 +151,110 @@ export function participantRosterRepository(): ParticipantRosterRepository {
         return {
           data: null,
           error: new Error("participantExists() went wrong"),
+        };
+      }
+    },
+
+    // Group-id lookup: narrow the board server-side by Group Coaching Name
+    // (contains_text — same substring caveat as above), then confirm an exact
+    // match in JS and return that entry's existing Nisa Group ID so every
+    // participant in the same named group ends up sharing one id.
+    findGroupId: async (groupCoachingName) => {
+      try {
+        const wantName = normalize(groupCoachingName);
+        if (!wantName) return { data: null, error: null };
+
+        const rules = `[{column_id: "text_mm5w13st", operator: contains_text, compare_value: "${escQueryValue(groupCoachingName)}"}]`;
+        const columnIds = `["text_mm5w13st","text_mm5w6tnt"]`;
+        const buildQuery = (cursor: string | null) =>
+          cursor
+            ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { column_values(ids:${columnIds}) { id text } } } }`
+            : `{ boards(ids: ${PARTICIPANT_ROSTER_BOARD_ID}) { items_page(limit: 500, query_params: {rules: ${rules}}) { cursor items { column_values(ids:${columnIds}) { id text } } } } }`;
+
+        const matchedGroupId = (item: any): string | null => {
+          const col = (id: string) =>
+            item.column_values.find((c: any) => c.id === id);
+          if (normalize(col("text_mm5w13st")?.text) !== wantName) return null;
+          return col("text_mm5w6tnt")?.text || null;
+        };
+
+        let response = await fetchMondayData(buildQuery(null));
+        let page = response.data.boards[0].items_page;
+        for (const item of page.items) {
+          const groupId = matchedGroupId(item);
+          if (groupId) return { data: groupId, error: null };
+        }
+
+        let cursor: string | null = page.cursor;
+        while (cursor) {
+          response = await fetchMondayData(buildQuery(cursor));
+          page = response.data.next_items_page;
+          for (const item of page.items) {
+            const groupId = matchedGroupId(item);
+            if (groupId) return { data: groupId, error: null };
+          }
+          cursor = page.cursor;
+        }
+
+        return { data: null, error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("findGroupId() went wrong"),
+        };
+      }
+    },
+
+    // Autocomplete source: narrow the board server-side by district + school
+    // (contains_text — same substring caveat as above), confirm an exact
+    // match in JS, then return the distinct, sorted Group Coaching Names.
+    fetchGroupCoachingNames: async (district, school) => {
+      try {
+        const wantDistrict = normalize(district);
+        const wantSchool = normalize(school);
+        if (!wantDistrict || !wantSchool) return { data: [], error: null };
+
+        const rules = `[{column_id: "coaching_partners", operator: contains_text, compare_value: "${escQueryValue(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${escQueryValue(school)}"}]`;
+        const columnIds = `["text_mm5w13st","coaching_partners","short_text66"]`;
+        const buildQuery = (cursor: string | null) =>
+          cursor
+            ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { column_values(ids:${columnIds}) { id text } } } }`
+            : `{ boards(ids: ${PARTICIPANT_ROSTER_BOARD_ID}) { items_page(limit: 500, query_params: {rules: ${rules}}) { cursor items { column_values(ids:${columnIds}) { id text } } } } }`;
+
+        const groupName = (item: any): string | null => {
+          const col = (id: string) =>
+            item.column_values.find((c: any) => c.id === id);
+          if (
+            normalize(col("coaching_partners")?.text) !== wantDistrict ||
+            normalize(col("short_text66")?.text) !== wantSchool
+          )
+            return null;
+          return col("text_mm5w13st")?.text || null;
+        };
+
+        let response = await fetchMondayData(buildQuery(null));
+        let page = response.data.boards[0].items_page;
+        let items: any[] = page.items;
+
+        let cursor: string | null = page.cursor;
+        while (cursor) {
+          response = await fetchMondayData(buildQuery(cursor));
+          page = response.data.next_items_page;
+          items = items.concat(page.items);
+          cursor = page.cursor;
+        }
+
+        const names = Array.from(
+          new Set(items.map(groupName).filter((n): n is string => !!n))
+        ).sort((a, b) => a.localeCompare(b));
+
+        return { data: names, error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("fetchGroupCoachingNames() went wrong"),
         };
       }
     },

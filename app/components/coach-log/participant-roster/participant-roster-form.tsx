@@ -1,4 +1,5 @@
 import {
+  Autocomplete,
   Button,
   Loader,
   MultiSelect,
@@ -8,7 +9,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { DistrictWithSchools } from "~/domains/coach-log/model";
 import { useSession } from "../../auth/hooks/useSession";
 import { useCoachOverride } from "../hooks/use-coach-override";
@@ -17,7 +18,6 @@ import { buildParticipantRosterSubmission } from "./build-submission";
 import {
   CONTENT_AREA_OPTIONS,
   GRADE_OPTIONS,
-  GROUP_NUMBER_OPTIONS,
   OTHER_OPTION,
   PARTICIPANT_ROLE_OPTIONS,
   SUPPORT_OPTIONS,
@@ -57,8 +57,9 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
   // the values, but a controlled searchable Select keeps its displayed text
   // until the field is remounted — so we key the form on this counter.
   const [resetKey, setResetKey] = useState(0);
+  const [groupNameOptions, setGroupNameOptions] = useState<string[]>([]);
 
-  const { district, role, contentAreas } = form.values;
+  const { district, school, role, contentAreas } = form.values;
 
   const districtOptions = useMemo(
     () => districts.map((d) => d.district),
@@ -75,6 +76,33 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
     form.setFieldValue("district", value || "");
     form.setFieldValue("school", "");
   };
+
+  // Suggest Group Coaching Names already on the roster for this district +
+  // school, once both are selected.
+  useEffect(() => {
+    if (!district || !school) {
+      setGroupNameOptions([]);
+      return;
+    }
+
+    let cancelledFetch = false;
+    fetch("/api/participant-roster/group-names", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ district, school }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (!cancelledFetch) setGroupNameOptions(data.groupNames || []);
+      })
+      .catch(() => {
+        if (!cancelledFetch) setGroupNameOptions([]);
+      });
+
+    return () => {
+      cancelledFetch = true;
+    };
+  }, [district, school]);
 
   const handleSubmit = async (values: ParticipantRosterValues) => {
     setShowErrorBanner(false);
@@ -213,17 +241,6 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
       </div>
 
       <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
-          If this participant receives group coaching, select their Group Number.
-        </h1>
-        <MultiSelect
-          placeholder="Select all that apply"
-          data={GROUP_NUMBER_OPTIONS}
-          {...form.getInputProps("groupNumbers")}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
         <h1 className="font-medium text-lg">Please select your district*</h1>
         <Select
           value={district || null}
@@ -246,6 +263,22 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
           searchable
           disabled={!district}
           {...form.getInputProps("school")}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <h1 className="font-medium text-lg">
+          If this participant receives group coaching, enter their Group
+          Coaching Name.
+        </h1>
+        <Autocomplete
+          placeholder={
+            district && school
+              ? "Group coaching name"
+              : "Select a district and school first for suggestions"
+          }
+          data={groupNameOptions}
+          {...form.getInputProps("groupCoachingName")}
         />
       </div>
 
