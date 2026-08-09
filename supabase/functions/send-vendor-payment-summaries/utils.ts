@@ -14,7 +14,6 @@ export async function sendProjectEmail(
     projectName: string,
     personSummary: PersonProjectSummary, // Pass the person's summary object
     pdf: Uint8Array,
-    docx: Uint8Array,
   ): Promise<void> {
     const recipientEmail = ["yancheng.pan@teachinglab.org", "accountspayable@teachinglab.org"];
     if (personSummary.cf_email) recipientEmail.push(personSummary.cf_email);
@@ -30,9 +29,7 @@ export async function sendProjectEmail(
       };
 
       const pdfBase64 = toBase64(pdf);
-      const docxBase64 = toBase64(docx);
       console.log(`PDF Base64 length: ${pdfBase64.length}`);
-      console.log(`DOCX Base64 length: ${docxBase64.length}`);
       const reportMonthYear = new Date().toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
       const baseName = `TeachingLab-PaymentSummary-${personSummary.cf_name.replace(/\s+/g, '')}-${projectName.replace(/\s+/g, '_')}-${reportMonthYear}`;
 
@@ -54,11 +51,6 @@ export async function sendProjectEmail(
             filename: `${baseName}.pdf`,
             content: pdfBase64,
             contentType: 'application/pdf',
-          },
-          {
-            filename: `${baseName}.docx`,
-            content: docxBase64,
-            contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
           },
         ]
       };
