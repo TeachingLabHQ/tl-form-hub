@@ -21,12 +21,10 @@ export const PARTICIPANT_ROLE_OPTIONS = [
 export const SUPPORT_OPTIONS = ["Coaching", "PL"];
 
 export const CONTENT_AREA_OPTIONS = [
-  "ELA",
-  "Early Literacy",
+  "ELA/Literacy",
   "Math",
   "Social Studies",
   "Science",
-  "Pre-K",
   OTHER_OPTION,
 ];
 
