@@ -18,6 +18,29 @@ export interface CoachFacilitatorRepository {
   ): Promise<Errorable<CoachFacilitatorDetails | null>>;
 }
 
+// Resolves a contractor's real Monday.com platform user id from their email,
+// so it can populate People columns (e.g. the coach log's coach-profile
+// column) the same way employee logins already do via the "people" column
+// on the employee board. Contractors aren't on that board, so this is a
+// separate lookup against Monday's own users directory. Returns "" (not an
+// error) when the contractor has no Monday seat at all, since that's a
+// legitimate state and shouldn't block login.
+export async function fetchMondayUserIdByEmail(
+  email: string
+): Promise<string> {
+  try {
+    // Escape values interpolated into the GraphQL query string.
+    const esc = (v: string) => v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const query = `{ users(emails: ["${esc(email)}"]) { id } }`;
+    const result = await fetchMondayData(query);
+    const users = result?.data?.users ?? [];
+    return users[0]?.id ? String(users[0].id) : "";
+  } catch (error) {
+    console.error("Error fetching Monday user id by email:", error);
+    return "";
+  }
+}
+
 export function coachFacilitatorRepository(): CoachFacilitatorRepository {
   return {
     fetchCoachFacilitatorDetails: async (email: string) => {
