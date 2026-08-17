@@ -5,7 +5,10 @@ import { employeeService } from "~/domains/employee/service";
 import { useNavigate } from "@remix-run/react";
 import { EmployeeProfile } from "~/domains/employee/model";
 import { supabase } from "../../../../supabase/supabase.client";
-import { coachFacilitatorRepository } from "~/domains/coachFacilitator/repository";
+import {
+  coachFacilitatorRepository,
+  fetchMondayUserIdByEmail,
+} from "~/domains/coachFacilitator/repository";
 import { coachFacilitatorService } from "~/domains/coachFacilitator/service";
 
 const MONDAY_PROFILE_KEY = "mondayProfile";
@@ -88,11 +91,18 @@ export const useSession = () => {
             setIsAuthenticated(false);
             return;
           }
+          // Contractors aren't on the employee board, so resolve their
+          // Monday platform user id separately. Used to populate People
+          // columns (e.g. the coach log's coach-profile column) on
+          // submission; falls back to "" if they have no Monday seat.
+          const mondayUserId = await fetchMondayUserIdByEmail(
+            session.user.email
+          );
           const coachFacilitatorProfile = {
             name: coachFacilitatorData?.name,
             email: coachFacilitatorData?.email,
             businessFunction: "contractor",
-            mondayProfileId: "",
+            mondayProfileId: mondayUserId,
             employeeId: "",
           };
           setMondayProfile(coachFacilitatorProfile);
