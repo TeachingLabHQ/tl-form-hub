@@ -50,9 +50,12 @@ const SESSION_CALENDAR_URL =
   "https://tl-data.teachinglab.org/monday-webhook/calendar_fy27";
 
 // Memoize the parsed calendar per process with a short TTL: it's the same data
-// for every coach/district lookup, but it does change over time, so re-fetch
-// periodically rather than caching for the whole process lifetime.
-const CALENDAR_CACHE_TTL_MS = 5 * 60 * 1000;
+// for every coach/district lookup, but it does change over time. Kept at 0
+// (effectively no caching, always re-fetch) so a coach's just-added session
+// date shows up as soon as the upstream mirror has it — the file is small, so
+// re-fetching per request is cheap; this only dedupes truly concurrent calls
+// that land within the same tick.
+const CALENDAR_CACHE_TTL_MS = 0;
 
 type CalendarRow = {
   session_date?: unknown;
