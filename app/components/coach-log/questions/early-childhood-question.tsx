@@ -81,18 +81,6 @@ export const EarlyChildhoodQuestion = ({ form }: Props) => {
             Please select the primary focus of the capacity building provided to
             leaders in this school.*
           </h1>
-          <Text size="sm" c="white">
-            See a detailed description of each capacity building focus in the{" "}
-            <a
-              href={JES_GLOSSARY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-bold underline"
-            >
-              Glossary of the JES Manual
-            </a>
-            .
-          </Text>
           <MultiSelect
             placeholder="Select all that apply"
             data={LEADER_CAPACITY_FOCUS_OPTIONS}

@@ -67,7 +67,6 @@ export const TEACHER_STRATEGY_OPTIONS = [
   "Side-by-side coaching",
   "Classroom visits",
   "Unit reflection",
-  "Book Club",
   "Student Work Analysis Meetings",
   "Data meetings",
 ];

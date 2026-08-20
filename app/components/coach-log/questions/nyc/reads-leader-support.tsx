@@ -43,20 +43,6 @@ export const ReadsLeaderSupport = ({ form }: Props) => (
 
     <QuestionField
       label="Please select the primary focus of the capacity building provided to leaders in this school.*"
-      note={
-        <>
-          See a detailed description of each capacity building focus in the{" "}
-          <a
-            href={JES_GLOSSARY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-bold underline"
-          >
-            Glossary of the JES Manual
-          </a>
-          .
-        </>
-      }
     >
       <MultiSelect
         placeholder="Select all that apply"
