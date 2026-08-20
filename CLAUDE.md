@@ -25,8 +25,8 @@ Path alias: `~/*` → `app/*`.
 ### Domain-driven layering (`app/domains/<domain>/`)
 Each feature domain (`coach-log`, `vendor-payment`, `employee`, `project`, `coachFacilitator`) splits into:
 - **`model.ts`** — types only (and small pure helpers/keys).
-- **`repository.ts`** — external data access: Monday GraphQL (via the shared helpers below) and Google Sheets (`googleapis` JWT service account). Returns `Errorable<T>` (`{ data, error: null } | { data: null, error }`, from `~/utils/errorable`).
-- **`service.ts`** — business logic over the repository (sort/filter/transform/dedupe). Routes call services, not repositories directly: `coachLogService(coachLogRepository())`.
+- **`repository.ts`** — external data access: Monday GraphQL (via the shared helpers below) and Google Sheets (`googleapis` JWT service account). Returns `Errorable<T>` (`{ data, error: null } | { data: null, error }`, from `~/utils/errorable`). Every function that hits an external system must be a method on the domain's `XRepository` interface, implemented inside the `xRepository()` factory — never a bare exported function sitting alongside the factory. This holds even for small one-off lookups (e.g. resolving a Monday user id by email).
+- **`service.ts`** — business logic over the repository (sort/filter/transform/dedupe). Every repository method gets a matching entry in the `xService(repo)` factory (even pure passthroughs, e.g. `fetchThing: repo.fetchThing`). Callers (routes, hooks, components) call the service, not the repository, and not repository functions imported directly: `coachLogService(coachLogRepository())`. Construct the service once per call site and reuse it across branches rather than re-instantiating per branch.
 
 ### Remix routing conventions
 - **Page routes** (`<feature>-form.tsx`, `dashboard.tsx`) expose a server-side `loader` for user-independent reference data fetched up front, then render a feature component. Auth/profile is resolved client-side via `useSession()`, so loaders generally don't gate on the user.

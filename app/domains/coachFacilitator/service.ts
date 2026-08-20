@@ -6,5 +6,8 @@ export function coachFacilitatorService(
   return {
     fetchCoachFacilitatorDetails:
       coachFacilitatorRepository.fetchCoachFacilitatorDetails,
+    fetchMondayUserByEmail: coachFacilitatorRepository.fetchMondayUserByEmail,
+    fetchMondayUserNameById:
+      coachFacilitatorRepository.fetchMondayUserNameById,
   };
 }

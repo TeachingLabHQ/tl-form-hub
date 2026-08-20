@@ -5,10 +5,7 @@ import { employeeService } from "~/domains/employee/service";
 import { useNavigate } from "@remix-run/react";
 import { EmployeeProfile } from "~/domains/employee/model";
 import { supabase } from "../../../../supabase/supabase.client";
-import {
-  coachFacilitatorRepository,
-  fetchMondayUserIdByEmail,
-} from "~/domains/coachFacilitator/repository";
+import { coachFacilitatorRepository } from "~/domains/coachFacilitator/repository";
 import { coachFacilitatorService } from "~/domains/coachFacilitator/service";
 
 const MONDAY_PROFILE_KEY = "mondayProfile";
@@ -71,14 +68,14 @@ export const useSession = () => {
 
         setIsLoading(true);
         const newEmployeeService = employeeService(employeeRepository());
+        const newCoachFacilitatorService = coachFacilitatorService(
+          coachFacilitatorRepository()
+        );
         const { data: employee, error } =
           await newEmployeeService.fetchMondayEmployee(session.user.email);
 
         if (error || !employee) {
           // If employee is not found, check if they are a coach or facilitator
-          const newCoachFacilitatorService = coachFacilitatorService(
-            coachFacilitatorRepository()
-          );
           const { data: coachFacilitatorData, error: coachFacilitatorError } =
             await newCoachFacilitatorService.fetchCoachFacilitatorDetails(
               session.user.email
@@ -92,17 +89,22 @@ export const useSession = () => {
             return;
           }
           // Contractors aren't on the employee board, so resolve their
-          // Monday platform user id separately. Used to populate People
-          // columns (e.g. the coach log's coach-profile column) on
-          // submission; falls back to "" if they have no Monday seat.
-          const mondayUserId = await fetchMondayUserIdByEmail(
+          // Monday platform identity (id + name) separately. The id
+          // populates People columns (e.g. the coach log's coach-profile
+          // column) on submission. Prefer the real Monday account name over
+          // the coach-facilitator board's free-text item name — the two can
+          // drift out of sync (nickname, name change, typo), which broke
+          // exact-string matches like fetchSessionDates()'s coach lookup
+          // against the PL calendar. Falls back to the board item name if
+          // they have no Monday seat.
+          const mondayUser = await newCoachFacilitatorService.fetchMondayUserByEmail(
             session.user.email
           );
           const coachFacilitatorProfile = {
-            name: coachFacilitatorData?.name,
+            name: mondayUser.name || coachFacilitatorData?.name,
             email: coachFacilitatorData?.email,
             businessFunction: "contractor",
-            mondayProfileId: mondayUserId,
+            mondayProfileId: mondayUser.id,
             employeeId: "",
           };
           setMondayProfile(coachFacilitatorProfile);
@@ -115,8 +117,17 @@ export const useSession = () => {
           return;
         }
 
+        // Prefer the real Monday account name (via the employee's linked
+        // "people" column id) over the employee board's free-text item
+        // name — see the contractor branch above for why the two can drift
+        // out of sync and break exact-string name matches downstream.
+        const mondayUserName = employee.mondayProfileId
+          ? await newCoachFacilitatorService.fetchMondayUserNameById(
+              employee.mondayProfileId
+            )
+          : "";
         const newProfile = {
-          name: employee.name,
+          name: mondayUserName || employee.name,
           email: employee.email,
           businessFunction: employee.businessFunction,
           mondayProfileId: employee.mondayProfileId,
