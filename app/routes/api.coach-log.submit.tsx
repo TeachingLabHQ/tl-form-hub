@@ -105,7 +105,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // (cancelled logs count). This is the authoritative check; the form also
     // pre-checks for a better UX. `subSchool` is already gated to "" by the
     // client when sub-school doesn't apply, so it only narrows the key for
-    // D75 + Solves logs.
+    // D75 + Solves logs, or D11 + Solves logs at the 8 K-8 schools (where it
+    // holds "Elementary"/"Middle" instead of a sub-school name).
     const service = coachLogService(coachLogRepository());
     const duplicate = await service.hasExistingLog({
       coachMondayId,

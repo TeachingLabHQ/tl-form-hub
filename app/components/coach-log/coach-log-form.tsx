@@ -14,8 +14,10 @@ import { buildCoachLogSubmission } from "./build-submission";
 import { ParticipantRosterForm } from "./participant-roster/participant-roster-form";
 import {
   isNycCoachTypeDistrict,
+  SCHOOL_LEVEL_OPTIONS,
   shouldShowEarlyChildhood,
   shouldShowReads,
+  shouldShowSchoolLevel,
   shouldShowSolves,
   shouldShowSubSchool,
 } from "./constants";
@@ -112,16 +114,26 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const readsIsPLSession = form.values.readsIsPLSession;
 
   // Sub-school options are filtered from the loader map by district + school.
-  const subSchoolOptions = useMemo(
+  const sheetSubSchoolOptions = useMemo(
     () => subSchools[subSchoolKey(district, school)] ?? [],
     [subSchools, district, school]
   );
+
+  // D11 Solves coaches at the 8 K-8 schools get a fixed Elementary/Middle
+  // choice instead — it reuses the same form field/Monday column as sub-school
+  // so a coach can submit one log per level for the same school/date.
+  const showSchoolLevel = shouldShowSchoolLevel(district, school, nycCoachType);
+  const subSchoolOptions = showSchoolLevel
+    ? SCHOOL_LEVEL_OPTIONS
+    : sheetSubSchoolOptions;
 
   // Sub-school shows for D75 + Solves, but only when the sheet actually has
   // sub-schools for this district + school combo (otherwise there's nothing to
   // pick, so we hide the question rather than show an empty dropdown).
   const showSubSchool =
-    shouldShowSubSchool(district, nycCoachType) && subSchoolOptions.length > 0;
+    showSchoolLevel ||
+    (shouldShowSubSchool(district, nycCoachType) &&
+      sheetSubSchoolOptions.length > 0);
 
   // One log per coach + district + school + date — plus sub-school when the form
   // requires one, so different sub-schools on the same date aren't collapsed
@@ -202,7 +214,10 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
 
   const handleNycCoachTypeChange = (value: string) => {
     form.setFieldValue("nycCoachType", value);
-    if (!shouldShowSubSchool(district, value)) {
+    if (
+      !shouldShowSubSchool(district, value) &&
+      !shouldShowSchoolLevel(district, school, value)
+    ) {
       form.setFieldValue("subSchool", "");
     }
     if (!shouldShowEarlyChildhood(district, value)) {
@@ -377,7 +392,14 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
               )}
 
               {showSubSchool && (
-                <SubSchoolQuestion form={form} options={subSchoolOptions} />
+                <SubSchoolQuestion
+                  form={form}
+                  options={subSchoolOptions}
+                  label={showSchoolLevel ? "Elementary or Middle?" : undefined}
+                  placeholder={
+                    showSchoolLevel ? "Select Elementary or Middle" : undefined
+                  }
+                />
               )}
 
               {isPLSession ? (

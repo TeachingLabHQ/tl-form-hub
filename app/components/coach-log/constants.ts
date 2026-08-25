@@ -131,6 +131,36 @@ export const NYC_COACH_TYPE_DISTRICT_LABELS = [
 /** District key that (with a Solves coach) reveals the Sub-school question. */
 export const D75_DISTRICT_KEY = "75";
 
+/** District key for the D11 Elementary/Middle question (see below). */
+export const D11_DISTRICT_KEY = "11";
+
+/** D11 K-8 schools where a Solves coach may work the elementary and middle
+ * portions on the same day, requiring two separate logs for that school/date.
+ * These reuse the sub-school field/column (see shouldShowSchoolLevel) to
+ * record "Elementary" or "Middle" instead of a sheet-driven sub-school name. */
+const D11_ELEMENTARY_MIDDLE_SCHOOLS = [
+  "019",
+  "083",
+  "089",
+  "105",
+  "108",
+  "175",
+  "194",
+  "498",
+];
+
+export const SCHOOL_LEVEL_OPTIONS = ["Elementary", "Middle"];
+
+export function isD11ElementaryMiddleSchool(
+  district: string,
+  school: string
+): boolean {
+  return (
+    districtKey(district) === D11_DISTRICT_KEY &&
+    D11_ELEMENTARY_MIDDLE_SCHOOLS.includes(school.trim())
+  );
+}
+
 /** Extract the numeric district key from a label, e.g. "NY_D9" -> "9". */
 export function districtKey(district: string): string {
   const match = String(district ?? "").match(/(\d+)/);
@@ -154,6 +184,20 @@ export function shouldShowSubSchool(
   nycCoachType: string
 ): boolean {
   return isD75District(district) && nycCoachType === SOLVES_COACH_TYPE;
+}
+
+/** Elementary/Middle reuses the sub-school field for D11 Solves coaches at the
+ * 8 K-8 schools, so a coach can submit one log per level for the same
+ * school/date instead of being blocked as a duplicate. */
+export function shouldShowSchoolLevel(
+  district: string,
+  school: string,
+  nycCoachType: string
+): boolean {
+  return (
+    isD11ElementaryMiddleSchool(district, school) &&
+    nycCoachType === SOLVES_COACH_TYPE
+  );
 }
 
 /** ELA Early Childhood question set shows for an EC coach in an NYC district. */

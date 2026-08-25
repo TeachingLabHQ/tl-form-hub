@@ -3,6 +3,7 @@ import {
   isNycCoachTypeDistrict,
   shouldShowEarlyChildhood,
   shouldShowReads,
+  shouldShowSchoolLevel,
   shouldShowSolves,
   shouldShowSubSchool,
 } from "./constants";
@@ -22,7 +23,9 @@ export function buildCoachLogSubmission(
 ): CoachLogSubmission {
   const cancelled = values.canceled === "Yes";
   const showNycCoachType = isNycCoachTypeDistrict(values.district);
-  const showSubSchool = shouldShowSubSchool(values.district, values.nycCoachType);
+  const showSubSchool =
+    shouldShowSubSchool(values.district, values.nycCoachType) ||
+    shouldShowSchoolLevel(values.district, values.school, values.nycCoachType);
   const sendEC =
     !cancelled && shouldShowEarlyChildhood(values.district, values.nycCoachType);
   const sendReads =
