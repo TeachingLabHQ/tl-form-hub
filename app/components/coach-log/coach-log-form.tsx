@@ -461,11 +461,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                       <EarlyChildhoodQuestion form={form} />
                     )}
                     {showReads && (
-                      <ReadsQuestion
-                        form={form}
-                        district={district}
-                        school={school}
-                      />
+                      <ReadsQuestion form={form} district={district} />
                     )}
                     {showSolves && <SolvesQuestion form={form} />}
                   </>

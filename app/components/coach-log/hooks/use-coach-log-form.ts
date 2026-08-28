@@ -11,15 +11,26 @@ import {
 } from "../constants";
 import {
   isReadsCapacityBuilderDistrict,
-  OTHER_LEADER_OPTION,
+  OTHER_OPTION,
+  READS_DISTRICT_FOCUS_DATA_STRATEGY,
+  READS_DISTRICT_FOCUS_PL,
+  READS_DISTRICT_FOCUS_SCHOOL_VISITS,
+  READS_DISTRICT_FOCUS_STRATEGIC_PLANNING,
+  READS_LEADER_FOCUS_MODELING,
+  READS_LEADER_FOCUS_PL,
+  READS_LEADER_FOCUS_SCHOOL_VISITS,
   readsShowsDistrictBlock,
   readsShowsLeaderBlock,
-  readsShowsMtssPilot,
   readsShowsTeacherBlock,
-  SOLVES_INTERVISITATION_PROTOCOL,
-  solvesShowsAdditionalSupport,
-  solvesShowsLeaderBlock,
-  solvesShowsTeacherBlock,
+  solvesShowsCsd,
+  solvesShowsDistrictWide,
+  solvesShowsDistrictWideDBNs,
+  solvesShowsEs,
+  solvesShowsHqim,
+  solvesShowsHqimLeaderPresent,
+  solvesShowsHsd,
+  solvesShowsPostVisitFollowUp,
+  solvesShowsPostVisitSnapshot,
 } from "../questions/nyc/constants";
 
 /** Single source of truth for every Coach Log field. */
@@ -38,41 +49,80 @@ export type CoachLogValues = {
 
   // NYC Reads coach
   readsIsPLSession: YesNo | "";
-  readsScheduleProvided: YesNo | "";
   readsHighImpactActivities: YesNo | "";
-  readsTouchpoint: string;
-  readsIsMultiSchool: YesNo | "";
-  readsMultiSchoolDBN: string;
+  readsTouchpointTypes: string[];
+
+  // NYC Reads — Teacher team support
   readsVisitDuration: string;
-  readsSupportedTeacherTypes: string[];
   readsGradeBands: string[];
   readsTeacherStrategies: string[];
-  readsMTSSFocus: YesNo | "";
+  readsTeacherSchoolLeaderPresence: string;
+  readsTeacherDistrictLeaderPresence: string;
   readsMajorityUsingHQIM: YesNo | "";
   readsHQIMContext: string;
-  readsSupportedLeaders: string[];
-  readsSupportedLeadersOther: string;
+  readsInterventionsScheduled: YesNo | "";
+  readsInterventionsContext: string;
+
+  // NYC Reads — School Leader/Leadership team support
   readsLeaderVisitDuration: string;
   readsLeaderCapacityFocus: string[];
-  readsSupportedDistrictLeaders: string[];
-  readsSupportedDistrictLeadersOther: string;
-  readsDistrictSupports: string[];
-  mtssPracticesResponses: string[];
-  mtssAdditionalContext: string;
+  readsLeaderFocusSchoolVisitsSubcomponent: string;
+  readsLeaderFocusModelingSubcomponent: string;
+  readsLeaderFocusPLSubcomponent: string;
+  readsLeaderSustainability: string[];
+  readsLeaderDistrictPresence: string;
+
+  // NYC Reads — District team support
+  readsDistrictCapacityFocus: string[];
+  readsDistrictFocusStrategicPlanningSubcomponent: string;
+  readsDistrictFocusPLSubcomponent: string;
+  readsDistrictFocusDataStrategySubcomponent: string;
+  readsDistrictFocusSchoolVisitsSubcomponent: string;
+  readsDistrictSustainability: string[];
+
+  // NYC Reads — shown once per submission
+  readsGuidanceToolsUsed: string[];
+  readsGuidanceToolsOther: string;
+  readsNotes: string;
 
   // NYC Solves coach
-  solvesTouchpoint: string;
-  solvesTeacherVisitDuration: string;
-  solvesSupportedTeacherTypes: string[];
-  solvesGradeContentAreas: string[];
-  solvesTeacherProtocols: string[];
-  solvesIntervisitationDBNs: string;
-  solvesMajorityUsingHQIM: YesNo | "";
-  solvesHQIMContext: string;
-  solvesLeaderSupportDuration: string;
-  solvesLeaderSupportTrack: string;
-  solvesAdditionalSupportDuration: string;
-  solvesAdditionalSupportType: string;
+  solvesTouchpointTypes: string[];
+
+  // NYC Solves — HQIM-Based Teacher Collaboration
+  solvesHqimVisitDuration: string;
+  solvesHqimGradeContentAreas: string[];
+  solvesHqimLeaderPresent: YesNo | "";
+  solvesHqimProtocols: string[];
+
+  // NYC Solves — HSD Only: Supplemental Time Teacher Collaboration
+  solvesHsdVisitDuration: string;
+  solvesHsdGradeContentAreas: string[];
+  solvesHsdPrimaryResources: string[];
+  solvesHsdPrimaryResourcesOther: string;
+  solvesHsdProtocols: string[];
+  solvesHsdLeaderPresent: YesNo | "";
+
+  // NYC Solves — ES: Do the Math Work Shops
+  solvesEsVisitDuration: string;
+  solvesEsGradeLevels: string[];
+
+  // NYC Solves — CSD: Leader Support (at one school)
+  solvesCsdVisitDuration: string;
+  solvesCsdTrack: string;
+
+  // NYC Solves — District Wide Learning Support
+  solvesDistrictWideVisitDuration: string;
+  solvesDistrictWideSupportType: string;
+  solvesDistrictWideDBNs: string;
+
+  // NYC Solves — shown once, if HQIM/HSD/CSD selected
+  solvesPostVisitSnapshot: string;
+  solvesPostVisitFollowUp: string;
+
+  // NYC Solves — shown once per submission
+  solvesGuidanceToolsUsed: string[];
+  solvesGuidanceToolsOther: string;
+  solvesNotes: string;
 
   // Cancellation
   canceled: YesNo | "";
@@ -109,40 +159,71 @@ const INITIAL_VALUES: CoachLogValues = {
   ecTouchpoint: "",
   ecTeacherStrategies: [],
   ecLeaderCapacityFocus: [],
+
   readsIsPLSession: "",
-  readsScheduleProvided: "",
   readsHighImpactActivities: "",
-  readsTouchpoint: "",
-  readsIsMultiSchool: "",
-  readsMultiSchoolDBN: "",
+  readsTouchpointTypes: [],
+
   readsVisitDuration: "",
-  readsSupportedTeacherTypes: [],
   readsGradeBands: [],
   readsTeacherStrategies: [],
-  readsMTSSFocus: "",
+  readsTeacherSchoolLeaderPresence: "",
+  readsTeacherDistrictLeaderPresence: "",
   readsMajorityUsingHQIM: "",
   readsHQIMContext: "",
-  readsSupportedLeaders: [],
-  readsSupportedLeadersOther: "",
+  readsInterventionsScheduled: "",
+  readsInterventionsContext: "",
+
   readsLeaderVisitDuration: "",
   readsLeaderCapacityFocus: [],
-  readsSupportedDistrictLeaders: [],
-  readsSupportedDistrictLeadersOther: "",
-  readsDistrictSupports: [],
-  mtssPracticesResponses: ["", "", "", "", "", "", ""],
-  mtssAdditionalContext: "",
-  solvesTouchpoint: "",
-  solvesTeacherVisitDuration: "",
-  solvesSupportedTeacherTypes: [],
-  solvesGradeContentAreas: [],
-  solvesTeacherProtocols: [],
-  solvesIntervisitationDBNs: "",
-  solvesMajorityUsingHQIM: "",
-  solvesHQIMContext: "",
-  solvesLeaderSupportDuration: "",
-  solvesLeaderSupportTrack: "",
-  solvesAdditionalSupportDuration: "",
-  solvesAdditionalSupportType: "",
+  readsLeaderFocusSchoolVisitsSubcomponent: "",
+  readsLeaderFocusModelingSubcomponent: "",
+  readsLeaderFocusPLSubcomponent: "",
+  readsLeaderSustainability: [],
+  readsLeaderDistrictPresence: "",
+
+  readsDistrictCapacityFocus: [],
+  readsDistrictFocusStrategicPlanningSubcomponent: "",
+  readsDistrictFocusPLSubcomponent: "",
+  readsDistrictFocusDataStrategySubcomponent: "",
+  readsDistrictFocusSchoolVisitsSubcomponent: "",
+  readsDistrictSustainability: [],
+
+  readsGuidanceToolsUsed: [],
+  readsGuidanceToolsOther: "",
+  readsNotes: "",
+
+  solvesTouchpointTypes: [],
+
+  solvesHqimVisitDuration: "",
+  solvesHqimGradeContentAreas: [],
+  solvesHqimLeaderPresent: "",
+  solvesHqimProtocols: [],
+
+  solvesHsdVisitDuration: "",
+  solvesHsdGradeContentAreas: [],
+  solvesHsdPrimaryResources: [],
+  solvesHsdPrimaryResourcesOther: "",
+  solvesHsdProtocols: [],
+  solvesHsdLeaderPresent: "",
+
+  solvesEsVisitDuration: "",
+  solvesEsGradeLevels: [],
+
+  solvesCsdVisitDuration: "",
+  solvesCsdTrack: "",
+
+  solvesDistrictWideVisitDuration: "",
+  solvesDistrictWideSupportType: "",
+  solvesDistrictWideDBNs: "",
+
+  solvesPostVisitSnapshot: "",
+  solvesPostVisitFollowUp: "",
+
+  solvesGuidanceToolsUsed: [],
+  solvesGuidanceToolsOther: "",
+  solvesNotes: "",
+
   canceled: "",
   cancelReason: "",
   cancelReasonOther: "",
@@ -169,6 +250,10 @@ const readsShown = (v: CoachLogValues) =>
   shouldShowReads(v.district, v.nycCoachType);
 const solvesShown = (v: CoachLogValues) =>
   shouldShowSolves(v.district, v.nycCoachType);
+
+/** Guidance/tools + notes questions are hidden entirely for a PL session log. */
+const readsShownNotPL = (v: CoachLogValues) =>
+  readsShown(v) && v.readsIsPLSession !== "Yes";
 
 const PICK_YES_NO = "Please select Yes or No";
 const PICK_ONE = "Please select an option";
@@ -211,13 +296,6 @@ export function useCoachLogForm() {
       readsIsPLSession: whenNotCancelled((value, values) =>
         readsShown(values) && !value ? PICK_YES_NO : null
       ),
-      readsScheduleProvided: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        isReadsCapacityBuilderDistrict(values.district) &&
-        !value
-          ? PICK_YES_NO
-          : null
-      ),
       readsHighImpactActivities: whenNotCancelled((value, values) =>
         readsShown(values) &&
         isReadsCapacityBuilderDistrict(values.district) &&
@@ -225,196 +303,317 @@ export function useCoachLogForm() {
           ? PICK_YES_NO
           : null
       ),
-      readsTouchpoint: whenNotCancelled((value, values) =>
-        readsShown(values) && !value ? "Please select a touchpoint type" : null
-      ),
-      readsIsMultiSchool: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpoint) && !value
-          ? PICK_YES_NO
+      readsTouchpointTypes: whenNotCancelled((value: string[], values) =>
+        readsShown(values) && value.length === 0
+          ? "Please select at least one touchpoint type"
           : null
       ),
-      readsMultiSchoolDBN: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpoint) &&
-        values.readsIsMultiSchool === "Yes" &&
-        !value
-          ? "Please list the school DBNs"
-          : null
-      ),
+
       readsVisitDuration: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpoint) && !value
+        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
           ? PICK_ONE
-          : null
-      ),
-      readsSupportedTeacherTypes: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpoint) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
           : null
       ),
       readsGradeBands: whenNotCancelled((value: string[], values) =>
         readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpoint) &&
+        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
         value.length === 0
           ? PICK_AT_LEAST_ONE
           : null
       ),
       readsTeacherStrategies: whenNotCancelled((value: string[], values) =>
         readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpoint) &&
+        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
         value.length === 0
           ? "Please select at least one strategy"
           : null
       ),
-      readsMTSSFocus: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpoint) && !value
-          ? PICK_YES_NO
+      readsTeacherSchoolLeaderPresence: whenNotCancelled((value, values) =>
+        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+      readsTeacherDistrictLeaderPresence: whenNotCancelled((value, values) =>
+        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+          ? PICK_ONE
           : null
       ),
       readsMajorityUsingHQIM: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpoint) && !value
+        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
           ? PICK_YES_NO
           : null
       ),
       readsHQIMContext: whenNotCancelled((value, values) =>
         readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpoint) &&
+        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
         values.readsMajorityUsingHQIM === "No" &&
         !value
           ? "Please share additional context"
           : null
       ),
-      readsSupportedLeaders: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpoint) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
+      readsInterventionsScheduled: whenNotCancelled((value, values) =>
+        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+          ? PICK_YES_NO
           : null
       ),
-      readsSupportedLeadersOther: whenNotCancelled((value, values) =>
+      readsInterventionsContext: whenNotCancelled((value, values) =>
         readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpoint) &&
-        values.readsSupportedLeaders.includes(OTHER_LEADER_OPTION) &&
+        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
+        values.readsInterventionsScheduled === "No" &&
         !value
-          ? "Please specify other school leaders"
+          ? "Please share additional context"
           : null
       ),
+
       readsLeaderVisitDuration: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsLeaderBlock(values.readsTouchpoint) && !value
+        readsShown(values) && readsShowsLeaderBlock(values.readsTouchpointTypes) && !value
           ? PICK_ONE
           : null
       ),
       readsLeaderCapacityFocus: whenNotCancelled((value: string[], values) =>
         readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpoint) &&
+        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
         value.length === 0
           ? PICK_AT_LEAST_ONE
           : null
       ),
-      readsSupportedDistrictLeaders: whenNotCancelled((value: string[], values) =>
+      readsLeaderFocusSchoolVisitsSubcomponent: whenNotCancelled((value, values) =>
         readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpoint) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      readsSupportedDistrictLeadersOther: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpoint) &&
-        values.readsSupportedDistrictLeaders.includes(OTHER_LEADER_OPTION) &&
+        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+        values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_SCHOOL_VISITS) &&
         !value
-          ? "Please specify other district leaders"
+          ? PICK_ONE
           : null
       ),
-      readsDistrictSupports: whenNotCancelled((value: string[], values) =>
+      readsLeaderFocusModelingSubcomponent: whenNotCancelled((value, values) =>
         readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpoint) &&
+        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+        values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_MODELING) &&
+        !value
+          ? PICK_ONE
+          : null
+      ),
+      readsLeaderFocusPLSubcomponent: whenNotCancelled((value, values) =>
+        readsShown(values) &&
+        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+        values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_PL) &&
+        !value
+          ? PICK_ONE
+          : null
+      ),
+      readsLeaderSustainability: whenNotCancelled((value: string[], values) =>
+        readsShown(values) &&
+        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
         value.length === 0
           ? PICK_AT_LEAST_ONE
           : null
       ),
-      mtssPracticesResponses: whenNotCancelled((value: string[], values) =>
+      readsLeaderDistrictPresence: whenNotCancelled((value, values) =>
+        readsShown(values) && readsShowsLeaderBlock(values.readsTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+
+      readsDistrictCapacityFocus: whenNotCancelled((value: string[], values) =>
         readsShown(values) &&
-        readsShowsMtssPilot(values.readsTouchpoint, values.district, values.school) &&
-        value.some((r) => !r)
-          ? "Please respond to every MTSS practice statement"
+        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+        value.length === 0
+          ? PICK_AT_LEAST_ONE
+          : null
+      ),
+      readsDistrictFocusStrategicPlanningSubcomponent: whenNotCancelled((value, values) =>
+        readsShown(values) &&
+        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_STRATEGIC_PLANNING) &&
+        !value
+          ? PICK_ONE
+          : null
+      ),
+      readsDistrictFocusPLSubcomponent: whenNotCancelled((value, values) =>
+        readsShown(values) &&
+        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_PL) &&
+        !value
+          ? PICK_ONE
+          : null
+      ),
+      readsDistrictFocusDataStrategySubcomponent: whenNotCancelled((value, values) =>
+        readsShown(values) &&
+        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_DATA_STRATEGY) &&
+        !value
+          ? PICK_ONE
+          : null
+      ),
+      readsDistrictFocusSchoolVisitsSubcomponent: whenNotCancelled((value, values) =>
+        readsShown(values) &&
+        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_SCHOOL_VISITS) &&
+        !value
+          ? PICK_ONE
+          : null
+      ),
+      readsDistrictSustainability: whenNotCancelled((value: string[], values) =>
+        readsShown(values) &&
+        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+        value.length === 0
+          ? PICK_AT_LEAST_ONE
+          : null
+      ),
+
+      readsGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
+        readsShownNotPL(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+      ),
+      readsGuidanceToolsOther: whenNotCancelled((value, values) =>
+        readsShownNotPL(values) &&
+        values.readsGuidanceToolsUsed.includes(OTHER_OPTION) &&
+        !value
+          ? "Please specify"
           : null
       ),
 
       // --- NYC Solves ---------------------------------------------------
-      solvesTouchpoint: whenNotCancelled((value, values) =>
-        solvesShown(values) && !value ? "Please select a touchpoint type" : null
+      solvesTouchpointTypes: whenNotCancelled((value: string[], values) =>
+        solvesShown(values) && value.length === 0
+          ? "Please select at least one touchpoint type"
+          : null
       ),
-      solvesTeacherVisitDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsTeacherBlock(values.solvesTouchpoint) && !value
+
+      solvesHqimVisitDuration: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsHqim(values.solvesTouchpointTypes) && !value
           ? PICK_ONE
           : null
       ),
-      solvesSupportedTeacherTypes: whenNotCancelled((value: string[], values) =>
+      solvesHqimGradeContentAreas: whenNotCancelled((value: string[], values) =>
         solvesShown(values) &&
-        solvesShowsTeacherBlock(values.solvesTouchpoint) &&
+        solvesShowsHqim(values.solvesTouchpointTypes) &&
         value.length === 0
           ? PICK_AT_LEAST_ONE
           : null
       ),
-      solvesGradeContentAreas: whenNotCancelled((value: string[], values) =>
+      solvesHqimLeaderPresent: whenNotCancelled((value, values) =>
         solvesShown(values) &&
-        solvesShowsTeacherBlock(values.solvesTouchpoint) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
+        solvesShowsHqim(values.solvesTouchpointTypes) &&
+        solvesShowsHqimLeaderPresent(values.solvesHqimGradeContentAreas) &&
+        !value
+          ? PICK_YES_NO
           : null
       ),
-      solvesTeacherProtocols: whenNotCancelled((value: string[], values) =>
+      solvesHqimProtocols: whenNotCancelled((value: string[], values) =>
         solvesShown(values) &&
-        solvesShowsTeacherBlock(values.solvesTouchpoint) &&
+        solvesShowsHqim(values.solvesTouchpointTypes) &&
         value.length === 0
           ? "Please select at least one protocol"
           : null
       ),
-      solvesIntervisitationDBNs: whenNotCancelled((value, values) =>
+
+      solvesHsdVisitDuration: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsHsd(values.solvesTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+      solvesHsdGradeContentAreas: whenNotCancelled((value: string[], values) =>
         solvesShown(values) &&
-        solvesShowsTeacherBlock(values.solvesTouchpoint) &&
-        values.solvesTeacherProtocols.includes(SOLVES_INTERVISITATION_PROTOCOL) &&
+        solvesShowsHsd(values.solvesTouchpointTypes) &&
+        value.length === 0
+          ? PICK_AT_LEAST_ONE
+          : null
+      ),
+      solvesHsdPrimaryResources: whenNotCancelled((value: string[], values) =>
+        solvesShown(values) &&
+        solvesShowsHsd(values.solvesTouchpointTypes) &&
+        value.length === 0
+          ? PICK_AT_LEAST_ONE
+          : null
+      ),
+      solvesHsdPrimaryResourcesOther: whenNotCancelled((value, values) =>
+        solvesShown(values) &&
+        solvesShowsHsd(values.solvesTouchpointTypes) &&
+        values.solvesHsdPrimaryResources.includes(OTHER_OPTION) &&
+        !value
+          ? "Please specify"
+          : null
+      ),
+      solvesHsdProtocols: whenNotCancelled((value: string[], values) =>
+        solvesShown(values) &&
+        solvesShowsHsd(values.solvesTouchpointTypes) &&
+        value.length === 0
+          ? "Please select at least one protocol"
+          : null
+      ),
+      solvesHsdLeaderPresent: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsHsd(values.solvesTouchpointTypes) && !value
+          ? PICK_YES_NO
+          : null
+      ),
+
+      solvesEsVisitDuration: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsEs(values.solvesTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+      solvesEsGradeLevels: whenNotCancelled((value: string[], values) =>
+        solvesShown(values) &&
+        solvesShowsEs(values.solvesTouchpointTypes) &&
+        value.length === 0
+          ? PICK_AT_LEAST_ONE
+          : null
+      ),
+
+      solvesCsdVisitDuration: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsCsd(values.solvesTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+      solvesCsdTrack: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsCsd(values.solvesTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+
+      solvesDistrictWideVisitDuration: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsDistrictWide(values.solvesTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+      solvesDistrictWideSupportType: whenNotCancelled((value, values) =>
+        solvesShown(values) && solvesShowsDistrictWide(values.solvesTouchpointTypes) && !value
+          ? PICK_ONE
+          : null
+      ),
+      solvesDistrictWideDBNs: whenNotCancelled((value, values) =>
+        solvesShown(values) &&
+        solvesShowsDistrictWide(values.solvesTouchpointTypes) &&
+        solvesShowsDistrictWideDBNs(values.solvesDistrictWideSupportType) &&
         !value
           ? "Please list the school DBNs"
           : null
       ),
-      solvesMajorityUsingHQIM: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsTeacherBlock(values.solvesTouchpoint) && !value
-          ? PICK_YES_NO
-          : null
-      ),
-      solvesHQIMContext: whenNotCancelled((value, values) =>
+
+      solvesPostVisitSnapshot: whenNotCancelled((value, values) =>
         solvesShown(values) &&
-        solvesShowsTeacherBlock(values.solvesTouchpoint) &&
-        values.solvesMajorityUsingHQIM === "No" &&
-        !value
-          ? "Please share additional context"
-          : null
-      ),
-      solvesLeaderSupportDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsLeaderBlock(values.solvesTouchpoint) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesLeaderSupportTrack: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsLeaderBlock(values.solvesTouchpoint) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesAdditionalSupportDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
-        solvesShowsAdditionalSupport(values.solvesTouchpoint) &&
+        solvesShowsPostVisitSnapshot(values.solvesTouchpointTypes) &&
         !value
           ? PICK_ONE
           : null
       ),
-      solvesAdditionalSupportType: whenNotCancelled((value, values) =>
+      solvesPostVisitFollowUp: whenNotCancelled((value, values) =>
         solvesShown(values) &&
-        solvesShowsAdditionalSupport(values.solvesTouchpoint) &&
+        solvesShowsPostVisitSnapshot(values.solvesTouchpointTypes) &&
+        solvesShowsPostVisitFollowUp(values.solvesPostVisitSnapshot) &&
         !value
-          ? PICK_ONE
+          ? "Please share additional information"
+          : null
+      ),
+
+      solvesGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
+        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+      ),
+      solvesGuidanceToolsOther: whenNotCancelled((value, values) =>
+        solvesShown(values) &&
+        values.solvesGuidanceToolsUsed.includes(OTHER_OPTION) &&
+        !value
+          ? "Please specify"
           : null
       ),
 

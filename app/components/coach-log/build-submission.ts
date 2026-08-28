@@ -8,6 +8,20 @@ import {
   shouldShowSubSchool,
 } from "./constants";
 import type { CoachLogValues } from "./hooks/use-coach-log-form";
+import {
+  readsShowsDistrictBlock,
+  readsShowsLeaderBlock,
+  readsShowsTeacherBlock,
+  solvesShowsCsd,
+  solvesShowsDistrictWide,
+  solvesShowsDistrictWideDBNs,
+  solvesShowsEs,
+  solvesShowsHqim,
+  solvesShowsHqimLeaderPresent,
+  solvesShowsHsd,
+  solvesShowsPostVisitFollowUp,
+  solvesShowsPostVisitSnapshot,
+} from "./questions/nyc/constants";
 
 type Coach = { name: string; mondayProfileId: string };
 
@@ -32,8 +46,24 @@ export function buildCoachLogSubmission(
     !cancelled && shouldShowReads(values.district, values.nycCoachType);
   const sendSolves =
     !cancelled && shouldShowSolves(values.district, values.nycCoachType);
+  const sendReadsGuidance = sendReads && values.readsIsPLSession !== "Yes";
   const sendCoachees = !cancelled && values.did1on1 === "Yes";
   const sendGroup = !cancelled && values.didGroupCoaching === "Yes";
+
+  const readsTouchpointTypes = sendReads ? values.readsTouchpointTypes : [];
+  const sendReadsTeacher = sendReads && readsShowsTeacherBlock(readsTouchpointTypes);
+  const sendReadsLeader = sendReads && readsShowsLeaderBlock(readsTouchpointTypes);
+  const sendReadsDistrict = sendReads && readsShowsDistrictBlock(readsTouchpointTypes);
+
+  const solvesTouchpointTypes = sendSolves ? values.solvesTouchpointTypes : [];
+  const sendSolvesHqim = sendSolves && solvesShowsHqim(solvesTouchpointTypes);
+  const sendSolvesHsd = sendSolves && solvesShowsHsd(solvesTouchpointTypes);
+  const sendSolvesEs = sendSolves && solvesShowsEs(solvesTouchpointTypes);
+  const sendSolvesCsd = sendSolves && solvesShowsCsd(solvesTouchpointTypes);
+  const sendSolvesDistrictWide =
+    sendSolves && solvesShowsDistrictWide(solvesTouchpointTypes);
+  const sendSolvesPostVisitSnapshot =
+    sendSolves && solvesShowsPostVisitSnapshot(solvesTouchpointTypes);
 
   return {
     coachName: coach.name,
@@ -51,53 +81,122 @@ export function buildCoachLogSubmission(
 
     // NYC Reads
     readsIsPLSession: sendReads ? values.readsIsPLSession : "",
-    readsScheduleProvided: sendReads ? values.readsScheduleProvided : "",
     readsHighImpactActivities: sendReads ? values.readsHighImpactActivities : "",
-    readsTouchpoint: sendReads ? values.readsTouchpoint : "",
-    readsIsMultiSchool: sendReads ? values.readsIsMultiSchool : "",
-    readsMultiSchoolDBN: sendReads ? values.readsMultiSchoolDBN : "",
-    readsVisitDuration: sendReads ? values.readsVisitDuration : "",
-    readsSupportedTeacherTypes: sendReads ? values.readsSupportedTeacherTypes : [],
-    readsGradeBands: sendReads ? values.readsGradeBands : [],
-    readsTeacherStrategies: sendReads ? values.readsTeacherStrategies : [],
-    readsMTSSFocus: sendReads ? values.readsMTSSFocus : "",
-    readsMajorityUsingHQIM: sendReads ? values.readsMajorityUsingHQIM : "",
-    readsHQIMContext: sendReads ? values.readsHQIMContext : "",
-    readsSupportedLeaders: sendReads ? values.readsSupportedLeaders : [],
-    readsSupportedLeadersOther: sendReads ? values.readsSupportedLeadersOther : "",
-    readsLeaderVisitDuration: sendReads ? values.readsLeaderVisitDuration : "",
-    readsLeaderCapacityFocus: sendReads ? values.readsLeaderCapacityFocus : [],
-    readsSupportedDistrictLeaders: sendReads
-      ? values.readsSupportedDistrictLeaders
-      : [],
-    readsSupportedDistrictLeadersOther: sendReads
-      ? values.readsSupportedDistrictLeadersOther
+    readsTouchpointTypes,
+
+    readsVisitDuration: sendReadsTeacher ? values.readsVisitDuration : "",
+    readsGradeBands: sendReadsTeacher ? values.readsGradeBands : [],
+    readsTeacherStrategies: sendReadsTeacher ? values.readsTeacherStrategies : [],
+    readsTeacherSchoolLeaderPresence: sendReadsTeacher
+      ? values.readsTeacherSchoolLeaderPresence
       : "",
-    readsDistrictSupports: sendReads ? values.readsDistrictSupports : [],
-    mtssPracticesResponses: sendReads ? values.mtssPracticesResponses : [],
-    mtssAdditionalContext: sendReads ? values.mtssAdditionalContext : "",
+    readsTeacherDistrictLeaderPresence: sendReadsTeacher
+      ? values.readsTeacherDistrictLeaderPresence
+      : "",
+    readsMajorityUsingHQIM: sendReadsTeacher ? values.readsMajorityUsingHQIM : "",
+    readsHQIMContext:
+      sendReadsTeacher && values.readsMajorityUsingHQIM === "No"
+        ? values.readsHQIMContext
+        : "",
+    readsInterventionsScheduled: sendReadsTeacher
+      ? values.readsInterventionsScheduled
+      : "",
+    readsInterventionsContext:
+      sendReadsTeacher && values.readsInterventionsScheduled === "No"
+        ? values.readsInterventionsContext
+        : "",
+
+    readsLeaderVisitDuration: sendReadsLeader ? values.readsLeaderVisitDuration : "",
+    readsLeaderCapacityFocus: sendReadsLeader ? values.readsLeaderCapacityFocus : [],
+    readsLeaderFocusSchoolVisitsSubcomponent: sendReadsLeader
+      ? values.readsLeaderFocusSchoolVisitsSubcomponent
+      : "",
+    readsLeaderFocusModelingSubcomponent: sendReadsLeader
+      ? values.readsLeaderFocusModelingSubcomponent
+      : "",
+    readsLeaderFocusPLSubcomponent: sendReadsLeader
+      ? values.readsLeaderFocusPLSubcomponent
+      : "",
+    readsLeaderSustainability: sendReadsLeader ? values.readsLeaderSustainability : [],
+    readsLeaderDistrictPresence: sendReadsLeader
+      ? values.readsLeaderDistrictPresence
+      : "",
+
+    readsDistrictCapacityFocus: sendReadsDistrict
+      ? values.readsDistrictCapacityFocus
+      : [],
+    readsDistrictFocusStrategicPlanningSubcomponent: sendReadsDistrict
+      ? values.readsDistrictFocusStrategicPlanningSubcomponent
+      : "",
+    readsDistrictFocusPLSubcomponent: sendReadsDistrict
+      ? values.readsDistrictFocusPLSubcomponent
+      : "",
+    readsDistrictFocusDataStrategySubcomponent: sendReadsDistrict
+      ? values.readsDistrictFocusDataStrategySubcomponent
+      : "",
+    readsDistrictFocusSchoolVisitsSubcomponent: sendReadsDistrict
+      ? values.readsDistrictFocusSchoolVisitsSubcomponent
+      : "",
+    readsDistrictSustainability: sendReadsDistrict
+      ? values.readsDistrictSustainability
+      : [],
+
+    readsGuidanceToolsUsed: sendReadsGuidance ? values.readsGuidanceToolsUsed : [],
+    readsGuidanceToolsOther: sendReadsGuidance ? values.readsGuidanceToolsOther : "",
+    readsNotes: sendReadsGuidance ? values.readsNotes : "",
 
     // NYC Solves
-    solvesTouchpoint: sendSolves ? values.solvesTouchpoint : "",
-    solvesTeacherVisitDuration: sendSolves ? values.solvesTeacherVisitDuration : "",
-    solvesSupportedTeacherTypes: sendSolves
-      ? values.solvesSupportedTeacherTypes
+    solvesTouchpointTypes,
+
+    solvesHqimVisitDuration: sendSolvesHqim ? values.solvesHqimVisitDuration : "",
+    solvesHqimGradeContentAreas: sendSolvesHqim
+      ? values.solvesHqimGradeContentAreas
       : [],
-    solvesGradeContentAreas: sendSolves ? values.solvesGradeContentAreas : [],
-    solvesTeacherProtocols: sendSolves ? values.solvesTeacherProtocols : [],
-    solvesIntervisitationDBNs: sendSolves ? values.solvesIntervisitationDBNs : "",
-    solvesMajorityUsingHQIM: sendSolves ? values.solvesMajorityUsingHQIM : "",
-    solvesHQIMContext: sendSolves ? values.solvesHQIMContext : "",
-    solvesLeaderSupportDuration: sendSolves
-      ? values.solvesLeaderSupportDuration
+    solvesHqimLeaderPresent:
+      sendSolvesHqim && solvesShowsHqimLeaderPresent(values.solvesHqimGradeContentAreas)
+        ? values.solvesHqimLeaderPresent
+        : "",
+    solvesHqimProtocols: sendSolvesHqim ? values.solvesHqimProtocols : [],
+
+    solvesHsdVisitDuration: sendSolvesHsd ? values.solvesHsdVisitDuration : "",
+    solvesHsdGradeContentAreas: sendSolvesHsd ? values.solvesHsdGradeContentAreas : [],
+    solvesHsdPrimaryResources: sendSolvesHsd ? values.solvesHsdPrimaryResources : [],
+    solvesHsdPrimaryResourcesOther: sendSolvesHsd
+      ? values.solvesHsdPrimaryResourcesOther
       : "",
-    solvesLeaderSupportTrack: sendSolves ? values.solvesLeaderSupportTrack : "",
-    solvesAdditionalSupportDuration: sendSolves
-      ? values.solvesAdditionalSupportDuration
+    solvesHsdProtocols: sendSolvesHsd ? values.solvesHsdProtocols : [],
+    solvesHsdLeaderPresent: sendSolvesHsd ? values.solvesHsdLeaderPresent : "",
+
+    solvesEsVisitDuration: sendSolvesEs ? values.solvesEsVisitDuration : "",
+    solvesEsGradeLevels: sendSolvesEs ? values.solvesEsGradeLevels : [],
+
+    solvesCsdVisitDuration: sendSolvesCsd ? values.solvesCsdVisitDuration : "",
+    solvesCsdTrack: sendSolvesCsd ? values.solvesCsdTrack : "",
+
+    solvesDistrictWideVisitDuration: sendSolvesDistrictWide
+      ? values.solvesDistrictWideVisitDuration
       : "",
-    solvesAdditionalSupportType: sendSolves
-      ? values.solvesAdditionalSupportType
+    solvesDistrictWideSupportType: sendSolvesDistrictWide
+      ? values.solvesDistrictWideSupportType
       : "",
+    solvesDistrictWideDBNs:
+      sendSolvesDistrictWide &&
+      solvesShowsDistrictWideDBNs(values.solvesDistrictWideSupportType)
+        ? values.solvesDistrictWideDBNs
+        : "",
+
+    solvesPostVisitSnapshot: sendSolvesPostVisitSnapshot
+      ? values.solvesPostVisitSnapshot
+      : "",
+    solvesPostVisitFollowUp:
+      sendSolvesPostVisitSnapshot &&
+      solvesShowsPostVisitFollowUp(values.solvesPostVisitSnapshot)
+        ? values.solvesPostVisitFollowUp
+        : "",
+
+    solvesGuidanceToolsUsed: sendSolves ? values.solvesGuidanceToolsUsed : [],
+    solvesGuidanceToolsOther: sendSolves ? values.solvesGuidanceToolsOther : "",
+    solvesNotes: sendSolves ? values.solvesNotes : "",
 
     // Cancellation
     canceled: values.canceled,

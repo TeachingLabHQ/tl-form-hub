@@ -115,41 +115,80 @@ export type CoachLogSubmission = {
 
   // NYC Reads coach
   readsIsPLSession: YesNo | "";
-  readsScheduleProvided: YesNo | "";
   readsHighImpactActivities: YesNo | "";
-  readsTouchpoint: string;
-  readsIsMultiSchool: YesNo | "";
-  readsMultiSchoolDBN: string;
+  readsTouchpointTypes: string[];
+
+  // NYC Reads — Teacher team support
   readsVisitDuration: string;
-  readsSupportedTeacherTypes: string[];
   readsGradeBands: string[];
   readsTeacherStrategies: string[];
-  readsMTSSFocus: YesNo | "";
+  readsTeacherSchoolLeaderPresence: string;
+  readsTeacherDistrictLeaderPresence: string;
   readsMajorityUsingHQIM: YesNo | "";
   readsHQIMContext: string;
-  readsSupportedLeaders: string[];
-  readsSupportedLeadersOther: string;
+  readsInterventionsScheduled: YesNo | "";
+  readsInterventionsContext: string;
+
+  // NYC Reads — School Leader/Leadership team support
   readsLeaderVisitDuration: string;
   readsLeaderCapacityFocus: string[];
-  readsSupportedDistrictLeaders: string[];
-  readsSupportedDistrictLeadersOther: string;
-  readsDistrictSupports: string[];
-  mtssPracticesResponses: string[];
-  mtssAdditionalContext: string;
+  readsLeaderFocusSchoolVisitsSubcomponent: string;
+  readsLeaderFocusModelingSubcomponent: string;
+  readsLeaderFocusPLSubcomponent: string;
+  readsLeaderSustainability: string[];
+  readsLeaderDistrictPresence: string;
+
+  // NYC Reads — District team support
+  readsDistrictCapacityFocus: string[];
+  readsDistrictFocusStrategicPlanningSubcomponent: string;
+  readsDistrictFocusPLSubcomponent: string;
+  readsDistrictFocusDataStrategySubcomponent: string;
+  readsDistrictFocusSchoolVisitsSubcomponent: string;
+  readsDistrictSustainability: string[];
+
+  // NYC Reads — shown once per submission
+  readsGuidanceToolsUsed: string[];
+  readsGuidanceToolsOther: string;
+  readsNotes: string;
 
   // NYC Solves coach
-  solvesTouchpoint: string;
-  solvesTeacherVisitDuration: string;
-  solvesSupportedTeacherTypes: string[];
-  solvesGradeContentAreas: string[];
-  solvesTeacherProtocols: string[];
-  solvesIntervisitationDBNs: string;
-  solvesMajorityUsingHQIM: YesNo | "";
-  solvesHQIMContext: string;
-  solvesLeaderSupportDuration: string;
-  solvesLeaderSupportTrack: string;
-  solvesAdditionalSupportDuration: string;
-  solvesAdditionalSupportType: string;
+  solvesTouchpointTypes: string[];
+
+  // NYC Solves — HQIM-Based Teacher Collaboration
+  solvesHqimVisitDuration: string;
+  solvesHqimGradeContentAreas: string[];
+  solvesHqimLeaderPresent: YesNo | "";
+  solvesHqimProtocols: string[];
+
+  // NYC Solves — HSD Only: Supplemental Time Teacher Collaboration
+  solvesHsdVisitDuration: string;
+  solvesHsdGradeContentAreas: string[];
+  solvesHsdPrimaryResources: string[];
+  solvesHsdPrimaryResourcesOther: string;
+  solvesHsdProtocols: string[];
+  solvesHsdLeaderPresent: YesNo | "";
+
+  // NYC Solves — ES: Do the Math Work Shops
+  solvesEsVisitDuration: string;
+  solvesEsGradeLevels: string[];
+
+  // NYC Solves — CSD: Leader Support (at one school)
+  solvesCsdVisitDuration: string;
+  solvesCsdTrack: string;
+
+  // NYC Solves — District Wide Learning Support
+  solvesDistrictWideVisitDuration: string;
+  solvesDistrictWideSupportType: string;
+  solvesDistrictWideDBNs: string;
+
+  // NYC Solves — shown once, if HQIM/HSD/CSD selected
+  solvesPostVisitSnapshot: string;
+  solvesPostVisitFollowUp: string;
+
+  // NYC Solves — shown once per submission
+  solvesGuidanceToolsUsed: string[];
+  solvesGuidanceToolsOther: string;
+  solvesNotes: string;
 
   // Cancellation
   canceled: YesNo | "";
