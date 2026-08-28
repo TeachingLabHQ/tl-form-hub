@@ -7,18 +7,33 @@ import {
 import { coachLogService } from "~/domains/coach-log/service";
 import { insertMondayData } from "~/domains/utils";
 import {
+  OTHER_OPTION,
   readsShowsDistrictBlock,
   readsShowsLeaderBlock,
   readsShowsTeacherBlock,
-  SOLVES_INTERVISITATION_PROTOCOL,
-  solvesShowsAdditionalSupport,
-  solvesShowsLeaderBlock,
-  solvesShowsTeacherBlock,
+  solvesShowsCsd,
+  solvesShowsDistrictWide,
+  solvesShowsDistrictWideDBNs,
+  solvesShowsEs,
+  solvesShowsHqim,
+  solvesShowsHqimLeaderPresent,
+  solvesShowsHsd,
+  solvesShowsPostVisitFollowUp,
+  solvesShowsPostVisitSnapshot,
 } from "~/components/coach-log/questions/nyc/constants";
 
 // Joins a multi-select array into the comma-separated string the Monday text
 // columns expect (matching the legacy form's serialization).
 const csv = (values: string[] | undefined) => (values ?? []).join(", ");
+
+// Some "Other" write-ins share their parent multi-select's Monday column
+// (rather than getting their own), so the write-in replaces the literal
+// "Other" entry in the serialized list instead of being written separately
+// (which would just have one silently overwrite the other).
+const csvWithOtherDetail = (values: string[] | undefined, otherText: string) =>
+  (values ?? [])
+    .map((v) => (v === OTHER_OPTION && otherText ? `Other: ${otherText}` : v))
+    .join(", ");
 
 // Session date is YYYY-MM-DD (required); guard against an empty value just in
 // case so we never write a blank date column.
@@ -27,6 +42,68 @@ const isRealDate = (value: string) => !!value;
 // Reuses the legacy Coach Log Form board + column schema.
 const BOARD_ID = COACH_LOG_BOARD_ID;
 const GROUP_ID = "topics";
+
+// ---------------------------------------------------------------------------
+// Monday column IDs for the FY27 NYC Reads/Solves overhaul, on board
+// `COACH_LOG_BOARD_ID` (see coach-log/repository.ts). A few reuse a column
+// from the pre-overhaul field of the same shape (touchpoint-type selects,
+// readsDistrictCapacityFocus); everything else is a newly added column.
+// ---------------------------------------------------------------------------
+const COLUMN = {
+  // NYC Reads — top-level
+  readsTouchpointTypes: "text_mktgtahx", // reused: pre-overhaul readsTouchpoint/ecTouchpoint column
+  // NYC Reads — Teacher team support
+  readsTeacherSchoolLeaderPresence: "text_mm6n1qtd",
+  readsTeacherDistrictLeaderPresence: "text_mm6nqxvh",
+  readsInterventionsScheduled: "text_mm6n77va",
+  readsInterventionsContext: "text_mm6ndxbw",
+  // NYC Reads — School Leader/Leadership team support
+  readsLeaderFocusSchoolVisitsSubcomponent: "text_mm6ngab7",
+  readsLeaderFocusModelingSubcomponent: "text_mm6n1fgs",
+  readsLeaderFocusPLSubcomponent: "text_mm6ne4nr",
+  readsLeaderSustainability: "text_mm6nbxvj",
+  readsLeaderDistrictPresence: "text_mm6nc9gw",
+  // NYC Reads — District team support
+  readsDistrictCapacityFocus: "text_mktg32xj", // reused: pre-overhaul readsDistrictSupports column
+  readsDistrictFocusStrategicPlanningSubcomponent: "text_mm6naqm5",
+  readsDistrictFocusPLSubcomponent: "text_mm6nnpxr",
+  readsDistrictFocusDataStrategySubcomponent: "text_mm6nns49",
+  readsDistrictFocusSchoolVisitsSubcomponent: "text_mm6n32z3",
+  readsDistrictSustainability: "text_mm6n46cw",
+  // NYC Reads — shown once per submission
+  readsGuidanceToolsUsed: "text_mm6ngq1v", // also holds the "Other" write-in (see csvWithOtherDetail)
+  readsNotes: "text_mm6nqjfn",
+
+  // NYC Solves — top-level
+  solvesTouchpointTypes: "text_mkthbvw5", // reused: pre-overhaul solvesTouchpoint column
+  // NYC Solves — HQIM-Based Teacher Collaboration
+  solvesHqimVisitDuration: "text_mkthtzhb",
+  solvesHqimGradeContentAreas: "text_mkth9zzf",
+  solvesHqimLeaderPresent: "text_mm6nt9f8",
+  solvesHqimProtocols: "text_mkthqrth",
+  // NYC Solves — HSD Only: Supplemental Time Teacher Collaboration
+  solvesHsdVisitDuration: "text_mm6nqx9x",
+  solvesHsdGradeContentAreas: "text_mm6ny98w",
+  solvesHsdPrimaryResources: "text_mkthjyrx", // also holds the "Other" write-in (see csvWithOtherDetail)
+  solvesHsdProtocols: "text_mm6n3qbz",
+  solvesHsdLeaderPresent: "text_mm6nk3m3",
+  // NYC Solves — ES: Do the Math Work Shops
+  solvesEsVisitDuration: "text_mm6nv7jp",
+  solvesEsGradeLevels: "text_mm6ne01j",
+  // NYC Solves — CSD: Leader Support (at one school)
+  solvesCsdVisitDuration: "text_mm6nvcvz",
+  solvesCsdTrack: "text_mm6nhv0b",
+  // NYC Solves — District Wide Learning Support
+  solvesDistrictWideVisitDuration: "text_mm6nx5fv",
+  solvesDistrictWideSupportType: "text_mm6n3zqp",
+  solvesDistrictWideDBNs: "text_mm6ncnt7",
+  // NYC Solves — shown once, if HQIM/HSD/CSD selected
+  solvesPostVisitSnapshot: "text_mm6n9813",
+  solvesPostVisitFollowUp: "text_mm6ne4t8",
+  // NYC Solves — shown once per submission
+  solvesGuidanceToolsUsed: "text_mm6n3rjz", // also holds the "Other" write-in (see csvWithOtherDetail)
+  solvesNotes: "text_mm6ntz5c",
+} as const;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -46,39 +123,56 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     ecTeacherStrategies,
     ecLeaderCapacityFocus,
     readsIsPLSession,
-    readsScheduleProvided,
     readsHighImpactActivities,
-    readsTouchpoint,
-    readsIsMultiSchool,
-    readsMultiSchoolDBN,
+    readsTouchpointTypes,
     readsVisitDuration,
-    readsSupportedTeacherTypes,
     readsGradeBands,
     readsTeacherStrategies,
-    readsMTSSFocus,
+    readsTeacherSchoolLeaderPresence,
+    readsTeacherDistrictLeaderPresence,
     readsMajorityUsingHQIM,
     readsHQIMContext,
-    readsSupportedLeaders,
-    readsSupportedLeadersOther,
+    readsInterventionsScheduled,
+    readsInterventionsContext,
     readsLeaderVisitDuration,
     readsLeaderCapacityFocus,
-    readsSupportedDistrictLeaders,
-    readsSupportedDistrictLeadersOther,
-    readsDistrictSupports,
-    mtssPracticesResponses,
-    mtssAdditionalContext,
-    solvesTouchpoint,
-    solvesTeacherVisitDuration,
-    solvesSupportedTeacherTypes,
-    solvesGradeContentAreas,
-    solvesTeacherProtocols,
-    solvesIntervisitationDBNs,
-    solvesMajorityUsingHQIM,
-    solvesHQIMContext,
-    solvesLeaderSupportDuration,
-    solvesLeaderSupportTrack,
-    solvesAdditionalSupportDuration,
-    solvesAdditionalSupportType,
+    readsLeaderFocusSchoolVisitsSubcomponent,
+    readsLeaderFocusModelingSubcomponent,
+    readsLeaderFocusPLSubcomponent,
+    readsLeaderSustainability,
+    readsLeaderDistrictPresence,
+    readsDistrictCapacityFocus,
+    readsDistrictFocusStrategicPlanningSubcomponent,
+    readsDistrictFocusPLSubcomponent,
+    readsDistrictFocusDataStrategySubcomponent,
+    readsDistrictFocusSchoolVisitsSubcomponent,
+    readsDistrictSustainability,
+    readsGuidanceToolsUsed,
+    readsGuidanceToolsOther,
+    readsNotes,
+    solvesTouchpointTypes,
+    solvesHqimVisitDuration,
+    solvesHqimGradeContentAreas,
+    solvesHqimLeaderPresent,
+    solvesHqimProtocols,
+    solvesHsdVisitDuration,
+    solvesHsdGradeContentAreas,
+    solvesHsdPrimaryResources,
+    solvesHsdPrimaryResourcesOther,
+    solvesHsdProtocols,
+    solvesHsdLeaderPresent,
+    solvesEsVisitDuration,
+    solvesEsGradeLevels,
+    solvesCsdVisitDuration,
+    solvesCsdTrack,
+    solvesDistrictWideVisitDuration,
+    solvesDistrictWideSupportType,
+    solvesDistrictWideDBNs,
+    solvesPostVisitSnapshot,
+    solvesPostVisitFollowUp,
+    solvesGuidanceToolsUsed,
+    solvesGuidanceToolsOther,
+    solvesNotes,
     canceled,
     cancelReason,
     cancelReasonOther,
@@ -148,94 +242,173 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // NYC Reads (the client only sends these for a Reads coach). Each touchpoint
     // block is gated again here so stale hidden values are never written.
-    if (readsTouchpoint) {
+    if (readsTouchpointTypes?.length) {
       if (readsIsPLSession) parentColumns.text_mkv0r1t = readsIsPLSession;
-      if (readsScheduleProvided) parentColumns.text_mm1erdxw = readsScheduleProvided;
       if (readsHighImpactActivities)
         parentColumns.text_mm1ec7kg = readsHighImpactActivities;
-      parentColumns.text_mktgtahx = readsTouchpoint;
+      parentColumns[COLUMN.readsTouchpointTypes] = csv(readsTouchpointTypes);
 
-      if (readsShowsTeacherBlock(readsTouchpoint)) {
-        if (readsIsMultiSchool) parentColumns.text_mktgedch = readsIsMultiSchool;
-        if (readsIsMultiSchool === "Yes" && readsMultiSchoolDBN)
-          parentColumns.text_mkvmnx9g = readsMultiSchoolDBN;
+      if (readsShowsTeacherBlock(readsTouchpointTypes)) {
         if (readsVisitDuration) parentColumns.text_mktgt2ah = readsVisitDuration;
-        if (readsSupportedTeacherTypes?.length)
-          parentColumns.text_mktgnqcx = csv(readsSupportedTeacherTypes);
         if (readsGradeBands?.length)
           parentColumns.text_mktgz9wm = csv(readsGradeBands);
         if (readsTeacherStrategies?.length)
           parentColumns.text_mktgaftm = csv(readsTeacherStrategies);
-        if (readsMTSSFocus) parentColumns.text_mkv0fs1n = readsMTSSFocus;
+        if (readsTeacherSchoolLeaderPresence)
+          parentColumns[COLUMN.readsTeacherSchoolLeaderPresence] =
+            readsTeacherSchoolLeaderPresence;
+        if (readsTeacherDistrictLeaderPresence)
+          parentColumns[COLUMN.readsTeacherDistrictLeaderPresence] =
+            readsTeacherDistrictLeaderPresence;
         if (readsMajorityUsingHQIM)
           parentColumns.text_mkv0w2eq = readsMajorityUsingHQIM;
         if (readsMajorityUsingHQIM === "No" && readsHQIMContext)
           parentColumns.text_mkxspvf5 = readsHQIMContext;
+        if (readsInterventionsScheduled)
+          parentColumns[COLUMN.readsInterventionsScheduled] =
+            readsInterventionsScheduled;
+        if (readsInterventionsScheduled === "No" && readsInterventionsContext)
+          parentColumns[COLUMN.readsInterventionsContext] =
+            readsInterventionsContext;
       }
 
-      if (readsShowsLeaderBlock(readsTouchpoint)) {
-        if (readsSupportedLeaders?.length)
-          parentColumns.text_mktg8pn8 = csv(readsSupportedLeaders);
-        if (readsSupportedLeadersOther)
-          parentColumns.text_mktgph5d = readsSupportedLeadersOther;
+      if (readsShowsLeaderBlock(readsTouchpointTypes)) {
         if (readsLeaderVisitDuration)
           parentColumns.text_mktggbxt = readsLeaderVisitDuration;
         if (readsLeaderCapacityFocus?.length)
           parentColumns.text_mktggp36 = csv(readsLeaderCapacityFocus);
+        if (readsLeaderFocusSchoolVisitsSubcomponent)
+          parentColumns[COLUMN.readsLeaderFocusSchoolVisitsSubcomponent] =
+            readsLeaderFocusSchoolVisitsSubcomponent;
+        if (readsLeaderFocusModelingSubcomponent)
+          parentColumns[COLUMN.readsLeaderFocusModelingSubcomponent] =
+            readsLeaderFocusModelingSubcomponent;
+        if (readsLeaderFocusPLSubcomponent)
+          parentColumns[COLUMN.readsLeaderFocusPLSubcomponent] =
+            readsLeaderFocusPLSubcomponent;
+        if (readsLeaderSustainability?.length)
+          parentColumns[COLUMN.readsLeaderSustainability] = csv(
+            readsLeaderSustainability
+          );
+        if (readsLeaderDistrictPresence)
+          parentColumns[COLUMN.readsLeaderDistrictPresence] =
+            readsLeaderDistrictPresence;
       }
 
-      if (readsShowsDistrictBlock(readsTouchpoint)) {
-        if (readsSupportedDistrictLeaders?.length)
-          parentColumns.text_mktgzc4s = csv(readsSupportedDistrictLeaders);
-        if (readsSupportedDistrictLeadersOther)
-          parentColumns.text_mktgexpt = readsSupportedDistrictLeadersOther;
-        if (readsDistrictSupports?.length)
-          parentColumns.text_mktg32xj = csv(readsDistrictSupports);
+      if (readsShowsDistrictBlock(readsTouchpointTypes)) {
+        if (readsDistrictCapacityFocus?.length)
+          parentColumns[COLUMN.readsDistrictCapacityFocus] = csv(
+            readsDistrictCapacityFocus
+          );
+        if (readsDistrictFocusStrategicPlanningSubcomponent)
+          parentColumns[COLUMN.readsDistrictFocusStrategicPlanningSubcomponent] =
+            readsDistrictFocusStrategicPlanningSubcomponent;
+        if (readsDistrictFocusPLSubcomponent)
+          parentColumns[COLUMN.readsDistrictFocusPLSubcomponent] =
+            readsDistrictFocusPLSubcomponent;
+        if (readsDistrictFocusDataStrategySubcomponent)
+          parentColumns[COLUMN.readsDistrictFocusDataStrategySubcomponent] =
+            readsDistrictFocusDataStrategySubcomponent;
+        if (readsDistrictFocusSchoolVisitsSubcomponent)
+          parentColumns[COLUMN.readsDistrictFocusSchoolVisitsSubcomponent] =
+            readsDistrictFocusSchoolVisitsSubcomponent;
+        if (readsDistrictSustainability?.length)
+          parentColumns[COLUMN.readsDistrictSustainability] = csv(
+            readsDistrictSustainability
+          );
       }
 
-      if (mtssPracticesResponses?.some((r) => r))
-        parentColumns.long_text_mkxsd1qs = mtssPracticesResponses.join(" | ");
-      if (mtssAdditionalContext)
-        parentColumns.long_text_mkxsxkdh = mtssAdditionalContext;
+      if (readsGuidanceToolsUsed?.length)
+        parentColumns[COLUMN.readsGuidanceToolsUsed] = csvWithOtherDetail(
+          readsGuidanceToolsUsed,
+          readsGuidanceToolsOther
+        );
+      if (readsNotes) parentColumns[COLUMN.readsNotes] = readsNotes;
     }
 
     // NYC Solves (client only sends these for a Solves coach).
-    if (solvesTouchpoint) {
-      parentColumns.text_mkthbvw5 = solvesTouchpoint;
+    if (solvesTouchpointTypes?.length) {
+      parentColumns[COLUMN.solvesTouchpointTypes] = csv(solvesTouchpointTypes);
 
-      if (solvesShowsTeacherBlock(solvesTouchpoint)) {
-        if (solvesTeacherVisitDuration)
-          parentColumns.text_mkthtzhb = solvesTeacherVisitDuration;
-        if (solvesSupportedTeacherTypes?.length)
-          parentColumns.text_mkthqes0 = csv(solvesSupportedTeacherTypes);
-        if (solvesGradeContentAreas?.length)
-          parentColumns.text_mkth9zzf = csv(solvesGradeContentAreas);
-        if (solvesTeacherProtocols?.length)
-          parentColumns.text_mkthqrth = csv(solvesTeacherProtocols);
+      if (solvesShowsHqim(solvesTouchpointTypes)) {
+        if (solvesHqimVisitDuration)
+          parentColumns[COLUMN.solvesHqimVisitDuration] = solvesHqimVisitDuration;
+        if (solvesHqimGradeContentAreas?.length)
+          parentColumns[COLUMN.solvesHqimGradeContentAreas] = csv(
+            solvesHqimGradeContentAreas
+          );
         if (
-          solvesTeacherProtocols?.includes(SOLVES_INTERVISITATION_PROTOCOL) &&
-          solvesIntervisitationDBNs
+          solvesShowsHqimLeaderPresent(solvesHqimGradeContentAreas ?? []) &&
+          solvesHqimLeaderPresent
         )
-          parentColumns.text_mkth5zrt = solvesIntervisitationDBNs;
-        if (solvesMajorityUsingHQIM)
-          parentColumns.text_mkttj6kq = solvesMajorityUsingHQIM;
-        if (solvesMajorityUsingHQIM === "No" && solvesHQIMContext)
-          parentColumns.text_mkxsvgng = solvesHQIMContext;
+          parentColumns[COLUMN.solvesHqimLeaderPresent] = solvesHqimLeaderPresent;
+        if (solvesHqimProtocols?.length)
+          parentColumns[COLUMN.solvesHqimProtocols] = csv(solvesHqimProtocols);
       }
 
-      if (solvesShowsLeaderBlock(solvesTouchpoint)) {
-        if (solvesLeaderSupportDuration)
-          parentColumns.text_mkth7jye = solvesLeaderSupportDuration;
-        if (solvesLeaderSupportTrack)
-          parentColumns.text_mkthjyrx = solvesLeaderSupportTrack;
+      if (solvesShowsHsd(solvesTouchpointTypes)) {
+        if (solvesHsdVisitDuration)
+          parentColumns[COLUMN.solvesHsdVisitDuration] = solvesHsdVisitDuration;
+        if (solvesHsdGradeContentAreas?.length)
+          parentColumns[COLUMN.solvesHsdGradeContentAreas] = csv(
+            solvesHsdGradeContentAreas
+          );
+        if (solvesHsdPrimaryResources?.length)
+          parentColumns[COLUMN.solvesHsdPrimaryResources] = csvWithOtherDetail(
+            solvesHsdPrimaryResources,
+            solvesHsdPrimaryResourcesOther
+          );
+        if (solvesHsdProtocols?.length)
+          parentColumns[COLUMN.solvesHsdProtocols] = csv(solvesHsdProtocols);
+        if (solvesHsdLeaderPresent)
+          parentColumns[COLUMN.solvesHsdLeaderPresent] = solvesHsdLeaderPresent;
       }
 
-      if (solvesShowsAdditionalSupport(solvesTouchpoint)) {
-        if (solvesAdditionalSupportDuration)
-          parentColumns.text_mkth5kcn = solvesAdditionalSupportDuration;
-        if (solvesAdditionalSupportType)
-          parentColumns.text_mkthwj61 = solvesAdditionalSupportType;
+      if (solvesShowsEs(solvesTouchpointTypes)) {
+        if (solvesEsVisitDuration)
+          parentColumns[COLUMN.solvesEsVisitDuration] = solvesEsVisitDuration;
+        if (solvesEsGradeLevels?.length)
+          parentColumns[COLUMN.solvesEsGradeLevels] = csv(solvesEsGradeLevels);
       }
+
+      if (solvesShowsCsd(solvesTouchpointTypes)) {
+        if (solvesCsdVisitDuration)
+          parentColumns[COLUMN.solvesCsdVisitDuration] = solvesCsdVisitDuration;
+        if (solvesCsdTrack) parentColumns[COLUMN.solvesCsdTrack] = solvesCsdTrack;
+      }
+
+      if (solvesShowsDistrictWide(solvesTouchpointTypes)) {
+        if (solvesDistrictWideVisitDuration)
+          parentColumns[COLUMN.solvesDistrictWideVisitDuration] =
+            solvesDistrictWideVisitDuration;
+        if (solvesDistrictWideSupportType)
+          parentColumns[COLUMN.solvesDistrictWideSupportType] =
+            solvesDistrictWideSupportType;
+        if (
+          solvesDistrictWideSupportType &&
+          solvesShowsDistrictWideDBNs(solvesDistrictWideSupportType) &&
+          solvesDistrictWideDBNs
+        )
+          parentColumns[COLUMN.solvesDistrictWideDBNs] = solvesDistrictWideDBNs;
+      }
+
+      if (solvesShowsPostVisitSnapshot(solvesTouchpointTypes)) {
+        if (solvesPostVisitSnapshot)
+          parentColumns[COLUMN.solvesPostVisitSnapshot] = solvesPostVisitSnapshot;
+        if (
+          solvesPostVisitSnapshot &&
+          solvesShowsPostVisitFollowUp(solvesPostVisitSnapshot) &&
+          solvesPostVisitFollowUp
+        )
+          parentColumns[COLUMN.solvesPostVisitFollowUp] = solvesPostVisitFollowUp;
+      }
+
+      if (solvesGuidanceToolsUsed?.length)
+        parentColumns[COLUMN.solvesGuidanceToolsUsed] = csvWithOtherDetail(
+          solvesGuidanceToolsUsed,
+          solvesGuidanceToolsOther
+        );
+      if (solvesNotes) parentColumns[COLUMN.solvesNotes] = solvesNotes;
     }
 
     if (canceled === "Yes") {

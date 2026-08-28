@@ -23,3 +23,22 @@ export const QuestionField = ({ label, note, children }: Props) => (
     {children}
   </div>
 );
+
+type TouchpointSectionProps = {
+  /** The exact touchpoint-type option this section's questions belong to, so
+   * the heading matches what the coach checked above. */
+  title: string;
+  children: ReactNode;
+};
+
+/**
+ * Groups a touchpoint's questions under a labeled card so it's clear which
+ * questions belong to which selected touchpoint type when several are
+ * checked at once (touchpoint type is a multi-select).
+ */
+export const TouchpointSection = ({ title, children }: TouchpointSectionProps) => (
+  <div className="flex flex-col gap-4 rounded-2xl bg-white/10 p-4">
+    <h2 className="font-semibold text-xl">{title}</h2>
+    {children}
+  </div>
+);
