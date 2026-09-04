@@ -79,7 +79,7 @@ export const SolvesQuestion = ({ form }: Props) => {
         <SolvesPostVisitSnapshot form={form} />
       )}
 
-      <SolvesGuidanceNotes form={form} />
+      {form.values.solvesIsPLSession !== "Yes" && <SolvesGuidanceNotes form={form} />}
     </>
   );
 };

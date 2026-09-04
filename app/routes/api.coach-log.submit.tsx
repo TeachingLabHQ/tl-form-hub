@@ -123,6 +123,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     ecTeacherStrategies,
     ecLeaderCapacityFocus,
     readsIsPLSession,
+    readsScheduleProvided,
     readsHighImpactActivities,
     readsTouchpointTypes,
     readsVisitDuration,
@@ -150,6 +151,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     readsGuidanceToolsUsed,
     readsGuidanceToolsOther,
     readsNotes,
+    solvesIsPLSession,
     solvesTouchpointTypes,
     solvesHqimVisitDuration,
     solvesHqimGradeContentAreas,
@@ -244,6 +246,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // block is gated again here so stale hidden values are never written.
     if (readsTouchpointTypes?.length) {
       if (readsIsPLSession) parentColumns.text_mkv0r1t = readsIsPLSession;
+      if (readsScheduleProvided)
+        parentColumns.text_mm1erdxw = readsScheduleProvided;
       if (readsHighImpactActivities)
         parentColumns.text_mm1ec7kg = readsHighImpactActivities;
       parentColumns[COLUMN.readsTouchpointTypes] = csv(readsTouchpointTypes);
@@ -328,6 +332,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // NYC Solves (client only sends these for a Solves coach).
     if (solvesTouchpointTypes?.length) {
+      if (solvesIsPLSession) parentColumns.text_mm6wy4vf = solvesIsPLSession;
       parentColumns[COLUMN.solvesTouchpointTypes] = csv(solvesTouchpointTypes);
 
       if (solvesShowsHqim(solvesTouchpointTypes)) {
