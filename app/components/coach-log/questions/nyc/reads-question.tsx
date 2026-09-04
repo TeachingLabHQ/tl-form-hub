@@ -3,6 +3,7 @@ import { YES_NO_OPTIONS } from "../../constants";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   isReadsCapacityBuilderDistrict,
+  JES_STRATEGIES_RESOURCES_URL,
   READS_TOUCHPOINT_DISTRICT,
   READS_TOUCHPOINT_LEADER,
   READS_TOUCHPOINT_TEACHER,
@@ -31,24 +32,52 @@ type Props = {
  * more than one sub-block can be shown/answered in the same submission (e.g.
  * a coach can log both teacher AND district support from the same visit).
  */
+const TOUCHPOINT_TYPE_NOTE = (
+  <>
+    Please only select school leader/school leadership team if your support
+    included a specific strategy(ies) from the{" "}
+    <a
+      href={JES_STRATEGIES_RESOURCES_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-bold underline"
+    >
+      Key Concepts: Strategies and Resources
+    </a>{" "}
+    section of the JES Manual for school leader/school leadership team
+    support. If support was primarily for teacher teams, please select
+    teacher team support only.
+  </>
+);
+
 export const ReadsQuestion = ({ form, district }: Props) => {
   const touchpointTypes = form.values.readsTouchpointTypes;
 
   return (
     <>
       {isReadsCapacityBuilderDistrict(district) && (
-        <QuestionField label="Did the capacity builder attend 2-3 high-impact activities during the coaching day?*">
-          <Select
-            placeholder="Select Yes or No"
-            data={YES_NO_OPTIONS}
-            {...form.getInputProps("readsHighImpactActivities")}
-          />
-        </QuestionField>
+        <>
+          <QuestionField label="Did the capacity builders provide a schedule prior to the visit?*">
+            <Select
+              placeholder="Select Yes or No"
+              data={YES_NO_OPTIONS}
+              {...form.getInputProps("readsScheduleProvided")}
+            />
+          </QuestionField>
+
+          <QuestionField label="Did the capacity builder attend 2-3 high-impact activities during the coaching day?*">
+            <Select
+              placeholder="Select Yes or No"
+              data={YES_NO_OPTIONS}
+              {...form.getInputProps("readsHighImpactActivities")}
+            />
+          </QuestionField>
+        </>
       )}
 
       <QuestionField
         label="What type of NYC Reads touchpoint are you recording?*"
-        note='Please only select school leader/school leadership team if your support included a specific strategy(ies) from the Key Concepts: Strategies and Resources section of the JES Manual for school leader/school leadership team support. If support was primarily for teacher teams, please select teacher team support only.'
+        note={TOUCHPOINT_TYPE_NOTE}
       >
         <MultiSelect
           placeholder="Select all that apply"

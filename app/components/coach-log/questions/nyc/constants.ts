@@ -23,6 +23,18 @@ export const OTHER_OPTION = "Other";
 export const JES_GLOSSARY_URL =
   "https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2";
 
+/** "Key Concepts: Strategies and Resources" section of the JES Manual, referenced by the Reads touchpoint-type question. */
+export const JES_STRATEGIES_RESOURCES_URL =
+  "https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.2gvxyy4nkj21";
+
+/** Sustainability Reflection Tool, referenced by the leader and district sustainability questions. */
+export const SUSTAINABILITY_REFLECTION_TOOL_URL =
+  "https://docs.google.com/document/d/1JCw0HRVEP5vV06Lwzt-Ea-W-7ljnxPVfd7MGTUbtDMQ/edit?tab=t.0";
+
+/** "Key Concepts" glossary of the JES Manual, referenced by the teacher capacity-building strategies question. */
+export const JES_TEACHER_GLOSSARY_URL =
+  "https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.cslg194210x2";
+
 /**
  * Multi-select helper for the guidance/tools questions: their "N/A" option is
  * mutually exclusive with every other option — picking N/A clears the rest,
@@ -99,8 +111,14 @@ export const MAX_READS_TEACHER_STRATEGIES = 3;
 
 // --- School Leader/Leadership team support ----------------------------------
 
-/** Changed for FY27: leader-visit duration is 1–4 (was 1–6). */
-export const READS_LEADER_VISIT_DURATION_OPTIONS = ["1", "2", "3", "4"];
+export const READS_LEADER_VISIT_DURATION_OPTIONS = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+];
 
 export const READS_LEADER_FOCUS_SCHOOL_VISITS =
   "School-based learning visits and classroom visits";
@@ -370,3 +388,18 @@ export const SOLVES_GUIDANCE_TOOLS_OPTIONS = [
   OTHER_OPTION,
   SOLVES_GUIDANCE_NA_OPTION,
 ];
+
+/** Reference links for the guidance documents above that have one (keyed by option label). */
+export const SOLVES_GUIDANCE_TOOL_URLS: Record<string, string> = {
+  "Beyond Core":
+    "https://sites.google.com/view/nyc-math-resources/multi-tiered-system-of-support-mtss?authuser=0",
+  "Additional Time":
+    "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/supplemental-programs?authuser=0",
+  "MTSS Quick Guide":
+    "https://sites.google.com/view/nyc-math-resources/multi-tiered-system-of-support-mtss?authuser=0&pli=1",
+  MLR: "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/multilingual-learners?authuser=0",
+  ICT: "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/inclusive-and-accessible-hqim?authuser=0",
+  EL: "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/inclusive-and-accessible-hqim?authuser=0",
+  Fluency:
+    "https://sites.google.com/view/nyc-math-resources/developing-fluency-understanding-together?authuser=0",
+};

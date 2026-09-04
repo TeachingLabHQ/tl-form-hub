@@ -14,6 +14,7 @@ import {
   READS_DISTRICT_SCHOOL_VISITS_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_STRATEGIC_PLANNING_SUBCOMPONENT_OPTIONS,
   READS_SUSTAINABILITY_OPTIONS,
+  SUSTAINABILITY_REFLECTION_TOOL_URL,
 } from "./constants";
 import { QuestionField } from "./field";
 
@@ -36,9 +37,42 @@ const GLOSSARY_NOTE = (
   </>
 );
 
+const SUSTAINABILITY_NOTE = (
+  <>
+    See a detailed description of each sustainability factor in the{" "}
+    <a
+      href={SUSTAINABILITY_REFLECTION_TOOL_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-bold underline"
+    >
+      Sustainability Reflection Tool
+    </a>
+    .
+  </>
+);
+
 /** NYC Reads district-support questions ("District team support" touchpoint). */
 export const ReadsDistrictSupport = ({ form }: Props) => {
   const focus = form.values.readsDistrictCapacityFocus;
+
+  // Deselecting a focus area hides its subcomponent question, so clear the
+  // stale answer along with it rather than leaving it around unanswerable.
+  const handleFocusChange = (value: string[]) => {
+    form.setFieldValue("readsDistrictCapacityFocus", value);
+    if (!value.includes(READS_DISTRICT_FOCUS_STRATEGIC_PLANNING)) {
+      form.setFieldValue("readsDistrictFocusStrategicPlanningSubcomponent", "");
+    }
+    if (!value.includes(READS_DISTRICT_FOCUS_PL)) {
+      form.setFieldValue("readsDistrictFocusPLSubcomponent", "");
+    }
+    if (!value.includes(READS_DISTRICT_FOCUS_DATA_STRATEGY)) {
+      form.setFieldValue("readsDistrictFocusDataStrategySubcomponent", "");
+    }
+    if (!value.includes(READS_DISTRICT_FOCUS_SCHOOL_VISITS)) {
+      form.setFieldValue("readsDistrictFocusSchoolVisitsSubcomponent", "");
+    }
+  };
 
   return (
     <>
@@ -51,6 +85,7 @@ export const ReadsDistrictSupport = ({ form }: Props) => {
           data={READS_DISTRICT_CAPACITY_FOCUS_OPTIONS}
           maxValues={MAX_READS_DISTRICT_CAPACITY_FOCUS}
           {...form.getInputProps("readsDistrictCapacityFocus")}
+          onChange={handleFocusChange}
         />
       </QuestionField>
 
@@ -108,7 +143,7 @@ export const ReadsDistrictSupport = ({ form }: Props) => {
 
       <QuestionField
         label="Select at most 2 conditions of sustainability that were most closely aligned to the support given today.*"
-        note="See a detailed description of each sustainability factor in the Sustainability Reflection Tool."
+        note={SUSTAINABILITY_NOTE}
       >
         <MultiSelect
           placeholder="Select up to 2 conditions"

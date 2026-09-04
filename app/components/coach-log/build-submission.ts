@@ -47,6 +47,7 @@ export function buildCoachLogSubmission(
   const sendSolves =
     !cancelled && shouldShowSolves(values.district, values.nycCoachType);
   const sendReadsGuidance = sendReads && values.readsIsPLSession !== "Yes";
+  const sendSolvesGuidance = sendSolves && values.solvesIsPLSession !== "Yes";
   const sendCoachees = !cancelled && values.did1on1 === "Yes";
   const sendGroup = !cancelled && values.didGroupCoaching === "Yes";
 
@@ -81,6 +82,7 @@ export function buildCoachLogSubmission(
 
     // NYC Reads
     readsIsPLSession: sendReads ? values.readsIsPLSession : "",
+    readsScheduleProvided: sendReads ? values.readsScheduleProvided : "",
     readsHighImpactActivities: sendReads ? values.readsHighImpactActivities : "",
     readsTouchpointTypes,
 
@@ -146,6 +148,7 @@ export function buildCoachLogSubmission(
     readsNotes: sendReadsGuidance ? values.readsNotes : "",
 
     // NYC Solves
+    solvesIsPLSession: sendSolves ? values.solvesIsPLSession : "",
     solvesTouchpointTypes,
 
     solvesHqimVisitDuration: sendSolvesHqim ? values.solvesHqimVisitDuration : "",
@@ -194,9 +197,9 @@ export function buildCoachLogSubmission(
         ? values.solvesPostVisitFollowUp
         : "",
 
-    solvesGuidanceToolsUsed: sendSolves ? values.solvesGuidanceToolsUsed : [],
-    solvesGuidanceToolsOther: sendSolves ? values.solvesGuidanceToolsOther : "",
-    solvesNotes: sendSolves ? values.solvesNotes : "",
+    solvesGuidanceToolsUsed: sendSolvesGuidance ? values.solvesGuidanceToolsUsed : [],
+    solvesGuidanceToolsOther: sendSolvesGuidance ? values.solvesGuidanceToolsOther : "",
+    solvesNotes: sendSolvesGuidance ? values.solvesNotes : "",
 
     // Cancellation
     canceled: values.canceled,

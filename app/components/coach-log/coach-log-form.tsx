@@ -112,6 +112,7 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const { district, school, nycCoachType, canceled, sessionDate, subSchool } =
     form.values;
   const readsIsPLSession = form.values.readsIsPLSession;
+  const solvesIsPLSession = form.values.solvesIsPLSession;
 
   // Sub-school options are filtered from the loader map by district + school.
   const sheetSubSchoolOptions = useMemo(
@@ -165,10 +166,12 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   const showSolves = shouldShowSolves(district, nycCoachType);
   const showActivities = canceled !== "Yes";
 
-  // A Reads coach logging a Professional Learning session: hide the coaching
-  // questions and pick the session date from a free calendar instead of the
-  // scheduled coaching-calendar dropdown.
-  const isPLSession = showReads && readsIsPLSession === "Yes";
+  // A Reads or Solves coach logging a Professional Learning session: hide the
+  // coaching questions and pick the session date from a free calendar instead
+  // of the scheduled coaching-calendar dropdown.
+  const isPLSession =
+    (showReads && readsIsPLSession === "Yes") ||
+    (showSolves && solvesIsPLSession === "Yes");
 
   const resetCoacheeSelections = () => {
     form.setFieldValue("coacheeRows", [{ ...EMPTY_COACHEE_ROW }]);
@@ -203,14 +206,15 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
   // Selecting "Yes" auto-answers the 1:1 and group coaching questions "No"
   // (they're hidden but still required), and clears the date since the input
   // switches between the calendar and the scheduled dropdown.
-  const handlePLSessionChange = (value: string) => {
-    form.setFieldValue("readsIsPLSession", value as CoachLogValues["readsIsPLSession"]);
-    form.setFieldValue("sessionDate", "");
-    if (value === "Yes") {
-      form.setFieldValue("did1on1", "No");
-      form.setFieldValue("didGroupCoaching", "No");
-    }
-  };
+  const handlePLSessionChange =
+    (fieldName: "readsIsPLSession" | "solvesIsPLSession") => (value: string) => {
+      form.setFieldValue(fieldName, value as CoachLogValues[typeof fieldName]);
+      form.setFieldValue("sessionDate", "");
+      if (value === "Yes") {
+        form.setFieldValue("did1on1", "No");
+        form.setFieldValue("didGroupCoaching", "No");
+      }
+    };
 
   const handleNycCoachTypeChange = (value: string) => {
     form.setFieldValue("nycCoachType", value);
@@ -387,7 +391,16 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
               {showReads && (
                 <PlSessionQuestion
                   form={form}
-                  onChange={handlePLSessionChange}
+                  fieldName="readsIsPLSession"
+                  onChange={handlePLSessionChange("readsIsPLSession")}
+                />
+              )}
+
+              {showSolves && (
+                <PlSessionQuestion
+                  form={form}
+                  fieldName="solvesIsPLSession"
+                  onChange={handlePLSessionChange("solvesIsPLSession")}
                 />
               )}
 

@@ -3,6 +3,7 @@ import { YES_NO_OPTIONS } from "../../constants";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   FREQUENCY_OPTIONS,
+  JES_TEACHER_GLOSSARY_URL,
   MAX_READS_TEACHER_STRATEGIES,
   READS_GRADE_BAND_OPTIONS,
   READS_TEACHER_STRATEGY_OPTIONS,
@@ -13,6 +14,21 @@ import { QuestionField } from "./field";
 type Props = {
   form: CoachLogForm;
 };
+
+const GLOSSARY_NOTE = (
+  <>
+    See a detailed description of each capacity building focus in the{" "}
+    <a
+      href={JES_TEACHER_GLOSSARY_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-bold underline"
+    >
+      Key Concepts of the JES Manual
+    </a>
+    .
+  </>
+);
 
 /** NYC Reads teacher-team support questions ("Teacher team support" touchpoint). */
 export const ReadsTeacherSupport = ({ form }: Props) => (
@@ -33,7 +49,10 @@ export const ReadsTeacherSupport = ({ form }: Props) => (
       />
     </QuestionField>
 
-    <QuestionField label="Please select the 1-3 main strategies you used to build capacity with teacher teams today.*">
+    <QuestionField
+      label="Please select the 1-3 main strategies you used to build capacity with teacher teams today.*"
+      note={GLOSSARY_NOTE}
+    >
       <MultiSelect
         placeholder="Select up to 3 strategies"
         data={READS_TEACHER_STRATEGY_OPTIONS}

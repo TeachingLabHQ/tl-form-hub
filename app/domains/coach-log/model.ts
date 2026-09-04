@@ -115,6 +115,7 @@ export type CoachLogSubmission = {
 
   // NYC Reads coach
   readsIsPLSession: YesNo | "";
+  readsScheduleProvided: YesNo | "";
   readsHighImpactActivities: YesNo | "";
   readsTouchpointTypes: string[];
 
@@ -152,6 +153,7 @@ export type CoachLogSubmission = {
   readsNotes: string;
 
   // NYC Solves coach
+  solvesIsPLSession: YesNo | "";
   solvesTouchpointTypes: string[];
 
   // NYC Solves — HQIM-Based Teacher Collaboration

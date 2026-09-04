@@ -1,9 +1,11 @@
 import { MultiSelect, Textarea, TextInput } from "@mantine/core";
+import { Fragment } from "react";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   applyNAExclusivity,
   OTHER_OPTION,
   SOLVES_GUIDANCE_NA_OPTION,
+  SOLVES_GUIDANCE_TOOL_URLS,
   SOLVES_GUIDANCE_TOOLS_OPTIONS,
 } from "./constants";
 import { QuestionField } from "./field";
@@ -11,6 +13,25 @@ import { QuestionField } from "./field";
 type Props = {
   form: CoachLogForm;
 };
+
+const GUIDANCE_TOOL_LINKS_NOTE = (
+  <>
+    Reference links:{" "}
+    {Object.entries(SOLVES_GUIDANCE_TOOL_URLS).map(([label, url], i, arr) => (
+      <Fragment key={label}>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="font-bold underline"
+        >
+          {label}
+        </a>
+        {i < arr.length - 1 ? ", " : ""}
+      </Fragment>
+    ))}
+  </>
+);
 
 /**
  * Shown once per NYC Solves submission (not per touchpoint block): which
@@ -21,7 +42,10 @@ export const SolvesGuidanceNotes = ({ form }: Props) => {
 
   return (
     <>
-      <QuestionField label="NYC Solves: Which (if any) of these following guidance documents did you use with teachers and/or leaders during your support visit?*">
+      <QuestionField
+        label="NYC Solves: Which (if any) of these following guidance documents did you use with teachers and/or leaders during your support visit?*"
+        note={GUIDANCE_TOOL_LINKS_NOTE}
+      >
         <MultiSelect
           placeholder="Select all that apply"
           data={SOLVES_GUIDANCE_TOOLS_OPTIONS}
