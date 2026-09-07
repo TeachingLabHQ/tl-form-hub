@@ -1,4 +1,5 @@
 import { MultiSelect } from "@mantine/core";
+import type { DbnsByDistrict } from "~/domains/coach-log/model";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   SOLVES_TOUCHPOINT_CSD,
@@ -25,6 +26,8 @@ import { SolvesPostVisitSnapshot } from "./solves-post-visit-snapshot";
 
 type Props = {
   form: CoachLogForm;
+  district: string;
+  dbnsByDistrict: DbnsByDistrict;
 };
 
 /**
@@ -33,7 +36,7 @@ type Props = {
  * tracked separately per type so they're never double-counted), so more than
  * one sub-block below can be shown/answered in the same submission.
  */
-export const SolvesQuestion = ({ form }: Props) => {
+export const SolvesQuestion = ({ form, district, dbnsByDistrict }: Props) => {
   const touchpointTypes = form.values.solvesTouchpointTypes;
 
   return (
@@ -71,7 +74,10 @@ export const SolvesQuestion = ({ form }: Props) => {
       )}
       {solvesShowsDistrictWide(touchpointTypes) && (
         <TouchpointSection title={SOLVES_TOUCHPOINT_DISTRICT_WIDE}>
-          <SolvesDistrictWideSupport form={form} />
+          <SolvesDistrictWideSupport
+            form={form}
+            dbnOptions={dbnsByDistrict[district] ?? []}
+          />
         </TouchpointSection>
       )}
 

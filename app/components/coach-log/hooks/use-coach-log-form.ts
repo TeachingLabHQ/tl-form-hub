@@ -115,7 +115,7 @@ export type CoachLogValues = {
   // NYC Solves — District Wide Learning Support
   solvesDistrictWideVisitDuration: string;
   solvesDistrictWideSupportType: string;
-  solvesDistrictWideDBNs: string;
+  solvesDistrictWideDBNs: string[];
 
   // NYC Solves — shown once, if HQIM/HSD/CSD selected
   solvesPostVisitSnapshot: string;
@@ -219,7 +219,7 @@ const INITIAL_VALUES: CoachLogValues = {
 
   solvesDistrictWideVisitDuration: "",
   solvesDistrictWideSupportType: "",
-  solvesDistrictWideDBNs: "",
+  solvesDistrictWideDBNs: [],
 
   solvesPostVisitSnapshot: "",
   solvesPostVisitFollowUp: "",
@@ -601,8 +601,8 @@ export function useCoachLogForm() {
         solvesShown(values) &&
         solvesShowsDistrictWide(values.solvesTouchpointTypes) &&
         solvesShowsDistrictWideDBNs(values.solvesDistrictWideSupportType) &&
-        !value
-          ? "Please list the school DBNs"
+        value.length === 0
+          ? "Please select the school DBNs"
           : null
       ),
 

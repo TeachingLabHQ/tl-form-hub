@@ -4,6 +4,7 @@ import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   subSchoolKey,
+  type DbnsByDistrict,
   type DistrictWithSchools,
   type SessionDateOption,
   type SubSchoolMap,
@@ -45,6 +46,7 @@ import {
 type Props = {
   districts: DistrictWithSchools[];
   subSchools: SubSchoolMap;
+  dbnsByDistrict: DbnsByDistrict;
 };
 
 // Tabs are mirrored into the URL (?tab=) so each tab has a shareable deep link
@@ -53,7 +55,7 @@ type Props = {
 const TAB_VALUES = ["coach-log", "roster"] as const;
 const DEFAULT_TAB = "coach-log";
 
-export const CoachLogForm = ({ districts, subSchools }: Props) => {
+export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) => {
   const { mondayProfile } = useSession();
   const form = useCoachLogForm();
 
@@ -476,7 +478,13 @@ export const CoachLogForm = ({ districts, subSchools }: Props) => {
                     {showReads && (
                       <ReadsQuestion form={form} district={district} />
                     )}
-                    {showSolves && <SolvesQuestion form={form} />}
+                    {showSolves && (
+                      <SolvesQuestion
+                        form={form}
+                        district={district}
+                        dbnsByDistrict={dbnsByDistrict}
+                      />
+                    )}
                   </>
                 )}
               </fieldset>

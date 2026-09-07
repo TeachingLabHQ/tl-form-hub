@@ -1,4 +1,5 @@
-import { Select, TextInput } from "@mantine/core";
+import { MultiSelect, Select } from "@mantine/core";
+import type { DbnOption } from "~/domains/coach-log/model";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   SOLVES_DISTRICT_WIDE_SUPPORT_OPTIONS,
@@ -9,10 +10,11 @@ import { QuestionField } from "./field";
 
 type Props = {
   form: CoachLogForm;
+  dbnOptions: DbnOption[];
 };
 
 /** NYC Solves "District Wide Learning Support" touchpoint questions. */
-export const SolvesDistrictWideSupport = ({ form }: Props) => (
+export const SolvesDistrictWideSupport = ({ form, dbnOptions }: Props) => (
   <>
     <QuestionField label="What was the duration of your district wide support during this visit in hours? Please round to the nearest unit.*">
       <Select
@@ -32,8 +34,10 @@ export const SolvesDistrictWideSupport = ({ form }: Props) => (
 
     {solvesShowsDistrictWideDBNs(form.values.solvesDistrictWideSupportType) && (
       <QuestionField label="Select the DBN(s) for all other schools that were participating in the intervisitation.*">
-        <TextInput
-          placeholder="e.g. 09X022, 09X011"
+        <MultiSelect
+          placeholder="Select DBNs"
+          data={dbnOptions}
+          searchable
           {...form.getInputProps("solvesDistrictWideDBNs")}
         />
       </QuestionField>

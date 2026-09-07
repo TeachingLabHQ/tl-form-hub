@@ -185,7 +185,7 @@ export function buildCoachLogSubmission(
     solvesDistrictWideDBNs:
       sendSolvesDistrictWide &&
       solvesShowsDistrictWideDBNs(values.solvesDistrictWideSupportType)
-        ? values.solvesDistrictWideDBNs
+        ? values.solvesDistrictWideDBNs.join(", ")
         : "",
 
     solvesPostVisitSnapshot: sendSolvesPostVisitSnapshot

@@ -7,17 +7,19 @@ import { coachLogRepository } from "~/domains/coach-log/repository";
 import { coachLogService } from "~/domains/coach-log/service";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
 
-// District -> schools tree and the sub-school map are both user-independent
-// reference data sourced from the same Google Sheet, so resolve them in the
-// loader (server-side, up front). They're fetched concurrently; the sub-school
-// map is then filtered client-side by the selected district + school. Coachees,
-// by contrast, come from a large dynamic Monday board and stay a client fetch
-// (see /api/coach-log/coachees).
+// District -> schools tree, the sub-school map, and the NYC DBN-by-district
+// map are all user-independent reference data (the latter two sourced from
+// separate Google Sheets), so resolve them in the loader (server-side, up
+// front). They're fetched concurrently; the sub-school map is then filtered
+// client-side by the selected district + school. Coachees, by contrast, come
+// from a large dynamic Monday board and stay a client fetch (see
+// /api/coach-log/coachees).
 export const loader = async () => {
   const service = coachLogService(coachLogRepository());
-  const [districts, subSchools] = await Promise.all([
+  const [districts, subSchools, dbnsByDistrict] = await Promise.all([
     service.fetchDistrictsWithSchools(),
     service.fetchSubSchoolMap(),
+    service.fetchDbnsByDistrict(),
   ]);
   if (districts.error) {
     console.error("Error fetching districts/schools:", districts.error);
@@ -25,9 +27,13 @@ export const loader = async () => {
   if (subSchools.error) {
     console.error("Error fetching sub-schools:", subSchools.error);
   }
+  if (dbnsByDistrict.error) {
+    console.error("Error fetching DBNs by district:", dbnsByDistrict.error);
+  }
   return json({
     districts: districts.data ?? [],
     subSchools: subSchools.data ?? {},
+    dbnsByDistrict: dbnsByDistrict.data ?? {},
   });
 };
 
@@ -42,7 +48,7 @@ export const shouldRevalidate: ShouldRevalidateFunction = ({
 
 export default function CoachLogFormRoute() {
   const { mondayProfile, isLoading: isSessionLoading } = useSession();
-  const { districts, subSchools } = useLoaderData<typeof loader>();
+  const { districts, subSchools, dbnsByDistrict } = useLoaderData<typeof loader>();
 
   if (isSessionLoading || mondayProfile === null) {
     return <LoadingSpinner message="Loading session..." />;
@@ -60,7 +66,11 @@ export default function CoachLogFormRoute() {
 
   return (
     <div className="min-h-screen w-full overflow-auto">
-      <CoachLogForm districts={districts} subSchools={subSchools} />
+      <CoachLogForm
+        districts={districts}
+        subSchools={subSchools}
+        dbnsByDistrict={dbnsByDistrict}
+      />
     </div>
   );
 }

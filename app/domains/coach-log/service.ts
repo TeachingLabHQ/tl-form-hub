@@ -2,6 +2,7 @@ import { Errorable } from "~/utils/errorable";
 import {
   CoachLogIdentity,
   CoachOption,
+  DbnsByDistrict,
   DistrictWithSchools,
   SessionDateOption,
   SubSchoolMap,
@@ -16,6 +17,7 @@ export interface CoachLogService {
     school: string
   ) => Promise<Errorable<string[]>>;
   fetchSubSchoolMap: () => Promise<Errorable<SubSchoolMap>>;
+  fetchDbnsByDistrict: () => Promise<Errorable<DbnsByDistrict>>;
   fetchSessionDates: (
     coachName: string,
     district: string,
@@ -122,6 +124,26 @@ export function coachLogService(
       }
 
       return { data: map, error: null };
+    },
+
+    fetchDbnsByDistrict: async () => {
+      const result = await repository.fetchDbnsByDistrict();
+      if (result.error || !result.data) return result;
+
+      // Dedupe + sort each district's options by label for the dropdown.
+      const sorted: DbnsByDistrict = {};
+      for (const [district, options] of Object.entries(result.data)) {
+        const seen = new Set<string>();
+        const unique = options.filter((o) => {
+          if (seen.has(o.value)) return false;
+          seen.add(o.value);
+          return true;
+        });
+        unique.sort((a, b) => a.label.localeCompare(b.label));
+        sorted[district] = unique;
+      }
+
+      return { data: sorted, error: null };
     },
 
     fetchSessionDates: async (

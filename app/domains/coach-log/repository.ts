@@ -5,6 +5,7 @@ import { fetchMondayData } from "~/domains/utils";
 import {
   CoachLogIdentity,
   CoachOption,
+  DbnsByDistrict,
   DistrictWithSchools,
   SessionDateRow,
   SubSchoolRow,
@@ -20,6 +21,15 @@ import {
 const COACH_LOG_SPREADSHEET_ID = "1hbs5d1uf2xqDvs0hG68hZG4ttmf7BhqKDuKCNNaYd54";
 const DISTRICT_SCHOOL_TAB_GID = 2037785111;
 const SUB_SCHOOL_TAB_GID = 1285523694;
+
+// NYC DBN (school code) reference sheet, maintained separately from the main
+// coach-log sheet above. Same one-column-per-district layout as the district/
+// school tab (first cell is the district label, cells below are its DBNs), but
+// the citywide Transfer High Schools / CUNY-UA columns write each cell as
+// "DBN - School Name" instead of a bare DBN.
+const DBN_SPREADSHEET_ID = "1hWMwqRLAVwd7T_gf1UTd_3C2KW7M2FoFsuQDy31kKSE";
+const DBN_TAB_GID = 0;
+
 const SHEETS_READONLY_SCOPE =
   "https://www.googleapis.com/auth/spreadsheets.readonly";
 
@@ -116,10 +126,11 @@ function sheetsClient() {
 // Resolve a tab gid (sheetId) to its title so the values API can range by it.
 async function tabTitleByGid(
   sheets: ReturnType<typeof sheetsClient>,
+  spreadsheetId: string,
   gid: number
 ): Promise<string> {
   const meta = await sheets.spreadsheets.get({
-    spreadsheetId: COACH_LOG_SPREADSHEET_ID,
+    spreadsheetId,
     fields: "sheets.properties(sheetId,title)",
   });
   const title = meta.data.sheets?.find(
@@ -133,6 +144,7 @@ export interface CoachLogRepository {
   fetchDistrictsWithSchools(): Promise<Errorable<DistrictWithSchools[]>>;
   fetchCoachees(district: string, school: string): Promise<Errorable<string[]>>;
   fetchSubSchoolRows(): Promise<Errorable<SubSchoolRow[]>>;
+  fetchDbnsByDistrict(): Promise<Errorable<DbnsByDistrict>>;
   fetchSessionDates(
     coachName: string,
     district: string
@@ -146,7 +158,11 @@ export function coachLogRepository(): CoachLogRepository {
     fetchDistrictsWithSchools: async () => {
       try {
         const sheets = sheetsClient();
-        const tabTitle = await tabTitleByGid(sheets, DISTRICT_SCHOOL_TAB_GID);
+        const tabTitle = await tabTitleByGid(
+          sheets,
+          COACH_LOG_SPREADSHEET_ID,
+          DISTRICT_SCHOOL_TAB_GID
+        );
 
         const res = await sheets.spreadsheets.values.get({
           spreadsheetId: COACH_LOG_SPREADSHEET_ID,
@@ -237,7 +253,11 @@ export function coachLogRepository(): CoachLogRepository {
     fetchSubSchoolRows: async () => {
       try {
         const sheets = sheetsClient();
-        const tabTitle = await tabTitleByGid(sheets, SUB_SCHOOL_TAB_GID);
+        const tabTitle = await tabTitleByGid(
+          sheets,
+          COACH_LOG_SPREADSHEET_ID,
+          SUB_SCHOOL_TAB_GID
+        );
 
         const res = await sheets.spreadsheets.values.get({
           spreadsheetId: COACH_LOG_SPREADSHEET_ID,
@@ -261,6 +281,50 @@ export function coachLogRepository(): CoachLogRepository {
         return {
           data: null,
           error: new Error("fetchSubSchoolRows() went wrong"),
+        };
+      }
+    },
+
+    // DBN options per district, from the separate NYC-DBN sheet (see
+    // DBN_SPREADSHEET_ID above). Same one-column-per-district layout as
+    // fetchDistrictsWithSchools: first cell is the district label, cells below
+    // are its DBNs. Per-district columns (D9, D11, ...) hold bare DBNs; the
+    // citywide Transfer High Schools / CUNY-UA columns hold "DBN - School Name"
+    // pairs, so split on " - " to get the submittable DBN as `value` while
+    // keeping the full cell text as `label`.
+    fetchDbnsByDistrict: async () => {
+      try {
+        const sheets = sheetsClient();
+        const tabTitle = await tabTitleByGid(sheets, DBN_SPREADSHEET_ID, DBN_TAB_GID);
+
+        const res = await sheets.spreadsheets.values.get({
+          spreadsheetId: DBN_SPREADSHEET_ID,
+          range: tabTitle,
+          majorDimension: "COLUMNS",
+        });
+
+        const columns = res.data.values ?? [];
+        const byDistrict: DbnsByDistrict = {};
+        for (const col of columns) {
+          const cells = (col ?? []).map((cell) => String(cell ?? "").trim());
+          const district = cells[0] ?? "";
+          if (!district) continue;
+
+          byDistrict[district] = cells
+            .slice(1)
+            .filter((cell) => cell !== "")
+            .map((cell) => ({
+              value: (cell.split(" - ")[0] ?? cell).trim(),
+              label: cell,
+            }));
+        }
+
+        return { data: byDistrict, error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("fetchDbnsByDistrict() went wrong"),
         };
       }
     },

@@ -19,6 +19,25 @@ export type SubSchoolRow = {
 };
 
 /**
+ * One selectable DBN (NYC school code) for the district-wide-support
+ * multi-select. `value` is the bare DBN (e.g. "09X042") — what actually gets
+ * submitted; `label` also carries the school name when the source sheet
+ * provides one (the citywide Transfer High Schools / CUNY-UA columns are
+ * "DBN - School Name" pairs, while per-district columns are bare DBNs).
+ */
+export type DbnOption = {
+  value: string;
+  label: string;
+};
+
+/**
+ * DBN options keyed by district label (same labels as
+ * {@link DistrictWithSchools}), sourced from a separate NYC-DBN reference
+ * sheet (see fetchDbnsByDistrict in the repository).
+ */
+export type DbnsByDistrict = Record<string, DbnOption[]>;
+
+/**
  * Sub-school options keyed by {@link subSchoolKey}. Loaded once (server-side)
  * and filtered client-side by the selected district + school.
  */
