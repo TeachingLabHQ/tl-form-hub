@@ -192,6 +192,9 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
     form.setFieldValue("nycCoachType", "");
     form.setFieldValue("subSchool", "");
     form.setFieldValue("sessionDate", "");
+    // DBN options are scoped to the district (see dbnsByDistrict), so a
+    // previous district's selections are no longer valid options here.
+    form.setFieldValue("solvesDistrictWideDBNs", []);
     resetCoacheeSelections();
     resetEarlyChildhood();
   };
