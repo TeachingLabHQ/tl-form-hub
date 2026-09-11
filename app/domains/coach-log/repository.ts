@@ -195,9 +195,9 @@ export function coachLogRepository(): CoachLogRepository {
     // Mirrors the legacy roster lookup: filter the roster board by district
     // (coaching_partners) and, when a single school is chosen, by school
     // (short_text66); the coachee display name comes from the "updated name"
-    // column, falling back to the "original name" column.
-    // TODO(rules): confirm these filter columns/values still match now that
-    // district & school come from board 18415001327.
+    // column, falling back to the "original name" column. Confirmed these
+    // filter columns/values still match with district & school sourced from
+    // board 18415001327.
     fetchCoachees: async (district: string, school: string) => {
       try {
         const districtFilter = normalize(district);
