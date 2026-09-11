@@ -35,7 +35,6 @@ export const COACH_OVERRIDE_TESTER_EMAILS = [
   "holly.corwin@teachinglab.org",
   "duncan.gates@teachinglab.org",
   "kelly.sanders@teachinglab.org",
-  "joseph.kapustka@teachinglab.org",
 ];
 
 export const canOverrideCoach = (email: string | undefined | null) =>
