@@ -16,10 +16,59 @@ export interface CoachFacilitatorRepository {
   fetchCoachFacilitatorDetails(
     email: string
   ): Promise<Errorable<CoachFacilitatorDetails | null>>;
+  fetchMondayUserByEmail(email: string): Promise<{ id: string; name: string }>;
+  fetchMondayUserNameById(id: string): Promise<string>;
 }
+
+// Escape values interpolated into the GraphQL query strings below.
+const escGraphqlString = (v: string) =>
+  v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 
 export function coachFacilitatorRepository(): CoachFacilitatorRepository {
   return {
+    // Resolves a Monday.com platform user's real id + display name from
+    // their email, so login can populate People columns (e.g. the coach
+    // log's coach-profile column) the same way employee logins already do
+    // via the "people" column on the employee board, and so the name
+    // matches strings synced elsewhere from the same Monday users directory
+    // (e.g. the PL calendar's `coach_facilitator` field — see
+    // fetchSessionDates() in coach-log/repository.ts, which does an
+    // exact-string match against it). Contractors aren't on the employee
+    // board, so this is a separate lookup. Returns "" for both fields (not
+    // an error) when the contractor has no Monday seat at all, since that's
+    // a legitimate state and shouldn't block login — callers fall back to a
+    // board-sourced name in that case.
+    fetchMondayUserByEmail: async (email: string) => {
+      try {
+        const query = `{ users(emails: ["${escGraphqlString(email)}"]) { id name } }`;
+        const result = await fetchMondayData(query);
+        const user = result?.data?.users?.[0];
+        return {
+          id: user?.id ? String(user.id) : "",
+          name: user?.name ? String(user.name) : "",
+        };
+      } catch (error) {
+        console.error("Error fetching Monday user by email:", error);
+        return { id: "", name: "" };
+      }
+    },
+
+    // Same lookup as fetchMondayUserByEmail, but by Monday user id — used
+    // for employees, whose linked Monday user id is already known via the
+    // employee board's "people" column (see employeeRepository.fetchEmployee).
+    fetchMondayUserNameById: async (id: string) => {
+      if (!id) return "";
+      try {
+        const query = `{ users(ids: ["${escGraphqlString(id)}"]) { name } }`;
+        const result = await fetchMondayData(query);
+        const user = result?.data?.users?.[0];
+        return user?.name ? String(user.name) : "";
+      } catch (error) {
+        console.error("Error fetching Monday user name by id:", error);
+        return "";
+      }
+    },
+
     fetchCoachFacilitatorDetails: async (email: string) => {
       try {
         //NOTE: Not using Monday API filtering by email because it doesn't support filtering mirror columns (lookup42)

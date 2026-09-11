@@ -1,0 +1,230 @@
+export type YesNo = "Yes" | "No";
+
+/**
+ * A district with its schools, sourced from the district/school Google Sheet
+ * (one column per district; see the coach-log repository). The service layer
+ * augments the school list with "All Schools"/"N/A" options before it reaches
+ * the form.
+ */
+export type DistrictWithSchools = {
+  district: string;
+  schools: string[];
+};
+
+/** One row of the sub-school sheet: a (district, school) -> sub-school mapping. */
+export type SubSchoolRow = {
+  district: string;
+  school: string;
+  subSchool: string;
+};
+
+/**
+ * One selectable DBN (NYC school code) for the district-wide-support
+ * multi-select. `value` is the bare DBN (e.g. "09X042") — what actually gets
+ * submitted; `label` also carries the school name when the source sheet
+ * provides one (the citywide Transfer High Schools / CUNY-UA columns are
+ * "DBN - School Name" pairs, while per-district columns are bare DBNs).
+ */
+export type DbnOption = {
+  value: string;
+  label: string;
+};
+
+/**
+ * DBN options keyed by district label (same labels as
+ * {@link DistrictWithSchools}), sourced from a separate NYC-DBN reference
+ * sheet (see fetchDbnsByDistrict in the repository).
+ */
+export type DbnsByDistrict = Record<string, DbnOption[]>;
+
+/**
+ * Sub-school options keyed by {@link subSchoolKey}. Loaded once (server-side)
+ * and filtered client-side by the selected district + school.
+ */
+export type SubSchoolMap = Record<string, string[]>;
+
+/**
+ * Stable lookup key for sub-schools by district + school. Used by both the
+ * service (building the map) and the form (reading it) so they can't drift.
+ */
+export const subSchoolKey = (district: string, school: string) =>
+  `${district.trim().toLowerCase()}|${school.trim().toLowerCase()}`;
+
+/**
+ * One selectable session date for the date dropdown. `value` is YYYY-MM-DD (maps
+ * straight into the Monday date column); `label` is a human-friendly rendering.
+ * Sourced from the coaching PL calendar, scoped to the logged-in coach + the
+ * selected district + school.
+ */
+export type SessionDateOption = {
+  value: string;
+  label: string;
+};
+
+/**
+ * A raw calendar row matched to a coach + district: the session date (YYYY-MM-DD)
+ * and the free-form `subsite` label. The service resolves `subsite` to a canonical
+ * school (see resolveSubsiteSchool in the service) to scope dates by school.
+ */
+export type SessionDateRow = {
+  date: string;
+  subsite: string;
+};
+
+/**
+ * A selectable coach for the testing-only coach override. Sourced from Monday
+ * users (legacy form's approach) so it carries the Monday profile id — `name`
+ * is matched against the calendar's Coach/Facilitator for session dates and
+ * becomes the log's item name; `mondayId` populates the people column.
+ */
+export type CoachOption = {
+  name: string;
+  mondayId: string;
+};
+
+/**
+ * The fields that uniquely identify a coach log for the duplicate check: one log
+ * per coach + district + school + sub-school + date. `coachMondayId` is preferred
+ * for the coach match; `coachName` (the item name) is the fallback.
+ */
+export type CoachLogIdentity = {
+  coachMondayId: string;
+  coachName: string;
+  district: string;
+  school: string;
+  sessionDate: string;
+  /** NYC Coach Type — the same coach can log different types (e.g. Solves vs
+   * Reads) for the same school/date, so it's part of the duplicate key. Empty
+   * for non-NYC districts (matches other empty-coach-type logs). */
+  nycCoachType: string;
+  /** Sub-school — when the form requires one (D75 + Solves), the same coach can
+   * log different sub-schools for the same school/date, so it's part of the
+   * duplicate key. Empty when sub-school doesn't apply (matches other
+   * empty-sub-school logs). */
+  subSchool: string;
+};
+
+/** One 1:1 coaching entry. Each row becomes a Monday subitem on submission. */
+export type CoacheeRow = {
+  coacheeName: string;
+  role: string;
+  durationMins: string;
+};
+
+/**
+ * Everything the client sends to the coach-log submit endpoint.
+ * This is intentionally a flat, serializable shape (no Date objects / functions).
+ */
+export type CoachLogSubmission = {
+  // Identity (auto-populated from the logged-in mondayProfile)
+  coachName: string;
+  coachMondayId: string;
+
+  // Location / context
+  district: string;
+  school: string;
+  subSchool: string;
+  nycCoachType: string;
+  sessionDate: string;
+
+  // ELA Early Childhood coach
+  ecTouchpoint: string;
+  ecTeacherStrategies: string[];
+  ecLeaderCapacityFocus: string[];
+
+  // NYC Reads coach
+  readsIsPLSession: YesNo | "";
+  readsScheduleProvided: YesNo | "";
+  readsHighImpactActivities: YesNo | "";
+  readsTouchpointTypes: string[];
+
+  // NYC Reads — Teacher team support
+  readsVisitDuration: string;
+  readsGradeBands: string[];
+  readsTeacherStrategies: string[];
+  readsTeacherSchoolLeaderPresence: string;
+  readsTeacherDistrictLeaderPresence: string;
+  readsMajorityUsingHQIM: YesNo | "";
+  readsHQIMContext: string;
+  readsInterventionsScheduled: YesNo | "";
+  readsInterventionsContext: string;
+
+  // NYC Reads — School Leader/Leadership team support
+  readsLeaderVisitDuration: string;
+  readsLeaderCapacityFocus: string[];
+  readsLeaderFocusSchoolVisitsSubcomponent: string;
+  readsLeaderFocusModelingSubcomponent: string;
+  readsLeaderFocusPLSubcomponent: string;
+  readsLeaderSustainability: string[];
+  readsLeaderDistrictPresence: string;
+
+  // NYC Reads — District team support
+  readsDistrictCapacityFocus: string[];
+  readsDistrictFocusStrategicPlanningSubcomponent: string;
+  readsDistrictFocusPLSubcomponent: string;
+  readsDistrictFocusDataStrategySubcomponent: string;
+  readsDistrictFocusSchoolVisitsSubcomponent: string;
+  readsDistrictSustainability: string[];
+
+  // NYC Reads — shown once per submission
+  readsGuidanceToolsUsed: string[];
+  readsGuidanceToolsOther: string;
+  readsNotes: string;
+
+  // NYC Solves coach
+  solvesIsPLSession: YesNo | "";
+  solvesTouchpointTypes: string[];
+
+  // NYC Solves — HQIM-Based Teacher Collaboration
+  solvesHqimVisitDuration: string;
+  solvesHqimGradeContentAreas: string[];
+  solvesHqimLeaderPresent: YesNo | "";
+  solvesHqimProtocols: string[];
+
+  // NYC Solves — HSD Only: Supplemental Time Teacher Collaboration
+  solvesHsdVisitDuration: string;
+  solvesHsdGradeContentAreas: string[];
+  solvesHsdPrimaryResources: string[];
+  solvesHsdPrimaryResourcesOther: string;
+  solvesHsdProtocols: string[];
+  solvesHsdLeaderPresent: YesNo | "";
+
+  // NYC Solves — ES: Do the Math Work Shops
+  solvesEsVisitDuration: string;
+  solvesEsGradeLevels: string[];
+
+  // NYC Solves — CSD: Leader Support (at one school)
+  solvesCsdVisitDuration: string;
+  solvesCsdTrack: string;
+
+  // NYC Solves — District Wide Learning Support
+  solvesDistrictWideVisitDuration: string;
+  solvesDistrictWideSupportType: string;
+  solvesDistrictWideDBNs: string;
+
+  // NYC Solves — shown once, if HQIM/HSD/CSD selected
+  solvesPostVisitSnapshot: string;
+  solvesPostVisitFollowUp: string;
+
+  // NYC Solves — shown once per submission
+  solvesGuidanceToolsUsed: string[];
+  solvesGuidanceToolsOther: string;
+  solvesNotes: string;
+
+  // Cancellation
+  canceled: YesNo | "";
+  cancelReason: string;
+  cancelReasonOther: string;
+  rescheduled: YesNo | "";
+
+  // 1:1 coaching
+  did1on1: YesNo | "";
+  coacheeRows: CoacheeRow[];
+
+  // Group coaching
+  didGroupCoaching: YesNo | "";
+  groupParticipants: string[];
+  groupParticipantRole: string[];
+  groupTopic: string;
+  groupDurationMins: string;
+};
