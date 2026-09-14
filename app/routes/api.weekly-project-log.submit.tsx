@@ -1,10 +1,19 @@
+import { json } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@vercel/remix";
+import { employeeRepository } from "~/domains/employee/repository";
+import { employeeService } from "~/domains/employee/service";
 import { insertMondayData } from "~/domains/utils";
 import { formatDate } from "~/utils/utils";
+
+const toPeopleValue = (ids: string[]) => ({
+  personsAndTeams: ids.map((id) => ({ id: Number(id), kind: "person" })),
+});
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   const body = await request.json();
   const { name, date, projectLogEntries, comment, employeeId } = body;
+  // ?dryRun=1 returns the parent item's column values without writing to Monday
+  const isDryRun = new URL(request.url).searchParams.get("dryRun") === "1";
 
   //validate Inputs
   if (!name || !date || !Array.isArray(projectLogEntries)) {
@@ -21,20 +30,60 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return a + parseFloat(b.workHours);
     }, 0);
 
+    // Tag the Employee Profile and Home Manager Profile People columns from the
+    // FTE/PTE Details board. A failed lookup shouldn't block the submission.
+    const peopleTags = await employeeService(
+      employeeRepository()
+    ).fetchEmployeePeopleTags(employeeId);
+    if (peopleTags.error) {
+      console.warn("Could not tag people on project log:", peopleTags.error.message);
+    }
+    const peopleColumnValues = peopleTags.data
+      ? {
+          ...(peopleTags.data.employeeProfileIds.length > 0 && {
+            person: toPeopleValue(peopleTags.data.employeeProfileIds),
+          }),
+          ...(peopleTags.data.homeManagerIds.length > 0 && {
+            people: toPeopleValue(peopleTags.data.homeManagerIds),
+          }),
+        }
+      : {};
+
+    const parentColumnValues = {
+      date4: { date: formattedDate },
+      numbers8: totalHours,
+      notes: comment,
+      numeric_mkq25pjh: employeeId,
+      ...peopleColumnValues,
+    };
+
+    if (isDryRun) {
+      return json({
+        parentColumnValues,
+        peopleTagError: peopleTags.error?.message ?? null,
+      });
+    }
+
     //create the parent item
     const queryParentItem =
       "mutation ($myItemName: String!, $columnVals: JSON!, $groupName: String! ) { create_item (board_id:4284585496, group_id: $groupName, item_name:$myItemName, column_values:$columnVals) { id } }";
-    const varsParentItem = {
-      groupName: "topics",
-      myItemName: name,
-      columnVals: JSON.stringify({
-        date4: { date: formattedDate },
-        numbers8: totalHours,
-        notes: comment,
-        numeric_mkq25pjh: employeeId,
-      }),
-    };
-    const response = await insertMondayData(queryParentItem, varsParentItem);
+    const createParentItem = (columnValues: object) =>
+      insertMondayData(queryParentItem, {
+        groupName: "topics",
+        myItemName: name,
+        columnVals: JSON.stringify(columnValues),
+      });
+    let response = await createParentItem(parentColumnValues);
+    // If Monday rejects a People value (e.g. a deactivated manager), still
+    // save the entry untagged rather than failing the whole submission
+    if (!response?.data?.create_item && Object.keys(peopleColumnValues).length > 0) {
+      console.warn(
+        "create_item failed with people tags, retrying without:",
+        JSON.stringify(response?.errors ?? response)
+      );
+      const { person, people, ...untaggedColumnValues } = parentColumnValues as Record<string, unknown>;
+      response = await createParentItem(untaggedColumnValues);
+    }
     const parentItemId = response.data.create_item.id;
     console.log("parentItemId", parentItemId);
 
