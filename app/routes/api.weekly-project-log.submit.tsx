@@ -1,11 +1,11 @@
 import { json } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@vercel/remix";
 import { employeeRepository } from "~/domains/employee/repository";
-import { employeeService } from "~/domains/employee/service";
 import {
   WEEKLY_PROJECT_LOG_BOARD_ID,
   weeklyProjectLogRepository,
 } from "~/domains/weekly-project-log/repository";
+import { weeklyProjectLogService } from "~/domains/weekly-project-log/service";
 import { getTeachingLabUser } from "~/utils/auth.server";
 import { formatDate } from "~/utils/utils";
 
@@ -34,11 +34,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ error: "Submission inputs are not valid." }, { status: 400, headers });
   }
 
-  const repository = weeklyProjectLogRepository();
+  const service = weeklyProjectLogService(weeklyProjectLogRepository(), employeeRepository());
 
   //process the submission
   try {
-    const { data: isAllowed, error: permissionError } = await repository.canSubmitFor(
+    const { data: isAllowed, error: permissionError } = await service.canSubmitFor(
       user.email,
       String(employeeId)
     );
@@ -61,7 +61,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // One log per employee per week. If the lookup itself fails, let the
     // submission through rather than block everyone during a Monday hiccup.
-    const submittedWeeks = await repository.fetchSubmittedWeeks(String(employeeId));
+    const submittedWeeks = await service.fetchSubmittedWeeks(String(employeeId));
     if (submittedWeeks.error) {
       console.error("Could not check for an existing project log:", submittedWeeks.error.message);
     }
@@ -74,14 +74,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     const totalHours = projectLogEntries.reduce((a, b) => {
-      return a + parseFloat(b.workHours);
+      return a + (parseFloat(b.workHours) || 0);
     }, 0);
 
     // Tag the Employee Profile and Home Manager Profile People columns from the
     // FTE/PTE Details board. A failed lookup shouldn't block the submission.
-    const peopleTags = await employeeService(
-      employeeRepository()
-    ).fetchEmployeePeopleTags(employeeId);
+    const peopleTags = await service.fetchEmployeePeopleTags(employeeId);
     if (peopleTags.error) {
       console.warn("Could not tag people on project log:", peopleTags.error.message);
     }
@@ -115,14 +113,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     //create the parent item
-    let parentItem = await repository.createParentItem(name, parentColumnValues);
+    let parentItem = await service.createParentItem(name, parentColumnValues);
     // If create_item fails with People tags (e.g. a deactivated manager), retry
     // once untagged rather than failing the whole submission. Monday's error
     // messages aren't stable enough to match on, so any failure retries once.
     if (parentItem.error && Object.keys(peopleColumnValues).length > 0) {
       console.warn("create_item failed with people tags, retrying untagged:", parentItem.error.message);
       const { person, people, ...untaggedColumnValues } = parentColumnValues as Record<string, unknown>;
-      parentItem = await repository.createParentItem(name, untaggedColumnValues);
+      parentItem = await service.createParentItem(name, untaggedColumnValues);
     }
     if (!parentItem.data) {
       console.error("create_item failed:", parentItem.error?.message);
@@ -132,10 +130,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       );
     }
     const parentItemId = parentItem.data.id;
-    console.log("parentItemId", parentItemId);
 
     //create subitems
-    const subitemResults = await repository.createSubitems(
+    const subitemResults = await service.createSubitems(
       parentItemId,
       projectLogEntries.map((project) => ({
         itemName: name,
@@ -159,7 +156,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       failedSubitems.forEach(({ result, project }) => {
         console.error(`create_subitem failed for ${project.projectName}:`, result.error?.message);
       });
-      const deleted = await repository.deleteItem(parentItemId);
+      const deleted = await service.deleteItem(parentItemId);
       if (deleted.error) {
         console.error(`Could not remove partial project log ${parentItemId}:`, deleted.error.message);
         // The partial entry is still on the board, so a resubmit would hit the

@@ -19,7 +19,7 @@ import {
   type ProjectData,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
-import type { SubmittedWeek } from "~/domains/weekly-project-log/repository";
+import type { SubmittedWeek } from "~/domains/weekly-project-log/model";
 
 // Local-calendar YYYY-MM-DD, matching the Date column the server writes
 const toWeekKey = (date: Date) =>
@@ -125,7 +125,15 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ employeeId: submissionUser.employeeId }),
         });
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          // The submit route still rejects a duplicate week; this only loses
+          // the early warning
+          console.error(
+            `Could not load submitted weeks (${response.status}):`,
+            data.error
+          );
+        }
         if (isCurrent) {
           setSubmittedWeeks(data.submittedWeeks || []);
         }

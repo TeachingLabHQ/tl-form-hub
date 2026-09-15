@@ -1,17 +1,8 @@
 import { Errorable } from "../../utils/errorable";
-import { executiveAssistantMappings } from "~/components/weekly-project-log/utils";
-import { employeeRepository } from "../employee/repository";
 import { fetchMondayData, insertMondayData, MondayApiStatusError } from "../utils";
+import { SubitemInput, SubmittedWeek } from "./model";
 
 export const WEEKLY_PROJECT_LOG_BOARD_ID = "4284585496";
-
-export type SubmittedWeek = {
-  itemId: string;
-  // Monday of the reported week, YYYY-MM-DD
-  week: string;
-  totalHours: number;
-  createdAt: string;
-};
 
 type MondayGraphQLError = {
   message?: string;
@@ -29,6 +20,10 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 // write: errors inside an HTTP 200 (lock contention, complexity limits) and
 // non-2xx statuses like 429. A dropped connection isn't retried, since the
 // write may have landed and a retry would duplicate it.
+// Known trade-off: an error inside a 200 is assumed to mean nothing was
+// written. If Monday ever errors after the write lands, a create retry would
+// duplicate the row, and a delete retry would report failure for an item
+// that's already gone.
 // Returns the created/deleted id or the last error.
 const mutateWithRetry = async (
   query: string,
@@ -84,7 +79,20 @@ const mapWithConcurrency = async <T, R>(
   return results;
 };
 
-export function weeklyProjectLogRepository() {
+export interface WeeklyProjectLogRepository {
+  fetchSubmittedWeeks(employeeId: string): Promise<Errorable<SubmittedWeek[]>>;
+  createParentItem(
+    itemName: string,
+    columnValues: Record<string, unknown>
+  ): Promise<Errorable<{ id: string }>>;
+  createSubitems(
+    parentItemId: string,
+    subitems: SubitemInput[]
+  ): Promise<Errorable<{ id: string }>[]>;
+  deleteItem(itemId: string): Promise<Errorable<{ id: string }>>;
+}
+
+export function weeklyProjectLogRepository(): WeeklyProjectLogRepository {
   return {
     // Every week an employee has already logged, keyed by the entry's Date.
     fetchSubmittedWeeks: async (
@@ -135,11 +143,14 @@ export function weeklyProjectLogRepository() {
           const page = await fetchMondayData(
             `{ next_items_page(limit: 500, cursor: ${JSON.stringify(cursor)}) { cursor ${itemFields} } }`
           );
+          // Keep the pages already fetched: a partial history still catches
+          // most duplicates, where an error would let every week through
           if (page?.errors) {
-            return {
-              data: null,
-              error: new Error(`Monday error: ${JSON.stringify(page.errors)}`),
-            };
+            console.warn(
+              `Stopped paging submitted weeks for employee ${trimmedId}:`,
+              JSON.stringify(page.errors)
+            );
+            break;
           }
           items.push(...(page?.data?.next_items_page?.items || []));
           cursor = page?.data?.next_items_page?.cursor ?? null;
@@ -163,31 +174,9 @@ export function weeklyProjectLogRepository() {
       }
     },
 
-    // Whether `email` may submit a log for `employeeId`: their own, or an
-    // executive they're mapped to as an executive assistant.
-    canSubmitFor: async (
-      email: string,
-      employeeId: string
-    ): Promise<Errorable<boolean>> => {
-      const trimmedId = String(employeeId ?? "").trim();
-      const isAssistantFor = executiveAssistantMappings.some(
-        (mapping) =>
-          mapping.executiveAssistantEmail.toLowerCase() === email.toLowerCase() &&
-          mapping.executiveId === trimmedId
-      );
-      if (isAssistantFor) {
-        return { data: true, error: null };
-      }
-      const { data: employee, error } = await employeeRepository().fetchEmployee(email);
-      if (error || !employee) {
-        return { data: null, error: error ?? new Error("Employee not found") };
-      }
-      return { data: employee.employeeId.trim() === trimmedId, error: null };
-    },
-
     createSubitems: async (
       parentItemId: string,
-      subitems: { itemName: string; columnValues: Record<string, unknown> }[]
+      subitems: SubitemInput[]
     ) => {
       const query =
         "mutation ($myItemName: String!, $parentID: ID!, $columnVals: JSON!) { create_subitem (parent_item_id: $parentID, item_name: $myItemName, column_values: $columnVals) { id } }";

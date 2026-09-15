@@ -1,5 +1,7 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { employeeRepository } from "~/domains/employee/repository";
 import { weeklyProjectLogRepository } from "~/domains/weekly-project-log/repository";
+import { weeklyProjectLogService } from "~/domains/weekly-project-log/service";
 import { getTeachingLabUser } from "~/utils/auth.server";
 
 // Weeks an employee has already logged, so the form can block a second
@@ -18,9 +20,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   try {
     const { employeeId } = await request.json();
-    const repository = weeklyProjectLogRepository();
+    const service = weeklyProjectLogService(weeklyProjectLogRepository(), employeeRepository());
 
-    const { data: isAllowed, error: permissionError } = await repository.canSubmitFor(
+    const { data: isAllowed, error: permissionError } = await service.canSubmitFor(
       user.email,
       String(employeeId ?? "")
     );
@@ -32,7 +34,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ error: "Not allowed" }, { status: 403, headers });
     }
 
-    const { data, error } = await repository.fetchSubmittedWeeks(String(employeeId));
+    const { data, error } = await service.fetchSubmittedWeeks(String(employeeId));
     if (error) {
       console.error("Error fetching submitted weeks:", error.message);
       return json({ submittedWeeks: [], error: true }, { status: 502, headers });
