@@ -45,6 +45,15 @@ export async function fetchMondayData(queryBody: string): Promise<any> {
   }
 }
 
+// Monday answered with a non-2xx status, so the request wasn't processed and
+// is safe to retry (unlike a dropped connection, where a write may have landed)
+export class MondayApiStatusError extends Error {
+  constructor(public status: number) {
+    super(`Monday API returned ${status}`);
+    this.name = "MondayApiStatusError";
+  }
+}
+
 export async function insertMondayData(query: string, vars: any): Promise<any> {
   // Check if we're running on the server
   const isServer = typeof window === "undefined";
@@ -65,9 +74,9 @@ export async function insertMondayData(query: string, vars: any): Promise<any> {
     });
     
     if (!response.ok) {
-      throw new Error(`Monday API returned ${response.status}`);
+      throw new MondayApiStatusError(response.status);
     }
-    
+
     const result = await response.json();
     return result;
   } else {

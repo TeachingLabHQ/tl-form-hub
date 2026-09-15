@@ -2,7 +2,10 @@ import { json } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@vercel/remix";
 import { employeeRepository } from "~/domains/employee/repository";
 import { employeeService } from "~/domains/employee/service";
-import { weeklyProjectLogRepository } from "~/domains/weekly-project-log/repository";
+import {
+  WEEKLY_PROJECT_LOG_BOARD_ID,
+  weeklyProjectLogRepository,
+} from "~/domains/weekly-project-log/repository";
 import { getTeachingLabUser } from "~/utils/auth.server";
 import { formatDate } from "~/utils/utils";
 
@@ -159,6 +162,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       const deleted = await repository.deleteItem(parentItemId);
       if (deleted.error) {
         console.error(`Could not remove partial project log ${parentItemId}:`, deleted.error.message);
+        // The partial entry is still on the board, so a resubmit would hit the
+        // duplicate check. Point the user at it instead of saying "try again".
+        return json(
+          {
+            error: `${failedSubitems.length} of ${projectLogEntries.length} project rows couldn't be saved, and the incomplete entry couldn't be removed automatically. Please delete it on Monday (https://teachinglab.monday.com/boards/${WEEKLY_PROJECT_LOG_BOARD_ID}/pulses/${parentItemId}) and submit again.`,
+          },
+          { status: 502, headers }
+        );
       }
       return json(
         {

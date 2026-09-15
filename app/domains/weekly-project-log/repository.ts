@@ -1,7 +1,7 @@
 import { Errorable } from "../../utils/errorable";
 import { executiveAssistantMappings } from "~/components/weekly-project-log/utils";
 import { employeeRepository } from "../employee/repository";
-import { fetchMondayData, insertMondayData } from "../utils";
+import { fetchMondayData, insertMondayData, MondayApiStatusError } from "../utils";
 
 export const WEEKLY_PROJECT_LOG_BOARD_ID = "4284585496";
 
@@ -52,7 +52,7 @@ const mutateWithRetry = async (
       });
     } catch (error) {
       lastError = error instanceof Error ? error.message : String(error);
-      if (!lastError.startsWith("Monday API returned")) {
+      if (!(error instanceof MondayApiStatusError)) {
         break;
       }
     }
@@ -95,35 +95,55 @@ export function weeklyProjectLogRepository() {
       if (!/^\d+$/.test(trimmedId)) {
         return { data: null, error: new Error(`Invalid employee id "${trimmedId}"`) };
       }
-      try {
-        const result = await fetchMondayData(`{
-  boards(ids: ${WEEKLY_PROJECT_LOG_BOARD_ID}) {
-    items_page(
-      limit: 500
-      query_params: {rules: [{column_id: "numeric_mkq25pjh", compare_value: [${trimmedId}], operator: any_of}]}
-    ) {
-      items {
+      type LogItem = {
+        id: string;
+        created_at: string;
+        column_values: { id: string; text: string | null }[];
+      };
+      const itemFields = `items {
         id
         created_at
         column_values(ids: ["date4", "numbers8"]) {
           id
           text
         }
-      }
+      }`;
+      try {
+        const firstPage = await fetchMondayData(`{
+  boards(ids: ${WEEKLY_PROJECT_LOG_BOARD_ID}) {
+    items_page(
+      limit: 500
+      query_params: {rules: [{column_id: "numeric_mkq25pjh", compare_value: [${trimmedId}], operator: any_of}]}
+    ) {
+      cursor
+      ${itemFields}
     }
   }
 }`);
-        if (result?.errors) {
+        if (firstPage?.errors) {
           return {
             data: null,
-            error: new Error(`Monday error: ${JSON.stringify(result.errors)}`),
+            error: new Error(`Monday error: ${JSON.stringify(firstPage.errors)}`),
           };
         }
-        const items: {
-          id: string;
-          created_at: string;
-          column_values: { id: string; text: string | null }[];
-        }[] = result?.data?.boards?.[0]?.items_page?.items || [];
+        const items: LogItem[] = [
+          ...(firstPage?.data?.boards?.[0]?.items_page?.items || []),
+        ];
+        // Follow the cursor so a long history can't hide an existing week
+        let cursor: string | null = firstPage?.data?.boards?.[0]?.items_page?.cursor ?? null;
+        while (cursor) {
+          const page = await fetchMondayData(
+            `{ next_items_page(limit: 500, cursor: ${JSON.stringify(cursor)}) { cursor ${itemFields} } }`
+          );
+          if (page?.errors) {
+            return {
+              data: null,
+              error: new Error(`Monday error: ${JSON.stringify(page.errors)}`),
+            };
+          }
+          items.push(...(page?.data?.next_items_page?.items || []));
+          cursor = page?.data?.next_items_page?.cursor ?? null;
+        }
         const weeks = items
           .map((item) => {
             const text = (id: string) =>

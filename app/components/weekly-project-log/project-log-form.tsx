@@ -448,7 +448,11 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
             loading={isSubmitted && isValidated === true && isSuccessful === null}
             disabled={Boolean(existingLogForWeek)}
           >
-            {existingLogForWeek && isSuccessful === true ? "Submitted" : "Submit"}
+            {existingLogForWeek
+              ? isSuccessful === true
+                ? "Submitted"
+                : "Already submitted"
+              : "Submit"}
           </Button>
           {isSuccessful === true && (
             <Notification

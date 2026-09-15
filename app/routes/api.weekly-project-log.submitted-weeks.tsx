@@ -20,7 +20,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const { employeeId } = await request.json();
     const repository = weeklyProjectLogRepository();
 
-    const { data: isAllowed } = await repository.canSubmitFor(user.email, String(employeeId ?? ""));
+    const { data: isAllowed, error: permissionError } = await repository.canSubmitFor(
+      user.email,
+      String(employeeId ?? "")
+    );
+    if (permissionError) {
+      console.error("Could not verify submitter:", user.email, permissionError.message);
+      return json({ submittedWeeks: [], error: true }, { status: 502, headers });
+    }
     if (!isAllowed) {
       return json({ error: "Not allowed" }, { status: 403, headers });
     }
