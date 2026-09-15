@@ -5,16 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// The form sends the picked day as a UTC-noon ISO string. Take the date text
+// as-is: parsing it into a Date on the server (UTC) shifted days for US users.
 export const formatDate = (date: string) => {
-  console.log("date", date);
-  const datePart = date.split("T")[0] || "";
-  const parts = datePart.split("-");
-
-  // Check if parts exist before accessing them
-  if (parts.length >= 3) {
-    return `${parts[0]}-${parts[1]}-${parts[2]}`;
-  }
-  // Fallback if parts are missing
+  // console.log("date", date);
   return date.substring(0, 10);
 };
 

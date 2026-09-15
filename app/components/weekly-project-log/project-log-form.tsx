@@ -1,8 +1,8 @@
 import { Button, Loader, Notification, Textarea } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { IconCheck, IconX } from "@tabler/icons-react";
-import React, { useEffect, useMemo, useState } from "react";
+import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
 import { useSession } from "../auth/hooks/useSession";
 import { ExecutiveAssistantSelector } from "./executive-assistant-selector";
@@ -19,6 +19,18 @@ import {
   type ProjectData,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
+import type { SubmittedWeek } from "~/domains/weekly-project-log/model";
+
+// Local-calendar YYYY-MM-DD, matching the Date column the server writes
+const toWeekKey = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+const formatWeek = (week: string) =>
+  new Date(`${week}T12:00:00`).toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
 
 export type FormValues = {
   email: string;
@@ -49,6 +61,11 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSuccessful, setIsSuccessful] = useState<boolean | null>(null);
+  const [submitErrorMessage, setSubmitErrorMessage] = useState<string | null>(null);
+  const [submittedWeeks, setSubmittedWeeks] = useState<SubmittedWeek[]>([]);
+  // A ref, not state, so a double click can't start two submissions before
+  // React re-renders with the button disabled
+  const isSubmittingRef = useRef(false);
   const [projectWorkEntries, setProjectWorkEntries] = useState<ProjectLogRows[]>([
     {
       projectName: "",
@@ -75,6 +92,9 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
   });
 
   const handleDateChange = (date: Date | null) => {
+    // Clear the last submission's result so it isn't read as this week's
+    setIsSuccessful(null);
+    setSubmitErrorMessage(null);
     if (!date) {
       setSelectedDate(null);
       return;
@@ -89,6 +109,50 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
     isExecutiveAssistant: false,
     submittedForYourself: null,
   }));
+
+  // Load the weeks this person already logged so a repeat week is blocked up
+  // front. If it fails the form still works; the server rejects duplicates.
+  useEffect(() => {
+    if (!submissionUser.employeeId) {
+      setSubmittedWeeks([]);
+      return;
+    }
+    let isCurrent = true;
+    const loadSubmittedWeeks = async () => {
+      try {
+        const response = await fetch("/api/weekly-project-log/submitted-weeks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ employeeId: submissionUser.employeeId }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          // The submit route still rejects a duplicate week; this only loses
+          // the early warning
+          console.error(
+            `Could not load submitted weeks (${response.status}):`,
+            data.error
+          );
+        }
+        if (isCurrent) {
+          setSubmittedWeeks(data.submittedWeeks || []);
+        }
+      } catch (error) {
+        console.error("Error loading submitted weeks:", error);
+        if (isCurrent) {
+          setSubmittedWeeks([]);
+        }
+      }
+    };
+    loadSubmittedWeeks();
+    return () => {
+      isCurrent = false;
+    };
+  }, [submissionUser.employeeId]);
+
+  const existingLogForWeek = selectedDate
+    ? submittedWeeks.find((week) => week.week === toWeekKey(selectedDate))
+    : undefined;
 
   // Track current project data (changes when executive is selected)
   const [currentProjectData, setCurrentProjectData] = useState<ProjectData>(projectData);
@@ -237,10 +301,16 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       return;
     }
 
+    if (isSubmittingRef.current || existingLogForWeek) {
+      return;
+    }
+    isSubmittingRef.current = true;
+
     try {
       setIsSubmitted(true);
       setIsValidated(true);
       setIsSuccessful(null);
+      setSubmitErrorMessage(null);
 
       const response = await fetch("/api/weekly-project-log/submit", {
         method: "POST",
@@ -268,14 +338,26 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
         }),
       });
 
+      const result = await response.json().catch(() => ({}));
+
       if (!response.ok) {
-        console.error("Form submission went wrong");
-        setIsSuccessful(false);
+        console.error("Form submission went wrong", response.status, result?.error);
+        // Already logged: record it so the week shows as submitted
+        if (response.status === 409 && result?.existing) {
+          setSubmittedWeeks((weeks) => [...weeks, result.existing]);
+          setIsSuccessful(null);
+        } else {
+          setSubmitErrorMessage(result?.error || null);
+          setIsSuccessful(false);
+        }
         setIsSubmitted(false);
         setIsValidated(null);
         return;
       }
 
+      if (result?.submitted) {
+        setSubmittedWeeks((weeks) => [...weeks, result.submitted]);
+      }
       setIsSuccessful(true);
       setIsSubmitted(false);
       setIsValidated(null);
@@ -285,6 +367,8 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       setIsSuccessful(false);
       setIsSubmitted(false);
       setIsValidated(null);
+    } finally {
+      isSubmittingRef.current = false;
     }
   };
 
@@ -346,25 +430,55 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
               {...form.getInputProps("comment")}
             />
           </div>
-          {(isSubmitted === false || isSuccessful !== null) && (
-            <Button type="submit">Submit</Button>
+          {existingLogForWeek && isSuccessful !== true && selectedDate && (
+            <Notification
+              icon={<IconAlertTriangle size={20} />}
+              color="yellow"
+              title={`A project log for the week of ${formatWeek(existingLogForWeek.week)} has already been submitted (${existingLogForWeek.totalHours} hours).`}
+              withCloseButton={false}
+            >
+              To make changes,{" "}
+              <a
+                href={`https://teachinglab.monday.com/boards/4284585496/pulses/${existingLogForWeek.itemId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="underline"
+              >
+                edit it on Monday
+              </a>
+              . To log a different week, change the date above.
+            </Notification>
           )}
-          {isSubmitted && isValidated && isSuccessful === null && (
-            <Loader size={30} color="rgba(255, 255, 255, 1)" />
-          )}
+          {/* Stays visible but locked once the selected week has a log;
+              picking another week unlocks it */}
+          <Button
+            type="submit"
+            loading={isSubmitted && isValidated === true && isSuccessful === null}
+            disabled={Boolean(existingLogForWeek)}
+          >
+            {existingLogForWeek
+              ? isSuccessful === true
+                ? "Submitted"
+                : "Already submitted"
+              : "Submit"}
+          </Button>
           {isSuccessful === true && (
             <Notification
               icon={checkIcon}
               color="teal"
               title="Form is submitted successfully!"
               mt="md"
-            ></Notification>
+              withCloseButton={false}
+            >
+              To log another week, change the date above.
+            </Notification>
           )}
           {isSuccessful === false && (
             <Notification
               icon={xIcon}
               color="red"
-              title="Something went wrong"
+              title={submitErrorMessage || "Something went wrong"}
+              withCloseButton={false}
             ></Notification>
           )}
         </form>
