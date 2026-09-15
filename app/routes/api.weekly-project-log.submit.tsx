@@ -74,15 +74,26 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         columnVals: JSON.stringify(columnValues),
       });
     let response = await createParentItem(parentColumnValues);
-    // If Monday rejects a People value (e.g. a deactivated manager), still
-    // save the entry untagged rather than failing the whole submission
+    // If create_item fails with People tags (e.g. a deactivated manager), retry
+    // once untagged rather than failing the whole submission. Monday's error
+    // messages aren't stable enough to match on, so any failure retries once.
     if (!response?.data?.create_item && Object.keys(peopleColumnValues).length > 0) {
       console.warn(
-        "create_item failed with people tags, retrying without:",
+        "create_item failed with people tags, retrying untagged:",
         JSON.stringify(response?.errors ?? response)
       );
       const { person, people, ...untaggedColumnValues } = parentColumnValues as Record<string, unknown>;
       response = await createParentItem(untaggedColumnValues);
+    }
+    if (!response?.data?.create_item) {
+      console.error(
+        "create_item failed:",
+        JSON.stringify(response?.errors ?? response)
+      );
+      return new Response(null, {
+        status: 500,
+        statusText: "Something went wrong with submission",
+      });
     }
     const parentItemId = response.data.create_item.id;
     console.log("parentItemId", parentItemId);

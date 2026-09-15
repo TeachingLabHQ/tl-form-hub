@@ -27,6 +27,7 @@ export function employeeRepository(): EmployeeRepository {
     // Replaces the VLOOKUP Auto-link marketplace app that used to tag these.
     fetchEmployeePeopleTags: async (employeeId: string) => {
       const trimmedId = String(employeeId ?? "").trim();
+      // Digits only: this also keeps the id safe to interpolate into the query
       if (!/^\d+$/.test(trimmedId)) {
         return {
           data: null,
