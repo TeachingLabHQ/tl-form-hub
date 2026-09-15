@@ -1,7 +1,7 @@
-import { executiveAssistantMappings } from "~/components/weekly-project-log/utils";
 import { Errorable } from "~/utils/errorable";
 import { EmployeeRepository } from "../employee/repository";
 import { employeeService } from "../employee/service";
+import { executiveAssistantMappings } from "./model";
 import { WeeklyProjectLogRepository } from "./repository";
 
 export function weeklyProjectLogService(

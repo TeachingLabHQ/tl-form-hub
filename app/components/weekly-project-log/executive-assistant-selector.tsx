@@ -1,12 +1,7 @@
 import { Select } from "@mantine/core";
 import { compareTwoStrings } from "./utils";
+import type { ExecutiveAssistantMapping } from "~/domains/weekly-project-log/model";
 
-export type ExecutiveAssistantMapping = {
-  executiveAssistantEmail: string;
-  executiveName: string;
-  executiveEmail: string;
-  executiveId: string;
-};
 
 type Props = {
   executiveAssistantMappings: ExecutiveAssistantMapping[];

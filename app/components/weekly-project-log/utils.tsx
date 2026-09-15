@@ -1,5 +1,4 @@
 import { ProjectLogRows, ProjectMember } from "~/domains/project/model";
-import { ExecutiveAssistantMapping } from "./executive-assistant-selector";
 import { EmployeeProfile } from "~/domains/employee/model";
 import { Link } from "@remix-run/react";
 import { ReminderItem } from "./reminders";
@@ -163,21 +162,6 @@ export const fetchProjectDataForUser = async (
     return null;
   }
 };
-
-export const executiveAssistantMappings: ExecutiveAssistantMapping[] = [
-  {
-    executiveAssistantEmail: "savanna.worthington@teachinglab.org",
-    executiveName: "HaMy Vu",
-    executiveEmail: "hamy.vu@teachinglab.org",
-    executiveId:"2"
-  },
-  {
-    executiveAssistantEmail: "alli.betsill@teachinglab.org",
-    executiveName: "Sarah Johnson",
-    executiveEmail: "sarah.johnson@teachinglab.org",
-    executiveId: "30"
-  },
-];
 
 export const getClosestMonday = (date: Date, onChange: boolean): Date => {
   const currentMonday = new Date(date);

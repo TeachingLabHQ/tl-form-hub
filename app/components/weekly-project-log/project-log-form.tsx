@@ -10,7 +10,6 @@ import { ProjectLogsWidget } from "./project-logs-widget";
 import { Reminders } from "./reminders";
 import {
   compareTwoStrings,
-  executiveAssistantMappings,
   getClosestMonday,
   REMINDER_ITEMS,
   setPreAssignedProjectsFromBudgetedHours,
@@ -19,7 +18,10 @@ import {
   type ProjectData,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
-import type { SubmittedWeek } from "~/domains/weekly-project-log/model";
+import {
+  executiveAssistantMappings,
+  type SubmittedWeek,
+} from "~/domains/weekly-project-log/model";
 
 // Local-calendar YYYY-MM-DD, matching the Date column the server writes
 const toWeekKey = (date: Date) =>
