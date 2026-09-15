@@ -21,7 +21,7 @@ export async function fetchMondayData(queryBody: string): Promise<any> {
     }
     
     const result = await response.json();
-    console.log("result", result);
+    // console.log("result", result);
     return result;
   } else {
     // Client-side: use proxy
@@ -40,7 +40,7 @@ export async function fetchMondayData(queryBody: string): Promise<any> {
     }
     
     const result = await response.json();
-    console.log("result", result);
+    // console.log("result", result);
     return result;
   }
 }

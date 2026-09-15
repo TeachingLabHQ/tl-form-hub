@@ -31,7 +31,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ submittedWeeks: [], error: true }, { status: 502, headers });
     }
     if (!isAllowed) {
-      return json({ error: "Not allowed" }, { status: 403, headers });
+      return json({ submittedWeeks: [], error: "Not allowed" }, { status: 403, headers });
     }
 
     const { data, error } = await service.fetchSubmittedWeeks(String(employeeId));
