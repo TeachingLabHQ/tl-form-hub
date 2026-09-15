@@ -2,31 +2,75 @@ import { json } from "@remix-run/node";
 import type { ActionFunctionArgs } from "@vercel/remix";
 import { employeeRepository } from "~/domains/employee/repository";
 import { employeeService } from "~/domains/employee/service";
-import { insertMondayData } from "~/domains/utils";
+import { weeklyProjectLogRepository } from "~/domains/weekly-project-log/repository";
+import { getTeachingLabUser } from "~/utils/auth.server";
 import { formatDate } from "~/utils/utils";
+
+// Large logs create 20+ subitems a few at a time (~0.75s per subitem), which
+// blew through the previous 15s limit and killed submissions mid-write.
+export const config = { maxDuration: 60 };
 
 const toPeopleValue = (ids: string[]) => ({
   personsAndTeams: ids.map((id) => ({ id: Number(id), kind: "person" })),
 });
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  const user = await getTeachingLabUser(request);
+  if (!user) {
+    return json({ error: "Please sign in with your Teaching Lab account." }, { status: 401 });
+  }
+  const { headers } = user;
+
   const body = await request.json();
   const { name, date, projectLogEntries, comment, employeeId } = body;
   // ?dryRun=1 returns the parent item's column values without writing to Monday
   const isDryRun = new URL(request.url).searchParams.get("dryRun") === "1";
 
   //validate Inputs
-  if (!name || !date || !Array.isArray(projectLogEntries)) {
-    return new Response(null, {
-      status: 400,
-      statusText: "Submission Inputs are not valid",
-    });
+  if (!name || !date || !employeeId || !Array.isArray(projectLogEntries) || projectLogEntries.length === 0) {
+    return json({ error: "Submission inputs are not valid." }, { status: 400, headers });
   }
+
+  const repository = weeklyProjectLogRepository();
 
   //process the submission
   try {
+    const { data: isAllowed, error: permissionError } = await repository.canSubmitFor(
+      user.email,
+      String(employeeId)
+    );
+    if (permissionError) {
+      console.error("Could not verify submitter:", user.email, permissionError.message);
+      return json(
+        { error: "We couldn't verify your employee profile. Please try again." },
+        { status: 502, headers }
+      );
+    }
+    if (!isAllowed) {
+      console.warn(`Rejected project log from ${user.email} for employee ${employeeId}`);
+      return json(
+        { error: "You can only submit a project log for yourself or an executive you support." },
+        { status: 403, headers }
+      );
+    }
+
     const formattedDate = formatDate(date);
-    let totalHours = projectLogEntries.reduce((a, b) => {
+
+    // One log per employee per week. If the lookup itself fails, let the
+    // submission through rather than block everyone during a Monday hiccup.
+    const submittedWeeks = await repository.fetchSubmittedWeeks(String(employeeId));
+    if (submittedWeeks.error) {
+      console.error("Could not check for an existing project log:", submittedWeeks.error.message);
+    }
+    const existing = submittedWeeks.data?.find((week) => week.week === formattedDate);
+    if (existing) {
+      return json(
+        { error: `A project log for the week of ${formattedDate} was already submitted.`, existing },
+        { status: 409, headers }
+      );
+    }
+
+    const totalHours = projectLogEntries.reduce((a, b) => {
       return a + parseFloat(b.workHours);
     }, 0);
 
@@ -58,84 +102,88 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     };
 
     if (isDryRun) {
-      return json({
-        parentColumnValues,
-        peopleTagError: peopleTags.error?.message ?? null,
-      });
+      return json(
+        {
+          parentColumnValues,
+          peopleTagError: peopleTags.error?.message ?? null,
+        },
+        { headers }
+      );
     }
 
     //create the parent item
-    const queryParentItem =
-      "mutation ($myItemName: String!, $columnVals: JSON!, $groupName: String! ) { create_item (board_id:4284585496, group_id: $groupName, item_name:$myItemName, column_values:$columnVals) { id } }";
-    const createParentItem = (columnValues: object) =>
-      insertMondayData(queryParentItem, {
-        groupName: "topics",
-        myItemName: name,
-        columnVals: JSON.stringify(columnValues),
-      });
-    let response = await createParentItem(parentColumnValues);
+    let parentItem = await repository.createParentItem(name, parentColumnValues);
     // If create_item fails with People tags (e.g. a deactivated manager), retry
     // once untagged rather than failing the whole submission. Monday's error
     // messages aren't stable enough to match on, so any failure retries once.
-    if (!response?.data?.create_item && Object.keys(peopleColumnValues).length > 0) {
-      console.warn(
-        "create_item failed with people tags, retrying untagged:",
-        JSON.stringify(response?.errors ?? response)
-      );
+    if (parentItem.error && Object.keys(peopleColumnValues).length > 0) {
+      console.warn("create_item failed with people tags, retrying untagged:", parentItem.error.message);
       const { person, people, ...untaggedColumnValues } = parentColumnValues as Record<string, unknown>;
-      response = await createParentItem(untaggedColumnValues);
+      parentItem = await repository.createParentItem(name, untaggedColumnValues);
     }
-    if (!response?.data?.create_item) {
-      console.error(
-        "create_item failed:",
-        JSON.stringify(response?.errors ?? response)
+    if (!parentItem.data) {
+      console.error("create_item failed:", parentItem.error?.message);
+      return json(
+        { error: "Your project log couldn't be saved. Please try again." },
+        { status: 502, headers }
       );
-      return new Response(null, {
-        status: 500,
-        statusText: "Something went wrong with submission",
-      });
     }
-    const parentItemId = response.data.create_item.id;
+    const parentItemId = parentItem.data.id;
     console.log("parentItemId", parentItemId);
 
     //create subitems
-    const querySubItems =
-      "mutation ($myItemName: String!,$parentID: ID!, $columnVals: JSON! ) { create_subitem (parent_item_id:$parentID, item_name:$myItemName, column_values:$columnVals) { id } }";
-    const subitemPromises = projectLogEntries.map((project) => {
-      const { projectName, projectRole, workHours, activity } = project;
-      const varsSubItems = {
-        myItemName: name,
-        parentID: String(parentItemId),
-        columnVals: JSON.stringify({
+    const subitemResults = await repository.createSubitems(
+      parentItemId,
+      projectLogEntries.map((project) => ({
+        itemName: name,
+        columnValues: {
           date: { date: formattedDate },
-          project_role: projectRole,
-          name6: projectName,
-          numbers: parseFloat(workHours),
+          project_role: project.projectRole,
+          name6: project.projectName,
+          numbers: parseFloat(project.workHours),
           numeric_mkq2d9jn: employeeId,
-          text_mkt4atja: activity,
-        }),
-      };
-      // Return the promise for each subitem creation
-      return insertMondayData(querySubItems, varsSubItems)
-        .then((result) => {
-          console.log(`Subitem created for project: ${projectName}`);
-          return result;
-        })
-        .catch((error) => {
-          console.error(`Error creating subitem ${projectName}:`, error);
-          throw error;
-        });
-    });
-    await Promise.all(subitemPromises);
-    return new Response(null, {
-      status: 200,
-      statusText: "All items and subitems created successfully.",
-    });
+          text_mkt4atja: project.activity,
+        },
+      }))
+    );
+    const failedSubitems = subitemResults
+      .map((result, index) => ({ result, project: projectLogEntries[index] }))
+      .filter(({ result }) => result.error);
+
+    // Don't leave a partial log behind: remove the entry so a resubmit starts
+    // clean and isn't blocked by the duplicate check
+    if (failedSubitems.length > 0) {
+      failedSubitems.forEach(({ result, project }) => {
+        console.error(`create_subitem failed for ${project.projectName}:`, result.error?.message);
+      });
+      const deleted = await repository.deleteItem(parentItemId);
+      if (deleted.error) {
+        console.error(`Could not remove partial project log ${parentItemId}:`, deleted.error.message);
+      }
+      return json(
+        {
+          error: `${failedSubitems.length} of ${projectLogEntries.length} project rows couldn't be saved, so nothing was submitted. Please try again.`,
+        },
+        { status: 502, headers }
+      );
+    }
+
+    return json(
+      {
+        submitted: {
+          itemId: parentItemId,
+          week: formattedDate,
+          totalHours,
+          createdAt: new Date().toISOString(),
+        },
+      },
+      { headers }
+    );
   } catch (e) {
     console.error(e);
-    return new Response(null, {
-      status: 500,
-      statusText: "Something went wrong with submission",
-    });
+    return json(
+      { error: "Something went wrong with your submission. Please try again." },
+      { status: 500, headers }
+    );
   }
 };
