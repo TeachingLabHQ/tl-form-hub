@@ -30,7 +30,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const isDryRun = new URL(request.url).searchParams.get("dryRun") === "1";
 
   //validate Inputs
-  if (!name || !date || !employeeId || !Array.isArray(projectLogEntries) || projectLogEntries.length === 0) {
+  // date must be a string: formatDate() slices it, and a number or object
+  // would throw inside the handler and surface as a 500
+  if (!name || typeof date !== "string" || !date || !employeeId || !Array.isArray(projectLogEntries) || projectLogEntries.length === 0) {
     return json({ error: "Submission inputs are not valid." }, { status: 400, headers });
   }
 

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "vitest run",
     "dev": "remix vite:dev --port 5174",
     "build": "remix vite:build",
     "typecheck": "tsc",
@@ -15,7 +15,8 @@
     "supa:gen": "supabase gen types typescript --local > supabase/database.types.ts",
     "supa:start": "supabase start",
     "supa:reset": "supabase db reset",
-    "supa:stop": "supabase stop"
+    "supa:stop": "supabase stop",
+    "test:watch": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -72,7 +73,8 @@
     "supabase": "^2.20.12",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vitest": "^2.1.9"
   },
   "type": "module"
 }
