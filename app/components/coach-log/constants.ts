@@ -38,8 +38,8 @@ export const COACH_OVERRIDE_TESTER_EMAILS = [
   "tyler.schoen@teachinglab.org",
   "carla.emanuele@teachinglab.org",
   "joseph.kapustka@teachinglab.org",
-  // Contractor test account (non-TL Google login) for checking contractor flows
-  "duncan.gates123@gmail.com",
+  // Contractor test account (data@ is not on the employee board, so it signs in as a contractor)
+  "data@teachinglab.org",
 ];
 
 export const canOverrideCoach = (email: string | undefined | null) =>
