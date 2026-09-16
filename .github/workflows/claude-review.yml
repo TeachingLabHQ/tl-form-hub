@@ -9,6 +9,14 @@ on:
   issue_comment:
     types: [created]
 
+# One review at a time per PR. A push that lands while a review is still
+# running cancels it, so a quick follow-up commit doesn't post two comments.
+# An @claude comment queues instead of cancelling, so an answer in flight
+# isn't thrown away.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
   pull-requests: write

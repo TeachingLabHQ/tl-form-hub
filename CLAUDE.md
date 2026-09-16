@@ -14,7 +14,9 @@ npm run typecheck    # tsc --noEmit — the primary verification gate (see below
 
 Supabase (local DB + edge functions): `npm run supa:start` / `supa:stop` / `supa:reset`, `supa:up` / `supa:down` / `supa:status` (migrations), `supa:new` (new migration), `supa:gen` (regenerate `supabase/database.types.ts`).
 
-**There is no test framework** — `npm test` is a placeholder that exits non-zero. Verify changes with `npm run typecheck` and `npm run build`; both must pass. For behavioral checks, run the app and exercise the form, or hit the `api.*` routes directly with `curl`.
+**Tests:** `npm test` runs vitest (`npm run test:watch` to watch). Node-environment unit tests of the domain layer and the `api.*` route actions, with Monday's `fetch` mocked — no test touches the real API or a board. Files are co-located as `*.test.ts` next to what they cover; CI runs typecheck, tests and build on every PR.
+
+Verify changes with `npm run typecheck`, `npm test` **and** `npm run build` — all three must pass, and typecheck and build do diverge (a route test that typechecked fine once broke the build by being compiled as a Remix route; hence `ignoredRouteFiles` in `vite.config.js`, which any new `app/routes/*.test.ts*` must match). For behavioral checks, run the app and exercise the form, or hit the `api.*` routes directly with `curl`.
 
 **Dev gotcha — Google Sheets egress:** Monday calls use Node's global `fetch`/undici (ignores proxy env vars), but Google Sheets calls use `googleapis`/gaxios (honors `http_proxy`/`https_proxy`). On a VPN or restricted network, the coach-log route loader (which reads Google Sheets) will hang/fail unless you start dev with proxy env, e.g. `https_proxy=http://127.0.0.1:7897 http_proxy=http://127.0.0.1:7897 npm run dev`. This is dev-only; prod (Vercel) reaches Google directly.
 

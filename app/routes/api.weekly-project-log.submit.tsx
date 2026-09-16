@@ -18,6 +18,10 @@ const toPeopleValue = (ids: string[]) => ({
 });
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (request.method !== "POST") {
+    return json({ error: "Method not allowed" }, { status: 405 });
+  }
+
   const user = await getTeachingLabUser(request);
   if (!user) {
     return json({ error: "Please sign in with your Teaching Lab account." }, { status: 401 });
@@ -30,7 +34,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   const isDryRun = new URL(request.url).searchParams.get("dryRun") === "1";
 
   //validate Inputs
-  if (!name || !date || !employeeId || !Array.isArray(projectLogEntries) || projectLogEntries.length === 0) {
+  // date must be a string: formatDate() slices it, and a number or object
+  // would throw inside the handler and surface as a 500
+  if (!name || typeof date !== "string" || !date || !employeeId || !Array.isArray(projectLogEntries) || projectLogEntries.length === 0) {
     return json({ error: "Submission inputs are not valid." }, { status: 400, headers });
   }
 
@@ -52,7 +58,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!isAllowed) {
       console.warn(`Rejected project log from ${user.email} for employee ${employeeId}`);
       return json(
-        { error: "You can only submit a project log for yourself or an executive you support." },
+        { error: "You can only submit a project log for yourself." },
         { status: 403, headers }
       );
     }

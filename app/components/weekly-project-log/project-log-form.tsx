@@ -5,17 +5,13 @@ import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
 import { useSession } from "../auth/hooks/useSession";
-import { ExecutiveAssistantSelector } from "./executive-assistant-selector";
 import { ProjectLogsWidget } from "./project-logs-widget";
 import { Reminders } from "./reminders";
 import {
-  compareTwoStrings,
-  executiveAssistantMappings,
   getClosestMonday,
   REMINDER_ITEMS,
   setPreAssignedProjectsFromBudgetedHours,
   addSharedOperationsRow,
-  fetchProjectDataForUser,
   type ProjectData,
 } from "./utils";
 import { ProjectLogRows } from "~/domains/project/model";
@@ -42,12 +38,6 @@ export type SubmissionUser = {
   name: string;
   email: string;
   employeeId: string;
-  isExecutiveAssistant: boolean;
-  submittedForYourself: boolean | null;
-  executiveDetails?: {
-    name: string;
-    email: string;
-  };
 };
 
 
@@ -106,8 +96,6 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
     name: mondayProfile?.name || "",
     email: mondayProfile?.email || "",
     employeeId: mondayProfile?.employeeId || "",
-    isExecutiveAssistant: false,
-    submittedForYourself: null,
   }));
 
   // Load the weeks this person already logged so a repeat week is blocked up
@@ -154,75 +142,26 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
     ? submittedWeeks.find((week) => week.week === toWeekKey(selectedDate))
     : undefined;
 
-  // Track current project data (changes when executive is selected)
-  const [currentProjectData, setCurrentProjectData] = useState<ProjectData>(projectData);
-  const [lastFetchedEmail, setLastFetchedEmail] = useState<string | null>(null);
+  // The signed-in user is always the person the log is for, so the project
+  // data the parent route fetched is the only set the form ever shows.
+  const currentProjectData = projectData;
 
-  // Fetch project data when submission user changes (e.g., when executive is selected)
-  // Skip fetch if it's the same email as the initial user (parent already fetched it)
+  // Pre-fill the rows from the user's budgeted hours once the data arrives
   useEffect(() => {
-    const loadProjectData = async () => {
-      if (!submissionUser?.email) {
-        return;
-      }
-
-      // Skip fetch if this is the initial user's email and we already have projectData
-      // Only fetch when switching to a different user (like an executive)
-      if (submissionUser.email === mondayProfile?.email && lastFetchedEmail === null && projectData) {
-        setLastFetchedEmail(submissionUser.email);
-        setCurrentProjectData(projectData);
-        // Set pre-assigned projects from initial projectData
-        if (projectData?.employeeBudgetedHours && projectData.employeeBudgetedHours.length > 0) {
-          setPreAssignedProjectsFromBudgetedHours(
-            projectData.employeeBudgetedHours, 
-            setProjectWorkEntries
-          );
-        }
-        return;
-      }
-      // Only fetch if email changed to a different user
-      if (submissionUser.email === lastFetchedEmail) {
-        return;
-      }
-
-      const newProjectData = await fetchProjectDataForUser(submissionUser.email);
-      if (newProjectData) {
-        setCurrentProjectData(newProjectData);
-        setLastFetchedEmail(submissionUser.email);
-
-        // Reset and set pre-assigned projects from budgeted hours
-        if (newProjectData?.employeeBudgetedHours && newProjectData.employeeBudgetedHours.length > 0) {
-          setPreAssignedProjectsFromBudgetedHours(
-            newProjectData.employeeBudgetedHours, 
-            setProjectWorkEntries
-          );
-        } else {
-          // Reset to empty if no budgeted hours
-          setProjectWorkEntries([{
-            projectName: "",
-            projectRole: "",
-            workHours: "",
-            budgetedHours: "N/A",
-            activity: "",
-          }]);
-        }
-      }
-    };
-
-    loadProjectData();
-  }, [submissionUser?.email, mondayProfile?.email, projectData, lastFetchedEmail]);
+    if (projectData?.employeeBudgetedHours && projectData.employeeBudgetedHours.length > 0) {
+      setPreAssignedProjectsFromBudgetedHours(
+        projectData.employeeBudgetedHours,
+        setProjectWorkEntries
+      );
+    }
+  }, [projectData]);
 
   useEffect(() => {
     if (mondayProfile?.email) {
-      const isEA = executiveAssistantMappings.some((mapping) =>
-        compareTwoStrings(mapping.executiveAssistantEmail, mondayProfile.email)
-      );
       setSubmissionUser({
         name: mondayProfile.name,
         email: mondayProfile.email,
         employeeId: mondayProfile.employeeId || "",
-        isExecutiveAssistant: isEA,
-        submittedForYourself: true,
       });
     }
      // Add Shared Operations row if user is from Shared Operations
@@ -230,36 +169,6 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
       addSharedOperationsRow(setProjectWorkEntries);
     }
   }, [mondayProfile?.email,mondayProfile?.businessFunction]);
-
-  const handleExecutiveSelection = (executiveName: string | null) => {
-    if (!executiveName) {
-      setSubmissionUser({
-        name: mondayProfile?.name || "",
-        email: mondayProfile?.email || "",
-        employeeId: mondayProfile?.employeeId || "",
-        isExecutiveAssistant: true,
-        submittedForYourself: true,
-      });
-      return;
-    }
-
-    const mapping = executiveAssistantMappings.find(
-      (m) => m.executiveName === executiveName
-    );
-    if (mapping) {
-      setSubmissionUser({
-        name: mapping.executiveName,
-        email: mapping.executiveEmail,
-        employeeId: mapping.executiveId,
-        isExecutiveAssistant: true,
-        submittedForYourself: false,
-        executiveDetails: {
-          name: mapping.executiveName,
-          email: mapping.executiveEmail,
-        },
-      });
-    }
-  };
 
   const form = useForm({
     initialValues: {
@@ -387,15 +296,6 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
           className="flex flex-col gap-4"
         >
           <h1 className="font-bold text-3xl">Weekly Project Log Form</h1>
-          {submissionUser.isExecutiveAssistant && (
-            <ExecutiveAssistantSelector
-              executiveAssistantMappings={executiveAssistantMappings}
-              userEmail={mondayProfile?.email || ""}
-              onSelectExecutive={handleExecutiveSelection}
-              isValidated={isValidated}
-              submittedForYourself={submissionUser.submittedForYourself}
-            />
-          )}
           <div className="flex flex-col gap-1">
             <h1 className="font-medium text-lg">
               Enter the Monday of the week:
