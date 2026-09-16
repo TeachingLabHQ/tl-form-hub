@@ -20,3 +20,6 @@ jobs:
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
+      # typecheck and build diverge: test files co-located in app/routes/
+      # typechecked fine but broke the Vite build as Remix routes
+      - run: npm run build
