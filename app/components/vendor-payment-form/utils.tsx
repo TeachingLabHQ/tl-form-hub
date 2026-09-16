@@ -209,7 +209,7 @@ export const dataEvaluationTaskOptions: TaskDetails[] = [
   {
     taskName: "Data Evaluation",
     "Tier 1": 27,
-    "Tier 2": null,
+    "Tier 2": 32,
     "Tier 3": null,
     "Tier 4": null,
     maxHours: null,
