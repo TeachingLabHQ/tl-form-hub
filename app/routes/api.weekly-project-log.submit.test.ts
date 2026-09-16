@@ -69,6 +69,19 @@ afterEach(() => {
 });
 
 describe("auth", () => {
+  it("405s on a non-POST request", async () => {
+    const response = await action({
+      request: new Request("http://localhost/api/weekly-project-log/submit", {
+        method: "GET",
+      }),
+      params: {},
+      context: {} as never,
+    });
+
+    expect(response.status).toBe(405);
+    expect(getTeachingLabUser).not.toHaveBeenCalled();
+  });
+
   it("401s when nobody is signed in", async () => {
     getTeachingLabUser.mockResolvedValue(null);
 

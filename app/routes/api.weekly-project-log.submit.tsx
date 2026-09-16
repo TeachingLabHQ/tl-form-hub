@@ -18,6 +18,10 @@ const toPeopleValue = (ids: string[]) => ({
 });
 
 export const action = async ({ request }: ActionFunctionArgs) => {
+  if (request.method !== "POST") {
+    return json({ error: "Method not allowed" }, { status: 405 });
+  }
+
   const user = await getTeachingLabUser(request);
   if (!user) {
     return json({ error: "Please sign in with your Teaching Lab account." }, { status: 401 });
