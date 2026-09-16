@@ -52,7 +52,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (!isAllowed) {
       console.warn(`Rejected project log from ${user.email} for employee ${employeeId}`);
       return json(
-        { error: "You can only submit a project log for yourself or an executive you support." },
+        { error: "You can only submit a project log for yourself." },
         { status: 403, headers }
       );
     }

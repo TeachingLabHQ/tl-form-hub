@@ -1,4 +1,3 @@
-import { executiveAssistantMappings } from "~/components/weekly-project-log/utils";
 import { Errorable } from "~/utils/errorable";
 import { EmployeeRepository } from "../employee/repository";
 import { employeeService } from "../employee/service";
@@ -16,21 +15,13 @@ export function weeklyProjectLogService(
     deleteItem: weeklyProjectLogRepository.deleteItem,
     fetchEmployeePeopleTags: employees.fetchEmployeePeopleTags,
 
-    // Whether `email` may submit a log for `employeeId`: their own, or an
-    // executive they're mapped to as an executive assistant.
+    // Whether `email` may submit a log for `employeeId`. Everyone submits for
+    // themselves only.
     canSubmitFor: async (
       email: string,
       employeeId: string
     ): Promise<Errorable<boolean>> => {
       const trimmedId = String(employeeId ?? "").trim();
-      const isAssistantFor = executiveAssistantMappings.some(
-        (mapping) =>
-          mapping.executiveAssistantEmail.toLowerCase() === email.toLowerCase() &&
-          mapping.executiveId === trimmedId
-      );
-      if (isAssistantFor) {
-        return { data: true, error: null };
-      }
       const { data: employee, error } = await employees.fetchMondayEmployee(email);
       if (error || !employee) {
         return { data: null, error: error ?? new Error("Employee not found") };
