@@ -7,7 +7,9 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     environment: "node",
-    include: ["app/**/*.test.ts"],
+    // Matches the ignoredRouteFiles glob in vite.config.js: a test file Remix
+    // skips but vitest doesn't collect would silently never run
+    include: ["app/**/*.test.{ts,tsx}"],
     setupFiles: ["./test/setup.ts"],
   },
 });
