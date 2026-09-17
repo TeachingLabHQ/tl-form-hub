@@ -4,13 +4,13 @@ import type { CoachLogForm } from "../hooks/use-coach-log-form";
 
 type Props = {
   form: CoachLogForm;
-  fieldName: "readsIsPLSession" | "solvesIsPLSession";
+  fieldName: "readsIsPLSession";
   onChange: (value: string) => void;
 };
 
 /**
  * "Are you logging a Professional Learning Session?" — shown right after the
- * coach-type question for NYC Reads and NYC Solves coaches. A PL session isn't
+ * coach-type question for NYC Reads coaches only. A PL session isn't
  * a coaching activity, so answering Yes hides the 1:1/group coaching questions
  * and switches the session-date field to a free calendar pick (both handled
  * in the form).
