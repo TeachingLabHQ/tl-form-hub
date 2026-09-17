@@ -87,6 +87,7 @@ export type CoachLogValues = {
   readsNotes: string;
 
   // NYC Solves coach
+  solvesIsPLSession: YesNo | "";
   solvesTouchpointTypes: string[];
 
   // NYC Solves — HQIM-Based Teacher Collaboration
@@ -195,6 +196,7 @@ const INITIAL_VALUES: CoachLogValues = {
   readsGuidanceToolsOther: "",
   readsNotes: "",
 
+  solvesIsPLSession: "",
   solvesTouchpointTypes: [],
 
   solvesHqimVisitDuration: "",
@@ -253,10 +255,11 @@ const readsShown = (v: CoachLogValues) =>
 const solvesShown = (v: CoachLogValues) =>
   shouldShowSolves(v.district, v.nycCoachType);
 
-/** Guidance/tools + notes questions are hidden entirely for a PL session log
- * (NYC Reads only — Solves coaches don't log PL sessions here). */
+/** Guidance/tools + notes questions are hidden entirely for a PL session log. */
 const readsShownNotPL = (v: CoachLogValues) =>
   readsShown(v) && v.readsIsPLSession !== "Yes";
+const solvesShownNotPL = (v: CoachLogValues) =>
+  solvesShown(v) && v.solvesIsPLSession !== "Yes";
 
 const PICK_YES_NO = "Please select Yes or No";
 const PICK_ONE = "Please select an option";
@@ -483,6 +486,9 @@ export function useCoachLogForm() {
       ),
 
       // --- NYC Solves ---------------------------------------------------
+      solvesIsPLSession: whenNotCancelled((value, values) =>
+        solvesShown(values) && !value ? PICK_YES_NO : null
+      ),
       solvesTouchpointTypes: whenNotCancelled((value: string[], values) =>
         solvesShown(values) && value.length === 0
           ? "Please select at least one touchpoint type"
@@ -617,10 +623,10 @@ export function useCoachLogForm() {
       ),
 
       solvesGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+        solvesShownNotPL(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
       ),
       solvesGuidanceToolsOther: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
+        solvesShownNotPL(values) &&
         values.solvesGuidanceToolsUsed.includes(OTHER_OPTION) &&
         !value
           ? "Please specify"
