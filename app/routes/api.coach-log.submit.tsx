@@ -151,6 +151,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     readsGuidanceToolsUsed,
     readsGuidanceToolsOther,
     readsNotes,
+    solvesIsPLSession,
     solvesTouchpointTypes,
     solvesHqimVisitDuration,
     solvesHqimGradeContentAreas,
@@ -331,6 +332,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     // NYC Solves (client only sends these for a Solves coach).
     if (solvesTouchpointTypes?.length) {
+      if (solvesIsPLSession) parentColumns.text_mm6wy4vf = solvesIsPLSession;
       parentColumns[COLUMN.solvesTouchpointTypes] = csv(solvesTouchpointTypes);
 
       if (solvesShowsHqim(solvesTouchpointTypes)) {

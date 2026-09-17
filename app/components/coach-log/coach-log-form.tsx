@@ -114,6 +114,7 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
   const { district, school, nycCoachType, canceled, sessionDate, subSchool } =
     form.values;
   const readsIsPLSession = form.values.readsIsPLSession;
+  const solvesIsPLSession = form.values.solvesIsPLSession;
 
   // Sub-school options are filtered from the loader map by district + school.
   const sheetSubSchoolOptions = useMemo(
@@ -167,10 +168,12 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
   const showSolves = shouldShowSolves(district, nycCoachType);
   const showActivities = canceled !== "Yes";
 
-  // A Reads coach logging a Professional Learning session: hide the coaching
-  // questions and pick the session date from a free calendar instead of the
-  // scheduled coaching-calendar dropdown.
-  const isPLSession = showReads && readsIsPLSession === "Yes";
+  // A Reads or Solves coach logging a Professional Learning session: hide the
+  // coaching questions and pick the session date from a free calendar instead
+  // of the scheduled coaching-calendar dropdown.
+  const isPLSession =
+    (showReads && readsIsPLSession === "Yes") ||
+    (showSolves && solvesIsPLSession === "Yes");
 
   const resetCoacheeSelections = () => {
     form.setFieldValue("coacheeRows", [{ ...EMPTY_COACHEE_ROW }]);
@@ -209,7 +212,7 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
   // (they're hidden but still required), and clears the date since the input
   // switches between the calendar and the scheduled dropdown.
   const handlePLSessionChange =
-    (fieldName: "readsIsPLSession") => (value: string) => {
+    (fieldName: "readsIsPLSession" | "solvesIsPLSession") => (value: string) => {
       form.setFieldValue(fieldName, value as CoachLogValues[typeof fieldName]);
       form.setFieldValue("sessionDate", "");
       if (value === "Yes") {
@@ -395,6 +398,14 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                   form={form}
                   fieldName="readsIsPLSession"
                   onChange={handlePLSessionChange("readsIsPLSession")}
+                />
+              )}
+
+              {showSolves && (
+                <PlSessionQuestion
+                  form={form}
+                  fieldName="solvesIsPLSession"
+                  onChange={handlePLSessionChange("solvesIsPLSession")}
                 />
               )}
 
