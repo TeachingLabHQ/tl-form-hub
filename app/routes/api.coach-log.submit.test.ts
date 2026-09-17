@@ -66,7 +66,6 @@ const base = {
   readsGuidanceToolsUsed: [],
   readsGuidanceToolsOther: "",
   readsNotes: "",
-  solvesIsPLSession: "",
   solvesTouchpointTypes: [],
   solvesHqimVisitDuration: "",
   solvesHqimGradeContentAreas: [],

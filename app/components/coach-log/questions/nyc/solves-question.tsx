@@ -85,7 +85,7 @@ export const SolvesQuestion = ({ form, district, dbnsByDistrict }: Props) => {
         <SolvesPostVisitSnapshot form={form} />
       )}
 
-      {form.values.solvesIsPLSession !== "Yes" && <SolvesGuidanceNotes form={form} />}
+      <SolvesGuidanceNotes form={form} />
     </>
   );
 };

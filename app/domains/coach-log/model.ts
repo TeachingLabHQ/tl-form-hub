@@ -172,7 +172,6 @@ export type CoachLogSubmission = {
   readsNotes: string;
 
   // NYC Solves coach
-  solvesIsPLSession: YesNo | "";
   solvesTouchpointTypes: string[];
 
   // NYC Solves — HQIM-Based Teacher Collaboration
