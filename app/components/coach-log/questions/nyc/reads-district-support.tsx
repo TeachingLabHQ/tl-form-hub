@@ -1,10 +1,8 @@
 import { MultiSelect, Select } from "@mantine/core";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
-  applyNAExclusivity,
   JES_GLOSSARY_URL,
   MAX_READS_DISTRICT_CAPACITY_FOCUS,
-  MAX_READS_SUSTAINABILITY,
   READS_DISTRICT_CAPACITY_FOCUS_OPTIONS,
   READS_DISTRICT_DATA_STRATEGY_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_FOCUS_DATA_STRATEGY,
@@ -14,11 +12,9 @@ import {
   READS_DISTRICT_PL_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_SCHOOL_VISITS_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_STRATEGIC_PLANNING_SUBCOMPONENT_OPTIONS,
-  READS_SUSTAINABILITY_NONE_OPTION,
-  READS_SUSTAINABILITY_OPTIONS,
-  SUSTAINABILITY_REFLECTION_TOOL_URL,
 } from "./constants";
 import { QuestionField } from "./field";
+import { SustainabilityQuestion } from "./sustainability-question";
 
 type Props = {
   form: CoachLogForm;
@@ -39,20 +35,6 @@ const GLOSSARY_NOTE = (
   </>
 );
 
-const SUSTAINABILITY_NOTE = (
-  <>
-    See a detailed description of each sustainability factor in the{" "}
-    <a
-      href={SUSTAINABILITY_REFLECTION_TOOL_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="font-bold underline"
-    >
-      Sustainability Reflection Tool
-    </a>
-    .
-  </>
-);
 
 /** NYC Reads district-support questions ("District team support" touchpoint). */
 export const ReadsDistrictSupport = ({ form }: Props) => {
@@ -143,28 +125,7 @@ export const ReadsDistrictSupport = ({ form }: Props) => {
         </QuestionField>
       )}
 
-      <QuestionField
-        label="Select at most 2 conditions of sustainability that were most closely aligned to the support given today.*"
-        note={SUSTAINABILITY_NOTE}
-      >
-        <MultiSelect
-          placeholder="Select up to 2 conditions"
-          data={READS_SUSTAINABILITY_OPTIONS}
-          maxValues={MAX_READS_SUSTAINABILITY}
-          value={form.values.readsDistrictSustainability}
-          onChange={(next) =>
-            form.setFieldValue(
-              "readsDistrictSustainability",
-              applyNAExclusivity(
-                next,
-                form.values.readsDistrictSustainability,
-                READS_SUSTAINABILITY_NONE_OPTION
-              )
-            )
-          }
-          error={form.errors.readsDistrictSustainability}
-        />
-      </QuestionField>
+      <SustainabilityQuestion form={form} field="readsDistrictSustainability" />
     </>
   );
 };

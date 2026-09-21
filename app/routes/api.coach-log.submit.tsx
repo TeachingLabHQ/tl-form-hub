@@ -100,6 +100,7 @@ const COLUMN = {
   solvesPostVisitSnapshot: "text_mm6n9813",
   solvesPostVisitFollowUp: "text_mm6ne4t8",
   // NYC Solves — shown once per submission
+  solvesSustainability: "text_mm7dbgm2",
   solvesGuidanceToolsUsed: "text_mm6n3rjz", // also holds the "Other" write-in (see csvWithOtherDetail)
 } as const;
 
@@ -169,6 +170,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     solvesDistrictWideDBNs,
     solvesPostVisitSnapshot,
     solvesPostVisitFollowUp,
+    solvesSustainability,
     solvesGuidanceToolsUsed,
     solvesGuidanceToolsOther,
     canceled,
@@ -403,6 +405,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           parentColumns[COLUMN.solvesPostVisitFollowUp] = solvesPostVisitFollowUp;
       }
 
+      if (solvesSustainability?.length)
+        parentColumns[COLUMN.solvesSustainability] = csv(solvesSustainability);
       if (solvesGuidanceToolsUsed?.length)
         parentColumns[COLUMN.solvesGuidanceToolsUsed] = csvWithOtherDetail(
           solvesGuidanceToolsUsed,

@@ -206,6 +206,7 @@ export type CoachLogSubmission = {
   solvesPostVisitFollowUp: string;
 
   // NYC Solves — shown once per submission
+  solvesSustainability: string[];
   solvesGuidanceToolsUsed: string[];
   solvesGuidanceToolsOther: string;
 

@@ -27,9 +27,26 @@ export const JES_GLOSSARY_URL =
 export const JES_STRATEGIES_RESOURCES_URL =
   "https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.2gvxyy4nkj21";
 
-/** Sustainability Reflection Tool, referenced by the leader and district sustainability questions. */
+/** Sustainability Reflection Tool, referenced by the sustainability questions. */
 export const SUSTAINABILITY_REFLECTION_TOOL_URL =
   "https://docs.google.com/document/d/1JCw0HRVEP5vV06Lwzt-Ea-W-7ljnxPVfd7MGTUbtDMQ/edit?tab=t.0";
+
+/** Exclusive response — can't be combined with any sustainability condition. */
+export const SUSTAINABILITY_NONE_OPTION = "None of the above";
+
+/**
+ * Conditions of sustainability — shared by the Reads leader and district
+ * support blocks and the once-per-submission Solves question.
+ */
+export const SUSTAINABILITY_OPTIONS = [
+  "Coherence, alignment, and integrity of HQIM",
+  "Professional learning and adult learning structures",
+  "Data-driven instruction, assessment, and continuous improvement systems",
+  "Instructional leadership across the vertical spine",
+  "Stakeholder engagement and community partnership",
+  SUSTAINABILITY_NONE_OPTION,
+];
+export const MAX_SUSTAINABILITY = 2;
 
 /** Guidance for NYC Solves Post-visit Snapshot, referenced by the Solves post visit snapshot question. */
 export const SOLVES_POST_VISIT_SNAPSHOT_GUIDANCE_URL =
@@ -160,20 +177,6 @@ export const READS_LEADER_PL_SUBCOMPONENT_OPTIONS = [
   "Co-facilitating professional learning for school-level staff.",
   "Planning and building capacity for the school leadership team to facilitate meetings based on jointly identified professional learning needs.",
 ];
-
-/** Exclusive response — can't be combined with any sustainability condition. */
-export const READS_SUSTAINABILITY_NONE_OPTION = "None of the above";
-
-/** Shared between the leader and district support blocks. */
-export const READS_SUSTAINABILITY_OPTIONS = [
-  "Coherence, alignment, and integrity of HQIM",
-  "Professional learning and adult learning structures",
-  "Data-driven instruction, assessment, and continuous improvement systems",
-  "Instructional leadership across the vertical spine",
-  "Stakeholder engagement and community partnership",
-  READS_SUSTAINABILITY_NONE_OPTION,
-];
-export const MAX_READS_SUSTAINABILITY = 2;
 
 // --- District team support ---------------------------------------------------
 

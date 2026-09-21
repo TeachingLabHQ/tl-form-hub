@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CoachLogSubmission } from "~/domains/coach-log/model";
 import {
   OTHER_OPTION,
-  READS_SUSTAINABILITY_NONE_OPTION,
+  SUSTAINABILITY_NONE_OPTION,
   READS_TOUCHPOINT_LEADER,
   READS_TOUCHPOINT_TEACHER,
   SOLVES_TOUCHPOINT_HQIM,
@@ -87,6 +87,7 @@ const base = {
   solvesDistrictWideDBNs: "",
   solvesPostVisitSnapshot: "",
   solvesPostVisitFollowUp: "",
+  solvesSustainability: [],
   solvesGuidanceToolsUsed: [],
   solvesGuidanceToolsOther: "",
   canceled: "No",
@@ -276,7 +277,7 @@ describe("parent column values", () => {
       ...base,
       nycCoachType: "NYC Reads",
       readsTouchpointTypes: [READS_TOUCHPOINT_LEADER],
-      readsLeaderSustainability: [READS_SUSTAINABILITY_NONE_OPTION],
+      readsLeaderSustainability: [SUSTAINABILITY_NONE_OPTION],
     });
 
     expect(parentColumns().text_mm6nbxvj).toBe("None of the above");
@@ -294,16 +295,18 @@ describe("parent column values", () => {
     expect(parentColumns().text_mm6ngq1v).toBe("Other");
   });
 
-  it("writes the Solves guidance on a PL session log too", async () => {
+  it("writes the Solves sustainability and guidance on a PL session log too", async () => {
     await submit({
       ...base,
       solvesIsPLSession: "Yes",
       solvesTouchpointTypes: [SOLVES_TOUCHPOINT_HQIM],
       solvesGuidanceToolsUsed: ["Beyond Core"],
+      solvesSustainability: [SUSTAINABILITY_NONE_OPTION],
     });
 
     expect(parentColumns()).toMatchObject({
       text_mm6wy4vf: "Yes",
+      text_mm7dbgm2: "None of the above",
       text_mm6n3rjz: "Beyond Core",
     });
   });

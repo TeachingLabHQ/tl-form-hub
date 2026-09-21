@@ -121,6 +121,7 @@ export type CoachLogValues = {
   solvesPostVisitFollowUp: string;
 
   // NYC Solves — shown once per submission
+  solvesSustainability: string[];
   solvesGuidanceToolsUsed: string[];
   solvesGuidanceToolsOther: string;
 
@@ -221,6 +222,7 @@ const INITIAL_VALUES: CoachLogValues = {
   solvesPostVisitSnapshot: "",
   solvesPostVisitFollowUp: "",
 
+  solvesSustainability: [],
   solvesGuidanceToolsUsed: [],
   solvesGuidanceToolsOther: "",
 
@@ -612,6 +614,9 @@ export function useCoachLogForm() {
           : null
       ),
 
+      solvesSustainability: whenNotCancelled((value: string[], values) =>
+        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+      ),
       solvesGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
         solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
       ),

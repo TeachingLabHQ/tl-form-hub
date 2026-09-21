@@ -194,6 +194,7 @@ export function buildCoachLogSubmission(
         ? values.solvesPostVisitFollowUp
         : "",
 
+    solvesSustainability: sendSolves ? values.solvesSustainability : [],
     solvesGuidanceToolsUsed: sendSolves ? values.solvesGuidanceToolsUsed : [],
     solvesGuidanceToolsOther: sendSolves ? values.solvesGuidanceToolsOther : "",
 
