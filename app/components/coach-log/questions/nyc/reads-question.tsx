@@ -102,7 +102,7 @@ export const ReadsQuestion = ({ form, district }: Props) => {
         </TouchpointSection>
       )}
 
-      {form.values.readsIsPLSession !== "Yes" && <ReadsGuidanceNotes form={form} />}
+      <ReadsGuidanceNotes form={form} />
     </>
   );
 };

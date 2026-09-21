@@ -255,9 +255,10 @@ const readsShown = (v: CoachLogValues) =>
 const solvesShown = (v: CoachLogValues) =>
   shouldShowSolves(v.district, v.nycCoachType);
 
-/** Guidance/tools + notes questions are hidden entirely for a PL session log. */
-const readsShownNotPL = (v: CoachLogValues) =>
-  readsShown(v) && v.readsIsPLSession !== "Yes";
+/**
+ * Solves guidance/tools + notes questions are hidden entirely for a PL session
+ * log. (The Reads ones are asked in every case, PL session or not.)
+ */
 const solvesShownNotPL = (v: CoachLogValues) =>
   solvesShown(v) && v.solvesIsPLSession !== "Yes";
 
@@ -475,10 +476,10 @@ export function useCoachLogForm() {
       ),
 
       readsGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
-        readsShownNotPL(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+        readsShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
       ),
       readsGuidanceToolsOther: whenNotCancelled((value, values) =>
-        readsShownNotPL(values) &&
+        readsShown(values) &&
         values.readsGuidanceToolsUsed.includes(OTHER_OPTION) &&
         !value
           ? "Please specify"
