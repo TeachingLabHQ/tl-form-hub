@@ -294,6 +294,20 @@ describe("parent column values", () => {
     expect(parentColumns().text_mm6ngq1v).toBe("Other");
   });
 
+  it("writes the Solves guidance on a PL session log too", async () => {
+    await submit({
+      ...base,
+      solvesIsPLSession: "Yes",
+      solvesTouchpointTypes: [SOLVES_TOUCHPOINT_HQIM],
+      solvesGuidanceToolsUsed: ["Beyond Core"],
+    });
+
+    expect(parentColumns()).toMatchObject({
+      text_mm6wy4vf: "Yes",
+      text_mm6n3rjz: "Beyond Core",
+    });
+  });
+
   it("writes the Solves HQIM block and skips the other Solves blocks", async () => {
     await submit({
       ...base,

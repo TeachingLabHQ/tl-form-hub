@@ -46,7 +46,6 @@ export function buildCoachLogSubmission(
     !cancelled && shouldShowReads(values.district, values.nycCoachType);
   const sendSolves =
     !cancelled && shouldShowSolves(values.district, values.nycCoachType);
-  const sendSolvesGuidance = sendSolves && values.solvesIsPLSession !== "Yes";
   const sendCoachees = !cancelled && values.did1on1 === "Yes";
   const sendGroup = !cancelled && values.didGroupCoaching === "Yes";
 
@@ -195,8 +194,8 @@ export function buildCoachLogSubmission(
         ? values.solvesPostVisitFollowUp
         : "",
 
-    solvesGuidanceToolsUsed: sendSolvesGuidance ? values.solvesGuidanceToolsUsed : [],
-    solvesGuidanceToolsOther: sendSolvesGuidance ? values.solvesGuidanceToolsOther : "",
+    solvesGuidanceToolsUsed: sendSolves ? values.solvesGuidanceToolsUsed : [],
+    solvesGuidanceToolsOther: sendSolves ? values.solvesGuidanceToolsOther : "",
 
     // Cancellation
     canceled: values.canceled,

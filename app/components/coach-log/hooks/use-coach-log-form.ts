@@ -251,13 +251,6 @@ const readsShown = (v: CoachLogValues) =>
 const solvesShown = (v: CoachLogValues) =>
   shouldShowSolves(v.district, v.nycCoachType);
 
-/**
- * Solves guidance/tools + notes questions are hidden entirely for a PL session
- * log. (The Reads ones are asked in every case, PL session or not.)
- */
-const solvesShownNotPL = (v: CoachLogValues) =>
-  solvesShown(v) && v.solvesIsPLSession !== "Yes";
-
 const PICK_YES_NO = "Please select Yes or No";
 const PICK_ONE = "Please select an option";
 const PICK_AT_LEAST_ONE = "Please select at least one option";
@@ -620,10 +613,10 @@ export function useCoachLogForm() {
       ),
 
       solvesGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
-        solvesShownNotPL(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
       ),
       solvesGuidanceToolsOther: whenNotCancelled((value, values) =>
-        solvesShownNotPL(values) &&
+        solvesShown(values) &&
         values.solvesGuidanceToolsUsed.includes(OTHER_OPTION) &&
         !value
           ? "Please specify"
