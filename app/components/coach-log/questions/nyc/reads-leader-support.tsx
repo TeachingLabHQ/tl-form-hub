@@ -35,7 +35,6 @@ const GLOSSARY_NOTE = (
   </>
 );
 
-
 /** NYC Reads school-leader support questions ("School Leader/Leadership team support" touchpoint). */
 export const ReadsLeaderSupport = ({ form }: Props) => {
   const focus = form.values.readsLeaderCapacityFocus;

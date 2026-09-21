@@ -35,7 +35,6 @@ const GLOSSARY_NOTE = (
   </>
 );
 
-
 /** NYC Reads district-support questions ("District team support" touchpoint). */
 export const ReadsDistrictSupport = ({ form }: Props) => {
   const focus = form.values.readsDistrictCapacityFocus;
