@@ -84,7 +84,6 @@ export type CoachLogValues = {
   // NYC Reads — shown once per submission
   readsGuidanceToolsUsed: string[];
   readsGuidanceToolsOther: string;
-  readsNotes: string;
 
   // NYC Solves coach
   solvesIsPLSession: YesNo | "";
@@ -124,7 +123,6 @@ export type CoachLogValues = {
   // NYC Solves — shown once per submission
   solvesGuidanceToolsUsed: string[];
   solvesGuidanceToolsOther: string;
-  solvesNotes: string;
 
   // Cancellation
   canceled: YesNo | "";
@@ -194,7 +192,6 @@ const INITIAL_VALUES: CoachLogValues = {
 
   readsGuidanceToolsUsed: [],
   readsGuidanceToolsOther: "",
-  readsNotes: "",
 
   solvesIsPLSession: "",
   solvesTouchpointTypes: [],
@@ -226,7 +223,6 @@ const INITIAL_VALUES: CoachLogValues = {
 
   solvesGuidanceToolsUsed: [],
   solvesGuidanceToolsOther: "",
-  solvesNotes: "",
 
   canceled: "",
   cancelReason: "",

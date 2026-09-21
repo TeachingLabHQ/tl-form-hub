@@ -72,7 +72,6 @@ const COLUMN = {
   readsDistrictSustainability: "text_mm6n46cw",
   // NYC Reads — shown once per submission
   readsGuidanceToolsUsed: "text_mm6ngq1v", // also holds the "Other" write-in (see csvWithOtherDetail)
-  readsNotes: "text_mm6nqjfn",
 
   // NYC Solves — top-level
   solvesTouchpointTypes: "text_mkthbvw5", // reused: pre-overhaul solvesTouchpoint column
@@ -102,7 +101,6 @@ const COLUMN = {
   solvesPostVisitFollowUp: "text_mm6ne4t8",
   // NYC Solves — shown once per submission
   solvesGuidanceToolsUsed: "text_mm6n3rjz", // also holds the "Other" write-in (see csvWithOtherDetail)
-  solvesNotes: "text_mm6ntz5c",
 } as const;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -150,7 +148,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     readsDistrictSustainability,
     readsGuidanceToolsUsed,
     readsGuidanceToolsOther,
-    readsNotes,
     solvesIsPLSession,
     solvesTouchpointTypes,
     solvesHqimVisitDuration,
@@ -174,7 +171,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     solvesPostVisitFollowUp,
     solvesGuidanceToolsUsed,
     solvesGuidanceToolsOther,
-    solvesNotes,
     canceled,
     cancelReason,
     cancelReasonOther,
@@ -327,7 +323,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           readsGuidanceToolsUsed,
           readsGuidanceToolsOther
         );
-      if (readsNotes) parentColumns[COLUMN.readsNotes] = readsNotes;
     }
 
     // NYC Solves (client only sends these for a Solves coach).
@@ -413,7 +408,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           solvesGuidanceToolsUsed,
           solvesGuidanceToolsOther
         );
-      if (solvesNotes) parentColumns[COLUMN.solvesNotes] = solvesNotes;
     }
 
     if (canceled === "Yes") {

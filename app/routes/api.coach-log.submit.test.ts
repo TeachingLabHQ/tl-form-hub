@@ -66,7 +66,6 @@ const base = {
   readsDistrictSustainability: [],
   readsGuidanceToolsUsed: [],
   readsGuidanceToolsOther: "",
-  readsNotes: "",
   solvesIsPLSession: "",
   solvesTouchpointTypes: [],
   solvesHqimVisitDuration: "",
@@ -90,7 +89,6 @@ const base = {
   solvesPostVisitFollowUp: "",
   solvesGuidanceToolsUsed: [],
   solvesGuidanceToolsOther: "",
-  solvesNotes: "",
   canceled: "No",
   cancelReason: "",
   cancelReasonOther: "",
@@ -258,20 +256,18 @@ describe("parent column values", () => {
     );
   });
 
-  it("writes the Reads guidance/notes on a PL session log too", async () => {
+  it("writes the Reads guidance on a PL session log too", async () => {
     await submit({
       ...base,
       nycCoachType: "NYC Reads",
       readsIsPLSession: "Yes",
       readsTouchpointTypes: [READS_TOUCHPOINT_TEACHER],
       readsGuidanceToolsUsed: ["Unit Internalization Protocol"],
-      readsNotes: "Some notes",
     });
 
     expect(parentColumns()).toMatchObject({
       text_mkv0r1t: "Yes",
       text_mm6ngq1v: "Unit Internalization Protocol",
-      text_mm6nqjfn: "Some notes",
     });
   });
 

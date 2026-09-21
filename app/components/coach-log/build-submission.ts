@@ -144,7 +144,6 @@ export function buildCoachLogSubmission(
 
     readsGuidanceToolsUsed: sendReads ? values.readsGuidanceToolsUsed : [],
     readsGuidanceToolsOther: sendReads ? values.readsGuidanceToolsOther : "",
-    readsNotes: sendReads ? values.readsNotes : "",
 
     // NYC Solves
     solvesIsPLSession: sendSolves ? values.solvesIsPLSession : "",
@@ -198,7 +197,6 @@ export function buildCoachLogSubmission(
 
     solvesGuidanceToolsUsed: sendSolvesGuidance ? values.solvesGuidanceToolsUsed : [],
     solvesGuidanceToolsOther: sendSolvesGuidance ? values.solvesGuidanceToolsOther : "",
-    solvesNotes: sendSolvesGuidance ? values.solvesNotes : "",
 
     // Cancellation
     canceled: values.canceled,
