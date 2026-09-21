@@ -1,6 +1,7 @@
 import { MultiSelect, Select } from "@mantine/core";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
+  applyNAExclusivity,
   JES_GLOSSARY_URL,
   MAX_READS_DISTRICT_CAPACITY_FOCUS,
   MAX_READS_SUSTAINABILITY,
@@ -13,6 +14,7 @@ import {
   READS_DISTRICT_PL_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_SCHOOL_VISITS_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_STRATEGIC_PLANNING_SUBCOMPONENT_OPTIONS,
+  READS_SUSTAINABILITY_NONE_OPTION,
   READS_SUSTAINABILITY_OPTIONS,
   SUSTAINABILITY_REFLECTION_TOOL_URL,
 } from "./constants";
@@ -149,7 +151,18 @@ export const ReadsDistrictSupport = ({ form }: Props) => {
           placeholder="Select up to 2 conditions"
           data={READS_SUSTAINABILITY_OPTIONS}
           maxValues={MAX_READS_SUSTAINABILITY}
-          {...form.getInputProps("readsDistrictSustainability")}
+          value={form.values.readsDistrictSustainability}
+          onChange={(next) =>
+            form.setFieldValue(
+              "readsDistrictSustainability",
+              applyNAExclusivity(
+                next,
+                form.values.readsDistrictSustainability,
+                READS_SUSTAINABILITY_NONE_OPTION
+              )
+            )
+          }
+          error={form.errors.readsDistrictSustainability}
         />
       </QuestionField>
     </>

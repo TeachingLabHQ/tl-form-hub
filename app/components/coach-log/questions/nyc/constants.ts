@@ -36,9 +36,10 @@ export const JES_TEACHER_GLOSSARY_URL =
   "https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.cslg194210x2";
 
 /**
- * Multi-select helper for the guidance/tools questions: their "N/A" option is
- * mutually exclusive with every other option — picking N/A clears the rest,
- * and picking anything else clears N/A.
+ * Multi-select helper for questions with an exclusive option (the guidance/tools
+ * "N/A", the sustainability "None of the above"): that option is mutually
+ * exclusive with every other option — picking it clears the rest, and picking
+ * anything else clears it.
  */
 export function applyNAExclusivity(
   next: string[],
@@ -156,6 +157,9 @@ export const READS_LEADER_PL_SUBCOMPONENT_OPTIONS = [
   "Planning and building capacity for the school leadership team to facilitate meetings based on jointly identified professional learning needs.",
 ];
 
+/** Exclusive response — can't be combined with any sustainability condition. */
+export const READS_SUSTAINABILITY_NONE_OPTION = "None of the above";
+
 /** Shared between the leader and district support blocks. */
 export const READS_SUSTAINABILITY_OPTIONS = [
   "Coherence, alignment, and integrity of HQIM",
@@ -163,6 +167,7 @@ export const READS_SUSTAINABILITY_OPTIONS = [
   "Data-driven instruction, assessment, and continuous improvement systems",
   "Instructional leadership across the vertical spine",
   "Stakeholder engagement and community partnership",
+  READS_SUSTAINABILITY_NONE_OPTION,
 ];
 export const MAX_READS_SUSTAINABILITY = 2;
 

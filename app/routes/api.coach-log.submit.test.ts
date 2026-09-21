@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { CoachLogSubmission } from "~/domains/coach-log/model";
 import {
   OTHER_OPTION,
+  READS_SUSTAINABILITY_NONE_OPTION,
   READS_TOUCHPOINT_LEADER,
   READS_TOUCHPOINT_TEACHER,
   SOLVES_TOUCHPOINT_HQIM,
@@ -255,6 +256,34 @@ describe("parent column values", () => {
     expect(parentColumns().text_mm6ngq1v).toBe(
       "Snapshot tool, Other: A custom tracker"
     );
+  });
+
+  it("writes the Reads guidance/notes on a PL session log too", async () => {
+    await submit({
+      ...base,
+      nycCoachType: "NYC Reads",
+      readsIsPLSession: "Yes",
+      readsTouchpointTypes: [READS_TOUCHPOINT_TEACHER],
+      readsGuidanceToolsUsed: ["Unit Internalization Protocol"],
+      readsNotes: "Some notes",
+    });
+
+    expect(parentColumns()).toMatchObject({
+      text_mkv0r1t: "Yes",
+      text_mm6ngq1v: "Unit Internalization Protocol",
+      text_mm6nqjfn: "Some notes",
+    });
+  });
+
+  it("writes a None of the above sustainability response", async () => {
+    await submit({
+      ...base,
+      nycCoachType: "NYC Reads",
+      readsTouchpointTypes: [READS_TOUCHPOINT_LEADER],
+      readsLeaderSustainability: [READS_SUSTAINABILITY_NONE_OPTION],
+    });
+
+    expect(parentColumns().text_mm6nbxvj).toBe("None of the above");
   });
 
   it("leaves a bare Other alone when there is no write-in", async () => {
