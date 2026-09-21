@@ -31,6 +31,10 @@ export const JES_STRATEGIES_RESOURCES_URL =
 export const SUSTAINABILITY_REFLECTION_TOOL_URL =
   "https://docs.google.com/document/d/1JCw0HRVEP5vV06Lwzt-Ea-W-7ljnxPVfd7MGTUbtDMQ/edit?tab=t.0";
 
+/** Guidance for NYC Solves Post-visit Snapshot, referenced by the Solves post visit snapshot question. */
+export const SOLVES_POST_VISIT_SNAPSHOT_GUIDANCE_URL =
+  "https://docs.google.com/document/d/1VqBl7Z0W9kN8aUWhPZKANNIzDLBbu4PXLPqX9n-d0Ng/edit?tab=t.0#heading=h.duoznt5x4f4o";
+
 /** "Key Concepts" glossary of the JES Manual, referenced by the teacher capacity-building strategies question. */
 export const JES_TEACHER_GLOSSARY_URL =
   "https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.cslg194210x2";
