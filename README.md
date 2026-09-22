@@ -244,6 +244,33 @@ Each domain (employee, project, vendor-payment, etc.) is self-contained.
 
 The application includes testing infrastructure for browser-based testing and form validation. See individual component files for validation logic.
 
+## 🗂 Coach Log Question Spec
+
+### How the coach log spec works
+
+The coach log form's questions and logic are specified in a Google Sheet, [Coaching Log — Question Spec (FY27)](https://docs.google.com/spreadsheets/d/1R-0ysOEsBjxcuDzNzwEXVN9_DamNSJaLo4VbpoNoM1M/edit). It replaces the prose FY27 Coaching Log doc as the source of truth. Stakeholders edit it and file requests on its **Change requests** tab.
+
+- **Questions** has one row per question: its ID (the form field), text, type, required flag, max selections, Monday column and a **Shows when** rule (e.g. `nycCoachType = "Reads Coach" AND district in ["NY_D9", "NY_D75"]`). Column M shows each rule in plain English. Column N checks each rule and flags unknown IDs, later questions, bad options and syntax errors.
+- **Options** lists the options for each select, in order, with the exclusive, write-in and link flags.
+- **Discrepancies** records where the old doc and the live form disagree, with a decision for each.
+- **Changelog** has one row per released spec version.
+
+`Rscript scripts/spec/export_spec.R` exports the sheet to `app/components/coach-log/spec/coach-log.spec.json`. It's read-only on Google, uses cached OAuth (set `GOOGLE_AUTH_EMAIL` to use another account) and refuses to write if anything in the sheet is invalid. The JSON's `specVersion` is the last Changelog row.
+
+For now the form doesn't read the JSON. The tests in `app/components/coach-log/spec/*.test.ts` and `app/routes/api.coach-log.submit.spec.test.ts` fail when the JSON and the code disagree. They check options, max selections, exclusive options, write-ins and links against `constants.ts`. They check show-if and required against the form's validators. They also run the real submit route over shown and hidden scenarios to confirm shown answers land in the spec's Monday column and hidden ones are never written. They need no network and no R.
+
+`Rscript scripts/spec/check_monday_columns.R` (not in CI; it needs `MONDAY_API_KEY`) confirms that every column the spec names exists on the live Coach Log board and its subitems board.
+
+### How to apply a change request
+
+1. Read the **accepted** rows on the Change requests tab.
+2. Edit the Questions/Options tabs. Column N must show ✅ on every row.
+3. Add a Changelog row with the next version, and set the requests' status to "in PR".
+4. Run `Rscript scripts/spec/export_spec.R`. The JSON diff shows the spec change.
+5. Update the form code (`constants.ts`, the question components, `use-coach-log-form.ts`, `build-submission.ts`, `api.coach-log.submit.tsx`) until `npm test` passes. If a Monday column changed, run `check_monday_columns.R`.
+6. Open a PR with the JSON and the code.
+7. After merging, set the requests to "live" with the PR link and version. Fill the Changelog row's PR link, and name the version in the sheet's **File → Version history** (the API can't do this).
+
 ## 📝 Additional Documentation
 
 - [Local Development Setup](./LOCAL_DEV_SETUP.md) - Detailed local setup guide

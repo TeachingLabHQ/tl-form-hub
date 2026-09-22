@@ -1,0 +1,4278 @@
+{
+  "specVersion": "1.0.0",
+  "source": {
+    "spreadsheetId": "1R-0ysOEsBjxcuDzNzwEXVN9_DamNSJaLo4VbpoNoM1M",
+    "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1R-0ysOEsBjxcuDzNzwEXVN9_DamNSJaLo4VbpoNoM1M/edit",
+    "driveVersion": "4",
+    "modifiedTime": "2026-09-22T20:44:02.702Z"
+  },
+  "exportedAt": "2026-09-22T20:46:32Z",
+  "facts": [
+    {
+      "name": "schoolHasSubSchools",
+      "description": "the sub-school sheet lists sub-schools for the chosen school"
+    }
+  ],
+  "referenceLabels": {
+    "district": ["CA_Lighthouse Community Public Schools", "CA_Santa Ana Unified School District", "CLC_Coney Island Prep", "CLC_DREAM Charter Schools", "CLC_Hebrew Public Charter Schools", "CLC_Neighborhood Charter Schools", "CO_Denver Public Schools", "CT_Bristol", "DC_DCPS", "FL_FAMU DRS", "GA_Continental Colony", "IL_CPS", "KY_Daviess County Public Schools", "MA_Athol-Royalston", "MA_Greenfield", "MA_Milford", "MA_Westborough", "MI_Center Line Public Schools", "MN_Hennepin", "MO_KIPP Kansas City", "NJ_Great Oaks Legacy Charter Schools", "NJ_Magnolia Public Schools", "NJ_Schechter Bergen Jewish Day School", "NM_Los Lunas Schools", "NM_North Valley", "NY_CBO", "NY_CUNY/UA", "NY_D11", "NY_D12", "NY_D13", "NY_D16", "NY_D25", "NY_D6", "NY_D75", "NY_D79", "NY_D9", "NY_East Harlem Scholar Academies (EHTP)", "NY_Prospect Schools", "NY_Transfer High Schools", "OH_Cincinnati Public Schools", "RI_Rhode Island Department of Education", "SL_NYC D4", "TN_Acceleration for All District", "TN_Acceleration for All Region", "TN_Hamblen County School District", "TN_McNairy County Schools", "TX_ESC 6", "TX_Round Rock"],
+    "school": ["003", "004", "005", "006", "008", "009", "011", "016", "019", "020", "021", "022", "024", "025", "026", "028", "029", "032", "035", "040", "041", "042", "044", "046", "047", "053", "054", "055", "056", "057", "058", "061", "063", "066", "067", "068", "070", "073", "076", "078", "079", "081", "083", "087", "088", "089", "093", "096", "097", "103", "105", "106", "107", "108", "109", "110", "111", "112", "113", "114", "117", "118", "120", "121", "126", "127", "128", "129", "130", "132", "133", "134", "144", "150", "153", "154", "160", "163", "164", "165", "169", "170", "175", "178", "180", "181", "184", "189", "190", "193", "194", "195", "196", "199", "200", "201", "204", "209", "211", "214", "215", "217", "218", "219", "229", "232", "236", "242", "243", "244", "256", "262", "265", "266", "267", "270", "273", "274", "282", "286", "287", "294", "300", "301", "303", "307", "308", "309", "311", "313", "314", "316", "318", "323", "326", "327", "335", "339", "341", "351", "355", "357", "361", "370", "383", "443", "449", "454", "456", "457", "458", "462", "463", "468", "481", "482", "483", "492", "498", "499", "529", "531", "532", "536", "555", "556", "566", "567", "593", "594", "595", "626", "627", "628", "644", "681", "691", "789", "898", "915", "Academy of Early Learning", "Academy of Hospitality and Tourism", "Achievement First Providence Mayoral Academy", "Achievement School District", "Adamsville High School", "Adamsville Middle School", "Alamo City Schools", "Alcoa City", "Alvin C. York Institute", "Anderson County", "Anderson Mill Elementry", "Ann Parish Elementary", "Arlington", "Aspirations Diploma Plus High School", "Athens City Schools", "Athol High School", "Athol-Royalston Middle School", "Avalon Park Fine and Performing Arts School", "Bard HS", "Barnum Elementary School", "Barrington Public Schools", "Bartlett", "Beacon Charter School", "Beacon Founder’s Academy", "Bedford County", "Bells City Schools", "Benton County", "Berkman Elementary", "Bethel Middle School", "Blackstone Academy Charter School", "Blackstone Valley Prep Mayoral Academy", "Bledsoe County", "Blount County", "Bluebonnet Elementary", "Bosque Farms Elementary", "Bradford Special School District", "Bradley County", "Bristol City Schools", "Bristol Warren Regional School District", "Bronx Arena High School", "Bronx Community High School", "Bronx Haven High School", "Bronx Regional High School", "Bronx School for Law, Government and Justice", "Brookland MS", "Brooklyn Academy High School", "Brooklyn Bridge Academy", "Brooklyn College Academy", "Brooklyn Democracy Academy", "Brooklyn Frontiers High School", "Brooklyn High School for Leadership and Community Service", "Brownsville Academy High School", "Burns Middle School", "Burrillville Public Schools", "Bushwick Community High School", "Business Technology Early College High School", "C.E. Hughes Elementary School", "Caldwell Heights Elementary", "Callison Elementary", "Campbell County", "Cannon County", "Cardenas Elementary School", "Cardozo HS", "Carroll County", "Carter County", "Cascades High School", "CD Fulkes Middle", "Central Falls School District", "Charette High School", "Chariho Regional School District", "Charles R. Darwin Public School", "Charter School", "Cheatham County", "Chester County", "Chippens Hill Middle School", "City College Academy of the Arts", "City Polytechnic High School of Engineering, Architecture, and Technology", "Claiborne County", "Clay County", "Cleveland City", "Clinton City Schools", "Clinton Hill Middle School", "Cocke County", "Coffee County", "College Hill Fundamental Academy", "College View Middle School", "Collierville", "Concord High School", "Coney Island Prep Lower Elementary School", "Coney Island Prep Middle School", "Coney Island Prep Upper Elementary School", "Continental Colony Elementary School", "Coolidge HS", "Courtenay Language Arts Center", "Covedale School", "Coventry Public Schools", "Cranston Public School District", "Crockett County", "Cumberland County", "Cumberland School Department", "Davidson County", "Davies Career and Technical High School", "Daviess County Middle School", "Dayton City Schools", "Decatur County", "Deer Park Middle", "Dekalb County", "Deneen School of Excellence", "Department of Children Youth & Families", "Desert View Elementary", "Design Works High School", "Dickson County", "Double File Elementary", "Downtown Elementary School", "Downtown Middle School", "DREAM East Harlem Elementary School", "DREAM East Harlem Middle School", "DREAM Highbridge Elementary School", "DREAM Highbridge Middle School", "DREAM Mott Haven Elementary School", "DREAM Mott Haven Middle School", "Dunbar HS", "Dvorak Elementary School", "Dyer County", "Dyersburg City", "Earhart Options for Knowledge Literature, Writing, and STEAM", "East", "East Brooklyn Community High School", "East Greenwich Public Schools", "East Harlem Scholars Academy High School", "East Harlem Scholars Academy I (2nd Ave)", "East Harlem Scholars Academy II (Madison Ave)", "East Providence School District", "Edison Regional Gifted Center", "Education Prep Provider (College or University)", "Edward A. Reynolds West Side High School", "Edward Coles Elementary Language Academy", "Eliot-Hine MS", "Elizabethton City", "Emma Lazarus High School", "Energy Tech High School", "Ethel M. Taylor Academy", "Etowah City Schools", "Excel Academy", "Exeter-West Greenwich Regional School District", "FAMU DRS", "Fayette County", "Fayette County Public Schools", "Fayetteville City Schools", "Federal Street Elementary", "Fentress County", "First", "Force Elementary", "Foster School District", "Foster-Glocester Regional School District", "Four Corners Elementary", "Franklin County", "Franklin SSD", "Gattis Elementary", "Germantown", "Gibbons Middle School", "Gibson County SSD", "Giles County", "Glocester School Department", "GOLCS High School", "Gotham Tech High School", "Grainger County", "Grant Ranch ECE-8 School", "Greene County", "Greeneville City Schools", "Greenfield High School", "Greenfield Middle School", "Grundy County", "H.E.R.O. High (Health, Education, and Research Occupations High School)", "Haines Elementary School", "Hamblen County", "Hamilton County", "Hamilton Middle School", "Hancock County", "Hardeman County Schools", "Hardin County", "Harlem Renaissance High School", "Hart MS", "Harvey Milk High School", "Hawkins County", "Haywood County", "HD Woodson HS", "Hebrew Language Academy Charter School (HLA)", "Hebrew Language Academy Charter School 2 (HLA 2)", "Heights Elementary School", "Henderson County", "Hennepin Upper Campus", "Henry County", "Hernandez Middle", "Hickman County", "High School for Excellence and Innovation", "High School of Arts and Technology", "Highlander Charter Schools", "Hiram H. Belding Elementary School", "Hollow Rock-Bruceton SSD", "Hostos-Lincoln Academy of Science", "Houston County", "Humboldt City Schools", "Humphreys County", "Huntingdon SSD", "Independence High School", "Innovation Diploma Plus", "International Charter School", "Inwood Early College for Health and Information Technologies", "Jackson County", "James N. Thorp Elementary School", "Jamestown School Department", "Jefferson County", "Jill Chaifetz Transfer High School", "Joe Lee Johnson Elementary", "Johnson City Schools", "Johnson County", "Johnston Public Schools", "K004", "K036", "K053", "K077", "K140", "K141", "K231", "K368", "K369", "K370", "K371", "K372", "K373", "K396", "K403", "K503", "K721", "K753", "K771", "K811", "KASJ - BCS Laurie A. Cumbo Children’s Enrichment Center", "Katherine Gallegos Elementary", "KBCV - Friends of Crown Heights", "KBLI - Young Minds_ECE", "KBVZ - Little Sun People Inc.", "KCLC - SUNNY SKIES Prospect Corp.", "KCUQ - Eladia’s Kids (266 Flatbush Avenue)", "KDQR - Eladia’s Kids (506 Washington Ave)", "Kelly Miller MS", "Kingsborough Early College School", "Kingsbridge International High School", "Kingsport City", "Kingston Hill Academy", "KIPP Forward", "KIPP KC Elementary School", "KIPP KC Middle School", "KIPP Legacy High School", "Knox County", "Lake County", "Lake Middle School", "Lakeland School System", "Lauderdale County", "Lawrence County", "Lebanon", "Lebanon SSD", "Lenoir City Schools", "Lewis County", "Lexington City Schools", "Liberation Diploma Plus", "Liberty High School Academy for Newcomers", "Lighthouse", "Lincoln County", "Lincoln Public Schools", "Little Compton School Department", "Lodestar", "Los Lunas Elementary", "Los Lunas Middle School", "Loudon County", "Lowell Elementary School", "Lower East Side Preparatory High School", "M035", "M079", "M094", "M138", "M169", "M226", "M401", "M501", "M721", "M751", "M811", "Macon County", "Madison County", "Magnolia Public School", "Manchester City County", "Manhattan Comprehensive Night and Day High School", "Manhattan Early College School for Advertising", "Manhattan/Hunter Science High School", "Marion County", "Marshall County", "Maryville City Schools", "Maspeth High School", "Maury County", "Maxwell Elementary", "McKenzie SSD", "McMeen Elementary", "McMinn County", "McNairy Central High School", "McNairy County", "Meadowview Middle School", "Medgar Evers College Preparatory School", "Meigs County", "Memorial Elementary", "Memphis-Shelby County", "Metropolitan Diploma Plus High School", "Metropolitan Regional Career and Technical Center", "Michie Elementary School", "Mid Cumberland", "Middletown Public Schools", "Midway School", "Milan SSD", "Millington Municipal Schools", "Monroe County", "Montbello Middle School", "Montgomery County", "Moore County", "Morgan County", "Morristown East High School", "Motion Picture Technical High School", "Mott Haven Community High School", "Murfreesboro City", "Murray Hill Academy", "Narragansett School System", "Neighborhood Charter School: Bronx", "Neighborhood Charter School: Harlem", "NEL/CPS Construction & Career Academy", "New Directions Secondary School", "New Shoreham Public Schools", "Newport City Schools", "Newport Public Schools", "Newton Elementary", "North Avondale Montessori", "North Kingstown School Department", "North Providence Public Schools", "North Queens Community High School", "North Smithfield Public Schools", "North Valley Academy", "Northwell School for Health Sciences", "Northwest", "Nuestro Mundo Public Charter School", "Oak Ridge City Schools", "Obion County", "Olympus Academy", "Oneida SSD", "Overton County", "Oyler School", "Paris SSD", "Park Manor Elementary School", "Pathways in Technology Early College HS (P-Tech)", "Paul Cuffee Charter Schools", "Pawtucket School Department", "Peralta Elementary", "Perry County", "Phelps HS", "Pickett County", "Pilsen Community Academy", "Polk County", "Portsmouth School Department", "Professional Pathways High School", "Providence Preparatory Charter School", "Providence Public Schools", "Providing Urban Learners Success In Education High School", "Putnam County", "Q004", "Q009", "Q023", "Q075", "Q177", "Q224", "Q233", "Q255", "Q256", "Q277", "Q404", "Q504", "Q721", "Q752", "Q811", "Q993", "Queens Academy High School", "Queens High School for Language Studies", "R025", "R037", "R089", "R373", "R405", "R505", "R721", "Ramer Middle School", "Raymond Gabaldon Elementary", "Rees E. Price Academy", "Research and Service High School", "Restart Academy", "Rhea County", "Rhode Island Nurses Institute Middle College Charter School", "Rhode Island School for the Deaf", "Richard City SSD", "RISE Prep Mayoral Academy", "Roane County", "Roberts Academy", "Robertson County", "Robertson Elementary", "Rogersville City Schools", "Ron Brown HS", "Roswell B. Mason Elementary School", "Rutherford County", "Satellite Academy High School", "Schechter Bergen Jewish Day School", "Science, Technology and Research Early College HS at Erasmus", "Scituate School Department", "Scott County", "Segue Institute for Learning", "Selmer Middle School", "Sequatchie County", "Sevier County", "Sheila C. “Skip” Nowell Leadership Academy", "Shroder High School", "Smith County", "Smithfield Public Schools", "Sousa MS", "South Brooklyn Community High School", "South Carroll SSD", "South Central", "South Kingstown Public Schools", "Southeast", "SouthSide Elementary Charter School", "Southwest", "Stacy Middle School", "Staten Island Hebrew Public", "Stephen T. Mather Building Arts & Craftsmanship High School", "Stewart County", "Sullivan County", "Sumner County", "Sundance Elementary", "Sunset Yards Middle School", "Swansea Elementary School", "Sweetwater City Schools", "Tennessee Department of Education (TDOE)", "Tennessee Public Charter School Commission", "Tennessee School for the Blind", "Tennessee School for the Deaf", "Tennessee State Board of Education", "The Celia Cruz Bronx High School of Music", "The Compass School", "The Global Learning Collaborative", "The Greene School", "The Hope Academy", "The Judith S. Kaye School", "The Learning Community Charter School", "The Queens School of Inquiry", "The Urban Assembly Academy of Government and Law", "The Urban Assembly Bronx Academy of Letters", "The Urban Assembly Early College High School of Emergency Medicine", "The Urban Assembly School for Applied Math and Science", "The Urban Assembly School for Collaborative Healthcare", "The Urban Assembly School for Global Commerce", "The Urban Assembly School for Green Careers", "The Urban Assembly School for Law and Justice", "The Urban Assembly School for Media Studies", "The Urban Assembly School of Design and Construction", "The Village Green Virtual Charter School", "Theodore Herzl Elementary School", "Times2 Academy", "Tipton County", "Tiverton School District", "Tomé Elementary", "Trenton SSD", "Trinity Academy for the Performing Arts", "Trousdale County", "Tullahoma City", "Tullahoma City Schools", "Unicoi County", "Union City Schools", "Union County", "Union Hill Elementary", "University Schools", "Upper Cumberland", "Urban Assembly Gateway School for Technology", "Urban Assembly Institute of Math and Science for Young Women", "Urban Assembly Maker Academy", "Urban Assembly New York Harbor School", "Urban Assembly School for Leadership and Empowerment", "Urban Assembly School for the Performing Arts", "Urban Collaborative", "Valencia Elementary", "Valencia Middle School", "Valverde Elementary", "Van Buren County", "Voigt Elementary", "Voyages Prep - South Queens", "VOYAGES Preparatory", "Walter L. Newberry Math and Science Academy", "Warren County", "Warwick Public Schools", "Washington County", "Wayne County", "Weakley County", "Wells Branch Elementary", "West Brooklyn Community High School", "West Carroll SSD", "West Tennessee School for the Deaf", "West Warwick Public Schools", "Westerly Public Schools", "White County", "William Penn Elementary School", "Williamson County", "Wilson County", "Windsor Terrace Middle School", "Withrow University High School", "Wolfe Middle School", "Woonsocket Education Department", "X010", "X012", "X017", "X168", "X176", "X186", "X188", "X352", "X402", "X469", "X502", "X596", "X643", "X721", "X723", "X754", "X811", "York Early College Academy"]
+  },
+  "questions": [
+    {
+      "id": "district",
+      "field": "district",
+      "repeatingGroup": null,
+      "shortName": "District",
+      "section": "Session details",
+      "block": "",
+      "order": 10,
+      "text": "What district was your coaching session for?",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Master Survey List (district row)",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "always",
+        "ast": {
+          "type": "always"
+        }
+      },
+      "mondayColumn": "text88__1",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "school",
+      "field": "school",
+      "repeatingGroup": null,
+      "shortName": "School",
+      "section": "Session details",
+      "block": "",
+      "order": 20,
+      "text": "What school was your coaching session for?",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Master Survey List (schools under the district)",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "always",
+        "ast": {
+          "type": "always"
+        }
+      },
+      "mondayColumn": "text5__1",
+      "notes": "Options are the schools listed under the chosen district.",
+      "options": []
+    },
+    {
+      "id": "nycCoachType",
+      "field": "nycCoachType",
+      "repeatingGroup": null,
+      "shortName": "Coach type",
+      "section": "Session details",
+      "block": "",
+      "order": 30,
+      "text": "Select the NYC Coach type that aligns with the session you are logging",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "district in [\"NY_D9\", \"NY_D11\", \"NY_D12\", \"NY_D13\", \"NY_D16\", \"NY_D25\", \"NY_D75\", \"NY_Transfer High Schools\", \"NY_CUNY/UA\"]",
+        "ast": {
+          "type": "test",
+          "field": "district",
+          "op": "in",
+          "values": ["NY_D9", "NY_D11", "NY_D12", "NY_D13", "NY_D16", "NY_D25", "NY_D75", "NY_Transfer High Schools", "NY_CUNY/UA"]
+        }
+      },
+      "mondayColumn": "text13__1",
+      "notes": "",
+      "options": [
+        {
+          "text": "Reads Coach",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "ELA Coach (non-Reads)",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "ELA Early Childhood Coach",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Solves Coach/D75 Math Coach",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Math Coach (non-Solves/non-D75)",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsIsPLSession",
+      "field": "readsIsPLSession",
+      "repeatingGroup": null,
+      "shortName": "Reads PL session?",
+      "section": "Session details",
+      "block": "",
+      "order": 40,
+      "text": "Are you logging a Professional Learning Session?",
+      "helper": "Professional Learning and coaching activities must be logged separately.",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Reads Coach\"",
+        "ast": {
+          "type": "test",
+          "field": "nycCoachType",
+          "op": "=",
+          "value": "Reads Coach"
+        }
+      },
+      "mondayColumn": "text_mkv0r1t",
+      "notes": "Answering Yes hides the 1:1 and group coaching questions (and answers them No for the coach) and switches the date question to a free calendar. Not required when the session was canceled. Only saved to Monday when at least one Reads touchpoint is selected.",
+      "options": []
+    },
+    {
+      "id": "solvesIsPLSession",
+      "field": "solvesIsPLSession",
+      "repeatingGroup": null,
+      "shortName": "Solves PL session?",
+      "section": "Session details",
+      "block": "",
+      "order": 50,
+      "text": "Are you logging a Professional Learning Session?",
+      "helper": "Professional Learning and coaching activities must be logged separately.",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Solves Coach/D75 Math Coach\"",
+        "ast": {
+          "type": "test",
+          "field": "nycCoachType",
+          "op": "=",
+          "value": "Solves Coach/D75 Math Coach"
+        }
+      },
+      "mondayColumn": "text_mm6wy4vf",
+      "notes": "Answering Yes hides the 1:1 and group coaching questions (and answers them No for the coach) and switches the date question to a free calendar. Not required when the session was canceled. Only saved to Monday when at least one Solves touchpoint is selected.",
+      "options": []
+    },
+    {
+      "id": "subSchool",
+      "field": "subSchool",
+      "repeatingGroup": null,
+      "shortName": "Sub-school",
+      "section": "Session details",
+      "block": "",
+      "order": 60,
+      "text": "Identify Sub-school",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Sub-school sheet",
+      "maxSelections": null,
+      "required": false,
+      "showsWhen": {
+        "text": "nycCoachType = \"Solves Coach/D75 Math Coach\" AND district = \"NY_D75\" AND @schoolHasSubSchools",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Solves Coach/D75 Math Coach"
+            },
+            {
+              "type": "test",
+              "field": "district",
+              "op": "=",
+              "value": "NY_D75"
+            },
+            {
+              "type": "fact",
+              "name": "schoolHasSubSchools"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mm465e65",
+      "notes": "Hidden when the sub-school sheet has no sub-schools for the chosen school. Also part of the duplicate-log check (coach + district + school + date + sub-school).",
+      "options": []
+    },
+    {
+      "id": "subSchool.schoolLevel",
+      "field": "subSchool",
+      "repeatingGroup": null,
+      "shortName": "Elementary or Middle",
+      "section": "Session details",
+      "block": "",
+      "order": 70,
+      "text": "Elementary or Middle?",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": false,
+      "showsWhen": {
+        "text": "nycCoachType = \"Solves Coach/D75 Math Coach\" AND district = \"NY_D11\" AND school in [\"019\", \"083\", \"089\", \"105\", \"108\", \"175\", \"194\", \"498\"]",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Solves Coach/D75 Math Coach"
+            },
+            {
+              "type": "test",
+              "field": "district",
+              "op": "=",
+              "value": "NY_D11"
+            },
+            {
+              "type": "test",
+              "field": "school",
+              "op": "in",
+              "values": ["019", "083", "089", "105", "108", "175", "194", "498"]
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mm465e65",
+      "notes": "A second version of the sub-school question for the eight D11 K-8 schools, so a coach can log the elementary and middle portions of the same day separately. Saved in the sub-school column.",
+      "options": [
+        {
+          "text": "Elementary",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Middle",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "sessionDate",
+      "field": "sessionDate",
+      "repeatingGroup": null,
+      "shortName": "Session date",
+      "section": "Session details",
+      "block": "",
+      "order": 80,
+      "text": "Please select the date of your coaching session",
+      "helper": "Note: Dates available in this dropdown are pulled directly from your district's Logistics Board in Monday.com. If the date you need is not listed, update the Logistics Board first. Once added there, the date will become available for selection in this form.",
+      "type": "date",
+      "optionsFrom": "Logistics Board dates",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "NOT (readsIsPLSession = \"Yes\" OR solvesIsPLSession = \"Yes\")",
+        "ast": {
+          "type": "not",
+          "arg": {
+            "type": "or",
+            "args": [
+              {
+                "type": "test",
+                "field": "readsIsPLSession",
+                "op": "=",
+                "value": "Yes"
+              },
+              {
+                "type": "test",
+                "field": "solvesIsPLSession",
+                "op": "=",
+                "value": "Yes"
+              }
+            ]
+          }
+        }
+      },
+      "mondayColumn": "date__1",
+      "notes": "A dropdown of the coach's scheduled dates for this district and school. Also written to each 1:1 subitem (date0).",
+      "options": []
+    },
+    {
+      "id": "sessionDate.pl",
+      "field": "sessionDate",
+      "repeatingGroup": null,
+      "shortName": "PL session date",
+      "section": "Session details",
+      "block": "",
+      "order": 90,
+      "text": "Please select the date of your Professional Learning session",
+      "helper": "Select the date this Professional Learning session took place.",
+      "type": "date",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsIsPLSession = \"Yes\" OR solvesIsPLSession = \"Yes\"",
+        "ast": {
+          "type": "or",
+          "args": [
+            {
+              "type": "test",
+              "field": "readsIsPLSession",
+              "op": "=",
+              "value": "Yes"
+            },
+            {
+              "type": "test",
+              "field": "solvesIsPLSession",
+              "op": "=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "date__1",
+      "notes": "A second version of the date question: a free calendar, used for Professional Learning sessions.",
+      "options": []
+    },
+    {
+      "id": "canceled",
+      "field": "canceled",
+      "repeatingGroup": null,
+      "shortName": "Canceled?",
+      "section": "Cancellation",
+      "block": "",
+      "order": 100,
+      "text": "Was the Coaching Session Canceled?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "always",
+        "ast": {
+          "type": "always"
+        }
+      },
+      "mondayColumn": "not saved",
+      "notes": "Answering Yes hides the activity questions (1:1, group, Early Childhood, Reads and Solves touchpoints).",
+      "options": []
+    },
+    {
+      "id": "cancelReason",
+      "field": "cancelReason",
+      "repeatingGroup": null,
+      "shortName": "Cancel reason",
+      "section": "Cancellation",
+      "block": "",
+      "order": 110,
+      "text": "Why did the session not take place?",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "canceled = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "canceled",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "text51__1",
+      "notes": "",
+      "options": [
+        {
+          "text": "Partner Canceled",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School Canceled",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Coachee Canceled",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Group Unavailable",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "TL Coach Canceled",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Canceled Other",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": true,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "cancelReasonOther",
+      "field": "cancelReasonOther",
+      "repeatingGroup": null,
+      "shortName": "Other cancel reason",
+      "section": "Cancellation",
+      "block": "",
+      "order": 120,
+      "text": "What was the reason the activity did not take place?",
+      "helper": "",
+      "type": "long text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "cancelReason = \"Canceled Other\"",
+        "ast": {
+          "type": "test",
+          "field": "cancelReason",
+          "op": "=",
+          "value": "Canceled Other"
+        }
+      },
+      "mondayColumn": "text99__1",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "rescheduled",
+      "field": "rescheduled",
+      "repeatingGroup": null,
+      "shortName": "Rescheduled?",
+      "section": "Cancellation",
+      "block": "",
+      "order": 130,
+      "text": "Has the coaching activity been rescheduled or will it be?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "canceled = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "canceled",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "text_mkssvd55",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "did1on1",
+      "field": "did1on1",
+      "repeatingGroup": null,
+      "shortName": "Did 1:1?",
+      "section": "1:1 coaching",
+      "block": "",
+      "order": 140,
+      "text": "Did you complete 1:1 coaching today?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "canceled != \"Yes\" AND readsIsPLSession != \"Yes\" AND solvesIsPLSession != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            },
+            {
+              "type": "test",
+              "field": "readsIsPLSession",
+              "op": "!=",
+              "value": "Yes"
+            },
+            {
+              "type": "test",
+              "field": "solvesIsPLSession",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "not saved",
+      "notes": "For a Professional Learning session this is hidden and answered No for the coach.",
+      "options": []
+    },
+    {
+      "id": "coacheeRows",
+      "field": "coacheeRows",
+      "repeatingGroup": null,
+      "shortName": "1:1 coachees",
+      "section": "1:1 coaching",
+      "block": "Coachee (repeats)",
+      "order": 150,
+      "text": "1:1 coachees (the coach can add another coachee, which repeats the three questions below)",
+      "helper": "",
+      "type": "repeating group",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "did1on1 = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "did1on1",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "subitems (one per coachee)",
+      "notes": "Each coachee row becomes a Monday subitem named after the coachee.",
+      "options": []
+    },
+    {
+      "id": "coacheeRows.coacheeName",
+      "field": "coacheeRows.coacheeName",
+      "repeatingGroup": "coacheeRows",
+      "shortName": "Coachee",
+      "section": "1:1 coaching",
+      "block": "Coachee (repeats)",
+      "order": 160,
+      "text": "Coachee",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Coachee roster (district + school)",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "did1on1 = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "did1on1",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "subitem: text__1",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "coacheeRows.role",
+      "field": "coacheeRows.role",
+      "repeatingGroup": "coacheeRows",
+      "shortName": "Coachee role",
+      "section": "1:1 coaching",
+      "block": "Coachee (repeats)",
+      "order": 170,
+      "text": "Role",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "did1on1 = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "did1on1",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "subitem: text0__1",
+      "notes": "",
+      "options": [
+        {
+          "text": "Teacher",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School-based coach",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School-based leader",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "District/Network leader",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "CPS only - Teacher Team Lead",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "coacheeRows.durationMins",
+      "field": "coacheeRows.durationMins",
+      "repeatingGroup": "coacheeRows",
+      "shortName": "Coachee duration",
+      "section": "1:1 coaching",
+      "block": "Coachee (repeats)",
+      "order": 180,
+      "text": "Duration (mins)",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "did1on1 = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "did1on1",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "subitem: numbers__1",
+      "notes": "",
+      "options": [
+        {
+          "text": "15",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "20",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "25",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "30",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "35",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "40",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "45",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "50",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "55",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "60",
+          "order": 10,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "65",
+          "order": 11,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "70",
+          "order": 12,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "75",
+          "order": 13,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "80",
+          "order": 14,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "85",
+          "order": 15,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "90",
+          "order": 16,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "120",
+          "order": 17,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "140",
+          "order": 18,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "160",
+          "order": 19,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "180",
+          "order": 20,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "didGroupCoaching",
+      "field": "didGroupCoaching",
+      "repeatingGroup": null,
+      "shortName": "Did group coaching?",
+      "section": "Group coaching",
+      "block": "",
+      "order": 190,
+      "text": "Did you complete group coaching today?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "canceled != \"Yes\" AND readsIsPLSession != \"Yes\" AND solvesIsPLSession != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            },
+            {
+              "type": "test",
+              "field": "readsIsPLSession",
+              "op": "!=",
+              "value": "Yes"
+            },
+            {
+              "type": "test",
+              "field": "solvesIsPLSession",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "not saved",
+      "notes": "For a Professional Learning session this is hidden and answered No for the coach.",
+      "options": []
+    },
+    {
+      "id": "groupParticipants",
+      "field": "groupParticipants",
+      "repeatingGroup": null,
+      "shortName": "Group participants",
+      "section": "Group coaching",
+      "block": "",
+      "order": 200,
+      "text": "Names of participants",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Coachee roster (district + school)",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "didGroupCoaching = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "didGroupCoaching",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "text7__1",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "groupParticipantRole",
+      "field": "groupParticipantRole",
+      "repeatingGroup": null,
+      "shortName": "Group participant roles",
+      "section": "Group coaching",
+      "block": "",
+      "order": 210,
+      "text": "Participants were:",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "didGroupCoaching = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "didGroupCoaching",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "text29__1",
+      "notes": "",
+      "options": [
+        {
+          "text": "Teacher",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School-based coach",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School-based leader",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "District/Network leader",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "CPS only - Teacher Team Lead",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "groupTopic",
+      "field": "groupTopic",
+      "repeatingGroup": null,
+      "shortName": "Group topic",
+      "section": "Group coaching",
+      "block": "",
+      "order": 220,
+      "text": "Topic of session:",
+      "helper": "",
+      "type": "long text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "didGroupCoaching = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "didGroupCoaching",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "text76__1",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "groupDurationMins",
+      "field": "groupDurationMins",
+      "repeatingGroup": null,
+      "shortName": "Group duration",
+      "section": "Group coaching",
+      "block": "",
+      "order": 230,
+      "text": "Duration (mins):",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "didGroupCoaching = \"Yes\"",
+        "ast": {
+          "type": "test",
+          "field": "didGroupCoaching",
+          "op": "=",
+          "value": "Yes"
+        }
+      },
+      "mondayColumn": "numbers1__1",
+      "notes": "",
+      "options": [
+        {
+          "text": "15",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "20",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "25",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "30",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "35",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "40",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "45",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "50",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "55",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "60",
+          "order": 10,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "65",
+          "order": 11,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "70",
+          "order": 12,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "75",
+          "order": 13,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "80",
+          "order": 14,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "85",
+          "order": 15,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "90",
+          "order": 16,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "120",
+          "order": 17,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "140",
+          "order": 18,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "160",
+          "order": 19,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "180",
+          "order": 20,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "ecTouchpoint",
+      "field": "ecTouchpoint",
+      "repeatingGroup": null,
+      "shortName": "EC touchpoint",
+      "section": "ELA Early Childhood",
+      "block": "",
+      "order": 240,
+      "text": "What type of touchpoint are you recording?",
+      "helper": "Please only select an option that includes school leader/school leadership team if your support included specific support for the school leader/school leadership team. If support was primarily for teacher teams, please select teacher team support only.",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"ELA Early Childhood Coach\" AND canceled != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "ELA Early Childhood Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mktgtahx",
+      "notes": "Shares its Monday column with readsTouchpointTypes (never both shown).",
+      "options": [
+        {
+          "text": "Teacher AND leader support",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Teacher support ONLY",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School Leader/Leadership Team support ONLY",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "ecTeacherStrategies",
+      "field": "ecTeacherStrategies",
+      "repeatingGroup": null,
+      "shortName": "EC teacher strategies",
+      "section": "ELA Early Childhood",
+      "block": "",
+      "order": 250,
+      "text": "Please select the 1–5 strategies you used to build capacity with teacher teams today.",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 5,
+      "required": true,
+      "showsWhen": {
+        "text": "ecTouchpoint in [\"Teacher AND leader support\", \"Teacher support ONLY\"]",
+        "ast": {
+          "type": "test",
+          "field": "ecTouchpoint",
+          "op": "in",
+          "values": ["Teacher AND leader support", "Teacher support ONLY"]
+        }
+      },
+      "mondayColumn": "text_mktgaftm",
+      "notes": "Shares its Monday column with readsTeacherStrategies (never both shown).",
+      "options": [
+        {
+          "text": "Unit/module internalization",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson internalization",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Deepening understanding of content/standards/instructional shifts",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson rehearsal",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional learning sessions",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Modeling",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Side-by-side coaching",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Classroom visits",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Unit reflection",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Student Work Analysis Meetings",
+          "order": 10,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Data meetings",
+          "order": 11,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "ecLeaderCapacityFocus",
+      "field": "ecLeaderCapacityFocus",
+      "repeatingGroup": null,
+      "shortName": "EC leader focus",
+      "section": "ELA Early Childhood",
+      "block": "",
+      "order": 260,
+      "text": "Please select the primary focus of the capacity building provided to leaders in this school.",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "ecTouchpoint in [\"Teacher AND leader support\", \"School Leader/Leadership Team support ONLY\"]",
+        "ast": {
+          "type": "test",
+          "field": "ecTouchpoint",
+          "op": "in",
+          "values": ["Teacher AND leader support", "School Leader/Leadership Team support ONLY"]
+        }
+      },
+      "mondayColumn": "text_mktggp36",
+      "notes": "Shares its Monday column with readsLeaderCapacityFocus (never both shown).",
+      "options": [
+        {
+          "text": "Strategic planning",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Regular communication check-in",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Classroom learning visits",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Modeling/gradual release of MTSS data team meetings",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Knowledge-building professional learning",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Intervisitation (Pilot MTSS Middle Schools Only)",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsScheduleProvided",
+      "field": "readsScheduleProvided",
+      "repeatingGroup": null,
+      "shortName": "Schedule provided?",
+      "section": "NYC Reads",
+      "block": "",
+      "order": 270,
+      "text": "Did the capacity builders provide a schedule prior to the visit?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Reads Coach\" AND canceled != \"Yes\" AND district in [\"NY_D9\", \"NY_D75\"]",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Reads Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            },
+            {
+              "type": "test",
+              "field": "district",
+              "op": "in",
+              "values": ["NY_D9", "NY_D75"]
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mm1erdxw",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "readsHighImpactActivities",
+      "field": "readsHighImpactActivities",
+      "repeatingGroup": null,
+      "shortName": "High-impact activities?",
+      "section": "NYC Reads",
+      "block": "",
+      "order": 280,
+      "text": "Did the capacity builder attend 2-3 high-impact activities during the coaching day?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Reads Coach\" AND canceled != \"Yes\" AND district in [\"NY_D9\", \"NY_D75\"]",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Reads Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            },
+            {
+              "type": "test",
+              "field": "district",
+              "op": "in",
+              "values": ["NY_D9", "NY_D75"]
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mm1ec7kg",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "readsTouchpointTypes",
+      "field": "readsTouchpointTypes",
+      "repeatingGroup": null,
+      "shortName": "Reads touchpoints",
+      "section": "NYC Reads",
+      "block": "",
+      "order": 290,
+      "text": "What type of NYC Reads touchpoint are you recording?",
+      "helper": "Please only select school leader/school leadership team if your support included a specific strategy(ies) from the [Key Concepts: Strategies and Resources](https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.2gvxyy4nkj21) section of the JES Manual for school leader/school leadership team support. If support was primarily for teacher teams, please select teacher team support only.",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Reads Coach\" AND canceled != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Reads Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mktgtahx",
+      "notes": "Each selected touchpoint opens its own block of questions. Shares its Monday column with ecTouchpoint (never both shown).",
+      "options": [
+        {
+          "text": "Teacher team support",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "District team support (ex. Superintendent, Deputy Supt., district based coach)",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsVisitDuration",
+      "field": "readsVisitDuration",
+      "repeatingGroup": null,
+      "shortName": "Teacher support hours",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 300,
+      "text": "What was the duration of teacher support during this visit in hours? Please round to the nearest unit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"Teacher team support\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "Teacher team support"
+        }
+      },
+      "mondayColumn": "text_mktgt2ah",
+      "notes": "",
+      "options": [
+        {
+          "text": "3",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "6",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsGradeBands",
+      "field": "readsGradeBands",
+      "repeatingGroup": null,
+      "shortName": "Grade bands",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 310,
+      "text": "Select the grade band(s) you supported today.",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"Teacher team support\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "Teacher team support"
+        }
+      },
+      "mondayColumn": "text_mktgz9wm",
+      "notes": "",
+      "options": [
+        {
+          "text": "Grades K-2",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grades 3-5",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grades 6-8",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grades 9-12",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsTeacherStrategies",
+      "field": "readsTeacherStrategies",
+      "repeatingGroup": null,
+      "shortName": "Teacher strategies",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 320,
+      "text": "Please select the 1-3 main strategies you used to build capacity with teacher teams today.",
+      "helper": "See a detailed description of each capacity building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 3,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"Teacher team support\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "Teacher team support"
+        }
+      },
+      "mondayColumn": "text_mktgaftm",
+      "notes": "Shares its Monday column with ecTeacherStrategies (never both shown).",
+      "options": [
+        {
+          "text": "Unit/module internalization (Tier 1 curriculum)",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Unit/module internalization (intervention curriculum)",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson internalization (Tier 1 curriculum)",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson internalization (intervention curriculum)",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson rehearsal (Tier 1 curriculum)",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson rehearsal (intervention curriculum)",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Modeling (Tier 1 curriculum)",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Modeling (intervention curriculum)",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Side-by-side coaching (Tier 1 curriculum)",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Side-by-side coaching (intervention curriculum)",
+          "order": 10,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Student work analysis meetings (Tier 1 curriculum)",
+          "order": 11,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Student work analysis meetings (intervention curriculum)",
+          "order": 12,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional learning sessions",
+          "order": 13,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "MTSS data team meetings",
+          "order": 14,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsTeacherSchoolLeaderPresence",
+      "field": "readsTeacherSchoolLeaderPresence",
+      "repeatingGroup": null,
+      "shortName": "School leaders present (teacher)",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 330,
+      "text": "How often were school leader(s) present and engaged during your support time with teachers?",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"Teacher team support\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "Teacher team support"
+        }
+      },
+      "mondayColumn": "text_mm6n1qtd",
+      "notes": "",
+      "options": [
+        {
+          "text": "All of the time",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Most of the time",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Some of the time",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "None of the time",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsTeacherDistrictLeaderPresence",
+      "field": "readsTeacherDistrictLeaderPresence",
+      "repeatingGroup": null,
+      "shortName": "District leaders present (teacher)",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 340,
+      "text": "How often were district leader(s) present and engaged during your support time with teachers?",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"Teacher team support\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "Teacher team support"
+        }
+      },
+      "mondayColumn": "text_mm6nqxvh",
+      "notes": "",
+      "options": [
+        {
+          "text": "All of the time",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Most of the time",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Some of the time",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "None of the time",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsMajorityUsingHQIM",
+      "field": "readsMajorityUsingHQIM",
+      "repeatingGroup": null,
+      "shortName": "Majority using HQIM?",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 350,
+      "text": "Were a majority of the teachers you worked with today using approved HQIM (Tier 1 curriculum and/or intervention curriculum)?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"Teacher team support\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "Teacher team support"
+        }
+      },
+      "mondayColumn": "text_mkv0w2eq",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "readsHQIMContext",
+      "field": "readsHQIMContext",
+      "repeatingGroup": null,
+      "shortName": "HQIM context",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 360,
+      "text": "Please share additional context on your response.",
+      "helper": "For example, please describe what you saw when you would have expected to see HQIM in place. If you selected \"No\" to the prior question in error, please go back and correct your response.",
+      "type": "long text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsMajorityUsingHQIM = \"No\"",
+        "ast": {
+          "type": "test",
+          "field": "readsMajorityUsingHQIM",
+          "op": "=",
+          "value": "No"
+        }
+      },
+      "mondayColumn": "text_mkxspvf5",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "readsInterventionsScheduled",
+      "field": "readsInterventionsScheduled",
+      "repeatingGroup": null,
+      "shortName": "Interventions scheduled?",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 370,
+      "text": "Are intervention blocks scheduled at this school?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"Teacher team support\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "Teacher team support"
+        }
+      },
+      "mondayColumn": "text_mm6n77va",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "readsInterventionsContext",
+      "field": "readsInterventionsContext",
+      "repeatingGroup": null,
+      "shortName": "Interventions context",
+      "section": "NYC Reads",
+      "block": "Teacher team support",
+      "order": 380,
+      "text": "Please share additional context on your response.",
+      "helper": "For example, please describe what you saw when you would have expected to see interventions. If you selected \"No\" to the prior question in error, please go back and correct your response.",
+      "type": "long text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsInterventionsScheduled = \"No\"",
+        "ast": {
+          "type": "test",
+          "field": "readsInterventionsScheduled",
+          "op": "=",
+          "value": "No"
+        }
+      },
+      "mondayColumn": "text_mm6ndxbw",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "readsLeaderVisitDuration",
+      "field": "readsLeaderVisitDuration",
+      "repeatingGroup": null,
+      "shortName": "Leader support hours",
+      "section": "NYC Reads",
+      "block": "School Leader/Leadership team support",
+      "order": 390,
+      "text": "What was the duration of your visit with school leaders in hours? Please round to the nearest option.",
+      "helper": "This information will be used to track days of support delivered for ongoing monitoring and will not be used for invoicing.",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)"
+        }
+      },
+      "mondayColumn": "text_mktggbxt",
+      "notes": "",
+      "options": [
+        {
+          "text": "1",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "2",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "3",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "4",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "5",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "6",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsLeaderCapacityFocus",
+      "field": "readsLeaderCapacityFocus",
+      "repeatingGroup": null,
+      "shortName": "Leader focus",
+      "section": "NYC Reads",
+      "block": "School Leader/Leadership team support",
+      "order": 400,
+      "text": "Please select the primary focus(es) of the capacity building for leaders in this school. Select up to 2 focus areas.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 2,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)"
+        }
+      },
+      "mondayColumn": "text_mktggp36",
+      "notes": "Shares its Monday column with ecLeaderCapacityFocus (never both shown).",
+      "options": [
+        {
+          "text": "School-based learning visits and classroom visits",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Modeling and gradual release of MTSS data team meetings",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional learning",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Intervisitation (Pilot MTSS Middle Schools Only)",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Supporting the establishment of a strong literacy infrastructure",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsLeaderFocusSchoolVisitsSubcomponent",
+      "field": "readsLeaderFocusSchoolVisitsSubcomponent",
+      "repeatingGroup": null,
+      "shortName": "Leader: school visits subcomponent",
+      "section": "NYC Reads",
+      "block": "School Leader/Leadership team support",
+      "order": 410,
+      "text": "Based on the focus area selected above, School-based learning visits and classroom visits, select 1 subcomponent that most directly applies to your support delivered today.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsLeaderCapacityFocus includes \"School-based learning visits and classroom visits\"",
+        "ast": {
+          "type": "test",
+          "field": "readsLeaderCapacityFocus",
+          "op": "includes",
+          "value": "School-based learning visits and classroom visits"
+        }
+      },
+      "mondayColumn": "text_mm6ngab7",
+      "notes": "",
+      "options": [
+        {
+          "text": "Deepening understanding of the citywide instructional shifts, priorities, and/or guidance.",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Norming on trends across classrooms in order to plan for professional learning and/or other support needs, while also monitoring implementation to ensure goals are met.",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Developing high-quality feedback",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsLeaderFocusModelingSubcomponent",
+      "field": "readsLeaderFocusModelingSubcomponent",
+      "repeatingGroup": null,
+      "shortName": "Leader: modeling subcomponent",
+      "section": "NYC Reads",
+      "block": "School Leader/Leadership team support",
+      "order": 420,
+      "text": "Based on the focus area selected above, Modeling and gradual release of MTSS data team meetings, select 1 subcomponent that most directly applies to your support delivered today.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsLeaderCapacityFocus includes \"Modeling and gradual release of MTSS data team meetings\"",
+        "ast": {
+          "type": "test",
+          "field": "readsLeaderCapacityFocus",
+          "op": "includes",
+          "value": "Modeling and gradual release of MTSS data team meetings"
+        }
+      },
+      "mondayColumn": "text_mm6n1fgs",
+      "notes": "",
+      "options": [
+        {
+          "text": "Supporting meaningful analysis of the most relevant data to make decisions about data-informed action steps",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Supporting with preparing for, modeling, and/or co-facilitating the actual meeting",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsLeaderFocusPLSubcomponent",
+      "field": "readsLeaderFocusPLSubcomponent",
+      "repeatingGroup": null,
+      "shortName": "Leader: PL subcomponent",
+      "section": "NYC Reads",
+      "block": "School Leader/Leadership team support",
+      "order": 430,
+      "text": "Based on the focus area selected above, Professional learning, select 1 subcomponent that most directly applies to your support delivered today.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsLeaderCapacityFocus includes \"Professional learning\"",
+        "ast": {
+          "type": "test",
+          "field": "readsLeaderCapacityFocus",
+          "op": "includes",
+          "value": "Professional learning"
+        }
+      },
+      "mondayColumn": "text_mm6ne4nr",
+      "notes": "",
+      "options": [
+        {
+          "text": "Providing PL to school leadership teams to support building content-specific or structural knowledge in service of the priorities of NYC Reads.",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Co-facilitating professional learning for school-level staff.",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Planning and building capacity for the school leadership team to facilitate meetings based on jointly identified professional learning needs.",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsLeaderSustainability",
+      "field": "readsLeaderSustainability",
+      "repeatingGroup": null,
+      "shortName": "Leader sustainability",
+      "section": "NYC Reads",
+      "block": "School Leader/Leadership team support",
+      "order": 440,
+      "text": "Select at most 2 conditions of sustainability that were most closely aligned to the support given today.",
+      "helper": "See a detailed description of each sustainability factor in the [Sustainability Reflection Tool](https://docs.google.com/document/d/1JCw0HRVEP5vV06Lwzt-Ea-W-7ljnxPVfd7MGTUbtDMQ/edit?tab=t.0).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 2,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)"
+        }
+      },
+      "mondayColumn": "text_mm6nbxvj",
+      "notes": "",
+      "options": [
+        {
+          "text": "Coherence, alignment, and integrity of HQIM",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional learning and adult learning structures",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Data-driven instruction, assessment, and continuous improvement systems",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Instructional leadership across the vertical spine",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Stakeholder engagement and community partnership",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "None of the above",
+          "order": 6,
+          "exclusive": true,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsLeaderDistrictPresence",
+      "field": "readsLeaderDistrictPresence",
+      "repeatingGroup": null,
+      "shortName": "District leaders present (leader)",
+      "section": "NYC Reads",
+      "block": "School Leader/Leadership team support",
+      "order": 450,
+      "text": "How often were district leaders present and engaged during your support time with school leaders?",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "School Leader/Leadership team support (ex. Principal, Asst. Principal, school based coach)"
+        }
+      },
+      "mondayColumn": "text_mm6nc9gw",
+      "notes": "",
+      "options": [
+        {
+          "text": "All of the time",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Most of the time",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Some of the time",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "None of the time",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsDistrictCapacityFocus",
+      "field": "readsDistrictCapacityFocus",
+      "repeatingGroup": null,
+      "shortName": "District focus",
+      "section": "NYC Reads",
+      "block": "District team support",
+      "order": 460,
+      "text": "Please select the capacity building focus (up to 2) provided to district leaders.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 2,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"District team support (ex. Superintendent, Deputy Supt., district based coach)\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "District team support (ex. Superintendent, Deputy Supt., district based coach)"
+        }
+      },
+      "mondayColumn": "text_mktg32xj",
+      "notes": "",
+      "options": [
+        {
+          "text": "Strategic planning",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional learning",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Data strategy meetings",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School-based learning visits and classroom visits",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Supporting the establishment of a strong literacy infrastructure",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsDistrictFocusStrategicPlanningSubcomponent",
+      "field": "readsDistrictFocusStrategicPlanningSubcomponent",
+      "repeatingGroup": null,
+      "shortName": "District: strategic planning subcomponent",
+      "section": "NYC Reads",
+      "block": "District team support",
+      "order": 470,
+      "text": "Based on the focus area selected above, Strategic planning, select 1 subcomponent that most directly applies to your support delivered today.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsDistrictCapacityFocus includes \"Strategic planning\"",
+        "ast": {
+          "type": "test",
+          "field": "readsDistrictCapacityFocus",
+          "op": "includes",
+          "value": "Strategic planning"
+        }
+      },
+      "mondayColumn": "text_mm6naqm5",
+      "notes": "",
+      "options": [
+        {
+          "text": "Collaboratively monitoring and analyzing data in real time to inform adjustments to the Strategic Support Plan as needed.",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Developing communication plans and materials that are aligned to the citywide/district instructional focus.",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Planning for/co-designing/reflecting on district-wide professional learning plans",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsDistrictFocusPLSubcomponent",
+      "field": "readsDistrictFocusPLSubcomponent",
+      "repeatingGroup": null,
+      "shortName": "District: PL subcomponent",
+      "section": "NYC Reads",
+      "block": "District team support",
+      "order": 480,
+      "text": "Based on the focus area selected above, Professional learning, select 1 subcomponent that most directly applies to your support delivered today.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsDistrictCapacityFocus includes \"Professional learning\"",
+        "ast": {
+          "type": "test",
+          "field": "readsDistrictCapacityFocus",
+          "op": "includes",
+          "value": "Professional learning"
+        }
+      },
+      "mondayColumn": "text_mm6nnpxr",
+      "notes": "",
+      "options": [
+        {
+          "text": "Providing professional learning to district teams to support building content-specific or structural knowledge in service of the priorities of NYC Reads and/or Solves",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Planning for or co-facilitating district-wide or multi-school professional learning for school leaders, teacher leaders, coaches, or teachers",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Building capacity for the district team to facilitate meetings based on jointly identified professional learning needs",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsDistrictFocusDataStrategySubcomponent",
+      "field": "readsDistrictFocusDataStrategySubcomponent",
+      "repeatingGroup": null,
+      "shortName": "District: data strategy subcomponent",
+      "section": "NYC Reads",
+      "block": "District team support",
+      "order": 490,
+      "text": "Based on the focus area selected above, Data strategy meetings, select 1 subcomponent that most directly applies to your support delivered today.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsDistrictCapacityFocus includes \"Data strategy meetings\"",
+        "ast": {
+          "type": "test",
+          "field": "readsDistrictCapacityFocus",
+          "op": "includes",
+          "value": "Data strategy meetings"
+        }
+      },
+      "mondayColumn": "text_mm6nns49",
+      "notes": "",
+      "options": [
+        {
+          "text": "Supporting meaningful analysis of the most relevant data to make decisions about data-informed action steps",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Supporting with preparing for, modeling, and/or co-facilitating the actual meeting",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsDistrictFocusSchoolVisitsSubcomponent",
+      "field": "readsDistrictFocusSchoolVisitsSubcomponent",
+      "repeatingGroup": null,
+      "shortName": "District: school visits subcomponent",
+      "section": "NYC Reads",
+      "block": "District team support",
+      "order": 500,
+      "text": "Based on the focus area selected above, School-based learning visits and classroom visits, select 1 subcomponent that most directly applies to your support delivered today.",
+      "helper": "See a detailed description of each capacity-building focus in the [Key Concepts of the JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsDistrictCapacityFocus includes \"School-based learning visits and classroom visits\"",
+        "ast": {
+          "type": "test",
+          "field": "readsDistrictCapacityFocus",
+          "op": "includes",
+          "value": "School-based learning visits and classroom visits"
+        }
+      },
+      "mondayColumn": "text_mm6n32z3",
+      "notes": "",
+      "options": [
+        {
+          "text": "Deepening understanding of the citywide instructional shifts, priorities, and/or guidance.",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Norming on trends across the district in order to plan for professional learning and/or other support needs, while also monitoring implementation to ensure goals are met.",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsDistrictSustainability",
+      "field": "readsDistrictSustainability",
+      "repeatingGroup": null,
+      "shortName": "District sustainability",
+      "section": "NYC Reads",
+      "block": "District team support",
+      "order": 510,
+      "text": "Select at most 2 conditions of sustainability that were most closely aligned to the support given today.",
+      "helper": "See a detailed description of each sustainability factor in the [Sustainability Reflection Tool](https://docs.google.com/document/d/1JCw0HRVEP5vV06Lwzt-Ea-W-7ljnxPVfd7MGTUbtDMQ/edit?tab=t.0).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 2,
+      "required": true,
+      "showsWhen": {
+        "text": "readsTouchpointTypes includes \"District team support (ex. Superintendent, Deputy Supt., district based coach)\"",
+        "ast": {
+          "type": "test",
+          "field": "readsTouchpointTypes",
+          "op": "includes",
+          "value": "District team support (ex. Superintendent, Deputy Supt., district based coach)"
+        }
+      },
+      "mondayColumn": "text_mm6n46cw",
+      "notes": "",
+      "options": [
+        {
+          "text": "Coherence, alignment, and integrity of HQIM",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional learning and adult learning structures",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Data-driven instruction, assessment, and continuous improvement systems",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Instructional leadership across the vertical spine",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Stakeholder engagement and community partnership",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "None of the above",
+          "order": 6,
+          "exclusive": true,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsGuidanceToolsUsed",
+      "field": "readsGuidanceToolsUsed",
+      "repeatingGroup": null,
+      "shortName": "Reads guidance used",
+      "section": "NYC Reads",
+      "block": "",
+      "order": 520,
+      "text": "During your support, did you use or reference any of the following NYC Reads guidance, tools, or protocols with teachers or leaders? Please select all that apply.",
+      "helper": "We are interested in learning how the updated NYC Reads guidance, tools, or protocols may be informing JES.",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Reads Coach\" AND canceled != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Reads Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mm6ngq1v",
+      "notes": "Asked once per Reads log, including Professional Learning sessions.",
+      "options": [
+        {
+          "text": "Unit Internalization Protocol",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Curriculum-Specific Lesson Internalization Protocols",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Explicit Instruction Guidance",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Small Group Instruction Guidance",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Other",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": true,
+          "link": ""
+        },
+        {
+          "text": "N/A- Did not use any NYC Reads guidance/tools/protocols",
+          "order": 6,
+          "exclusive": true,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "readsGuidanceToolsOther",
+      "field": "readsGuidanceToolsOther",
+      "repeatingGroup": null,
+      "shortName": "Reads guidance: other",
+      "section": "NYC Reads",
+      "block": "",
+      "order": 530,
+      "text": "Please specify the other NYC Reads guidance, tool, or protocol used.",
+      "helper": "",
+      "type": "short text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "readsGuidanceToolsUsed includes \"Other\"",
+        "ast": {
+          "type": "test",
+          "field": "readsGuidanceToolsUsed",
+          "op": "includes",
+          "value": "Other"
+        }
+      },
+      "mondayColumn": "folded into parent",
+      "notes": "Saved inside readsGuidanceToolsUsed's column as \"Other: <text>\".",
+      "options": []
+    },
+    {
+      "id": "solvesTouchpointTypes",
+      "field": "solvesTouchpointTypes",
+      "repeatingGroup": null,
+      "shortName": "Solves touchpoints",
+      "section": "NYC Solves",
+      "block": "",
+      "order": 540,
+      "text": "What type of NYC Solves touchpoint are you recording?",
+      "helper": "Select all the unique types of support you provided during this visit. Any support hours logged should NOT be double counted in multiple support categories (ex. if you supported teachers and leaders at the same time, then only select the category that best captures that support).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Solves Coach/D75 Math Coach\" AND canceled != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Solves Coach/D75 Math Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mkthbvw5",
+      "notes": "Each selected touchpoint (except Initial Planning Conversation) opens its own block of questions.",
+      "options": [
+        {
+          "text": "Initial Planning Conversation",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "HQIM-Based Teacher Collaboration",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "HSD Only: Supplemental Time Teacher Collaboration",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "ES: Do the Math Work Shops",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "CSD: Leader Support (at one school)",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "District Wide Learning Support",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHqimVisitDuration",
+      "field": "solvesHqimVisitDuration",
+      "repeatingGroup": null,
+      "shortName": "HQIM hours",
+      "section": "NYC Solves",
+      "block": "HQIM-Based Teacher Collaboration",
+      "order": 550,
+      "text": "What was the duration of this teacher support in hours? Please round to the nearest unit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HQIM-Based Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HQIM-Based Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mkthtzhb",
+      "notes": "",
+      "options": [
+        {
+          "text": "1",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "2",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "3",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "4",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "5",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "6",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHqimGradeContentAreas",
+      "field": "solvesHqimGradeContentAreas",
+      "repeatingGroup": null,
+      "shortName": "HQIM grades/content",
+      "section": "NYC Solves",
+      "block": "HQIM-Based Teacher Collaboration",
+      "order": 560,
+      "text": "Select ALL the grades/content areas you supported with teachers today.",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HQIM-Based Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HQIM-Based Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mkth9zzf",
+      "notes": "",
+      "options": [
+        {
+          "text": "Kindergarten",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 1",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 2",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 3",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 4",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 5",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 6",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 7",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 8",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Algebra I",
+          "order": 10,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Geometry",
+          "order": 11,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Algebra II",
+          "order": 12,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHqimLeaderPresent",
+      "field": "solvesHqimLeaderPresent",
+      "repeatingGroup": null,
+      "shortName": "HQIM leaders present?",
+      "section": "NYC Solves",
+      "block": "HQIM-Based Teacher Collaboration",
+      "order": 570,
+      "text": "NYC Solves: Were school leader(s) present for a majority of your support visit today?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesHqimGradeContentAreas includes any of [\"Algebra I\", \"Geometry\", \"Algebra II\"]",
+        "ast": {
+          "type": "test",
+          "field": "solvesHqimGradeContentAreas",
+          "op": "includes any of",
+          "values": ["Algebra I", "Geometry", "Algebra II"]
+        }
+      },
+      "mondayColumn": "text_mm6nt9f8",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "solvesHqimProtocols",
+      "field": "solvesHqimProtocols",
+      "repeatingGroup": null,
+      "shortName": "HQIM protocols",
+      "section": "NYC Solves",
+      "block": "HQIM-Based Teacher Collaboration",
+      "order": 580,
+      "text": "Please select the 1-3 primary protocols/strategies used to support teachers in this visit.",
+      "helper": "Make sure to select \"Intervisitation Protocol\" if you supported multiple schools in a single visit. See a detailed description of each in the [Key Concepts of the SY 26-27 JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 3,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HQIM-Based Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HQIM-Based Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mkthqrth",
+      "notes": "",
+      "options": [
+        {
+          "text": "Data Protocol",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Do the Math Protocol",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Intervisitation Protocol",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson Internalization Protocol",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Unit Internalization Protocol",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Unit Reflection Protocol",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Role Play Protocol",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Classroom visits",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Modeling",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional Book Club",
+          "order": 10,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Side-by-side coaching",
+          "order": 11,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHsdVisitDuration",
+      "field": "solvesHsdVisitDuration",
+      "repeatingGroup": null,
+      "shortName": "HSD hours",
+      "section": "NYC Solves",
+      "block": "HSD Only: Supplemental Time Teacher Collaboration",
+      "order": 590,
+      "text": "What was the duration of your HSD Only: Supplemental Time Teacher Collaboration during this visit in hours? Please round to the nearest unit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HSD Only: Supplemental Time Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HSD Only: Supplemental Time Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mm6nqx9x",
+      "notes": "",
+      "options": [
+        {
+          "text": "1",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "2",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "3",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "4",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "5",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "6",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHsdGradeContentAreas",
+      "field": "solvesHsdGradeContentAreas",
+      "repeatingGroup": null,
+      "shortName": "HSD grades/content",
+      "section": "NYC Solves",
+      "block": "HSD Only: Supplemental Time Teacher Collaboration",
+      "order": 600,
+      "text": "Select ALL the grades/content areas you supported with teachers today.",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HSD Only: Supplemental Time Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HSD Only: Supplemental Time Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mm6ny98w",
+      "notes": "",
+      "options": [
+        {
+          "text": "Algebra I",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Geometry",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Algebra II",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHsdPrimaryResources",
+      "field": "solvesHsdPrimaryResources",
+      "repeatingGroup": null,
+      "shortName": "HSD primary resources",
+      "section": "NYC Solves",
+      "block": "HSD Only: Supplemental Time Teacher Collaboration",
+      "order": 610,
+      "text": "What was/were the primary resource(s) you supported using during supplemental time?",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HSD Only: Supplemental Time Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HSD Only: Supplemental Time Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mkthjyrx",
+      "notes": "",
+      "options": [
+        {
+          "text": "Core instructional materials only (Illustrative Math, IReady, Amplify)",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Unit access guides with core instructional materials",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Imagine Math",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Math 180",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Transition to Algebra",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Other",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": true,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHsdPrimaryResourcesOther",
+      "field": "solvesHsdPrimaryResourcesOther",
+      "repeatingGroup": null,
+      "shortName": "HSD resources: other",
+      "section": "NYC Solves",
+      "block": "HSD Only: Supplemental Time Teacher Collaboration",
+      "order": 620,
+      "text": "Please specify the other primary resource used.",
+      "helper": "",
+      "type": "short text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesHsdPrimaryResources includes \"Other\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesHsdPrimaryResources",
+          "op": "includes",
+          "value": "Other"
+        }
+      },
+      "mondayColumn": "folded into parent",
+      "notes": "Saved inside solvesHsdPrimaryResources's column as \"Other: <text>\".",
+      "options": []
+    },
+    {
+      "id": "solvesHsdProtocols",
+      "field": "solvesHsdProtocols",
+      "repeatingGroup": null,
+      "shortName": "HSD protocols",
+      "section": "NYC Solves",
+      "block": "HSD Only: Supplemental Time Teacher Collaboration",
+      "order": 630,
+      "text": "Please select the 1-3 primary protocols/strategies used to support teachers in this visit.",
+      "helper": "Make sure to select \"Intervisitation Protocol\" if you supported multiple schools in a single visit. See a detailed description of each in the [SY 26-27 JES Manual](https://docs.google.com/document/d/1WiGwohRHYmXeJztoUI0cplQ3g5inr8LjjyDChNQrDpY/edit?tab=t.0#heading=h.cslg194210x2).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 3,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HSD Only: Supplemental Time Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HSD Only: Supplemental Time Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mm6n3qbz",
+      "notes": "",
+      "options": [
+        {
+          "text": "Data Protocol",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Do the Math Protocol",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Intervisitation Protocol",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Lesson Internalization Protocol",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Unit Internalization Protocol",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Unit Reflection Protocol",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Role Play Protocol",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Classroom visits",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Modeling",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional Book Club",
+          "order": 10,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Side-by-side coaching",
+          "order": 11,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesHsdLeaderPresent",
+      "field": "solvesHsdLeaderPresent",
+      "repeatingGroup": null,
+      "shortName": "HSD leaders present?",
+      "section": "NYC Solves",
+      "block": "HSD Only: Supplemental Time Teacher Collaboration",
+      "order": 640,
+      "text": "NYC Solves: Were school leader(s) present for a majority of your support visit today?",
+      "helper": "",
+      "type": "yes-no",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"HSD Only: Supplemental Time Teacher Collaboration\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "HSD Only: Supplemental Time Teacher Collaboration"
+        }
+      },
+      "mondayColumn": "text_mm6nk3m3",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "solvesEsVisitDuration",
+      "field": "solvesEsVisitDuration",
+      "repeatingGroup": null,
+      "shortName": "ES workshop hours",
+      "section": "NYC Solves",
+      "block": "ES: Do the Math Work Shops",
+      "order": 650,
+      "text": "What was the duration of your district wide support during this visit in hours? Please round to the nearest unit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"ES: Do the Math Work Shops\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "ES: Do the Math Work Shops"
+        }
+      },
+      "mondayColumn": "text_mm6nv7jp",
+      "notes": "",
+      "options": [
+        {
+          "text": "1",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "2",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "3",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "4",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "5",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "6",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesEsGradeLevels",
+      "field": "solvesEsGradeLevels",
+      "repeatingGroup": null,
+      "shortName": "ES workshop grades",
+      "section": "NYC Solves",
+      "block": "ES: Do the Math Work Shops",
+      "order": 660,
+      "text": "Please select which grade level(s) you worked with during your support for Elementary \"Doing the Math\" School Based Workshops.",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"ES: Do the Math Work Shops\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "ES: Do the Math Work Shops"
+        }
+      },
+      "mondayColumn": "text_mm6ne01j",
+      "notes": "",
+      "options": [
+        {
+          "text": "Kindergarten",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 1",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 2",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 3",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 4",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Grade 5",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesCsdVisitDuration",
+      "field": "solvesCsdVisitDuration",
+      "repeatingGroup": null,
+      "shortName": "CSD hours",
+      "section": "NYC Solves",
+      "block": "CSD: Leader Support (at one school)",
+      "order": 670,
+      "text": "What was the duration of your support for school leaders during this visit in hours? Please round to the nearest unit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"CSD: Leader Support (at one school)\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "CSD: Leader Support (at one school)"
+        }
+      },
+      "mondayColumn": "text_mm6nvcvz",
+      "notes": "",
+      "options": [
+        {
+          "text": "1",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "2",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "3",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "4",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "5",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "6",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesCsdTrack",
+      "field": "solvesCsdTrack",
+      "repeatingGroup": null,
+      "shortName": "CSD track",
+      "section": "NYC Solves",
+      "block": "CSD: Leader Support (at one school)",
+      "order": 680,
+      "text": "Please select the track of support used to support leaders in this visit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"CSD: Leader Support (at one school)\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "CSD: Leader Support (at one school)"
+        }
+      },
+      "mondayColumn": "text_mm6nhv0b",
+      "notes": "",
+      "options": [
+        {
+          "text": "Unpacking teacher practice",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Classroom observation & feedback practice",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesDistrictWideVisitDuration",
+      "field": "solvesDistrictWideVisitDuration",
+      "repeatingGroup": null,
+      "shortName": "District-wide hours",
+      "section": "NYC Solves",
+      "block": "District Wide Learning Support",
+      "order": 690,
+      "text": "What was the duration of your district wide support during this visit in hours? Please round to the nearest unit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"District Wide Learning Support\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "District Wide Learning Support"
+        }
+      },
+      "mondayColumn": "text_mm6nx5fv",
+      "notes": "",
+      "options": [
+        {
+          "text": "1",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "2",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "3",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "4",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "5",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "6",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesDistrictWideSupportType",
+      "field": "solvesDistrictWideSupportType",
+      "repeatingGroup": null,
+      "shortName": "District-wide support type",
+      "section": "NYC Solves",
+      "block": "District Wide Learning Support",
+      "order": 700,
+      "text": "Please select which additional support you provided during this visit.",
+      "helper": "",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes \"District Wide Learning Support\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes",
+          "value": "District Wide Learning Support"
+        }
+      },
+      "mondayColumn": "text_mm6n3zqp",
+      "notes": "",
+      "options": [
+        {
+          "text": "Admin Collaborative Coaching",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Teacher Collaborative Planning Sessions",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Facilitated Intervisitation",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesDistrictWideDBNs",
+      "field": "solvesDistrictWideDBNs",
+      "repeatingGroup": null,
+      "shortName": "Intervisitation DBNs",
+      "section": "NYC Solves",
+      "block": "District Wide Learning Support",
+      "order": 710,
+      "text": "Select the DBN(s) for all other schools that were participating in the intervisitation.",
+      "helper": "",
+      "type": "multi select",
+      "optionsFrom": "DBN list (schools in the chosen district)",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesDistrictWideSupportType in [\"Admin Collaborative Coaching\", \"Facilitated Intervisitation\"]",
+        "ast": {
+          "type": "test",
+          "field": "solvesDistrictWideSupportType",
+          "op": "in",
+          "values": ["Admin Collaborative Coaching", "Facilitated Intervisitation"]
+        }
+      },
+      "mondayColumn": "text_mm6ncnt7",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "solvesPostVisitSnapshot",
+      "field": "solvesPostVisitSnapshot",
+      "repeatingGroup": null,
+      "shortName": "Post-visit snapshot",
+      "section": "NYC Solves",
+      "block": "",
+      "order": 720,
+      "text": "NYC Solves: Post Visit Snapshot",
+      "helper": "Additional guidance around each option here: [Guidance for NYC Solves Post-visit Snapshot](https://docs.google.com/document/d/1VqBl7Z0W9kN8aUWhPZKANNIzDLBbu4PXLPqX9n-d0Ng/edit?tab=t.0#heading=h.duoznt5x4f4o).",
+      "type": "single select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesTouchpointTypes includes any of [\"HQIM-Based Teacher Collaboration\", \"HSD Only: Supplemental Time Teacher Collaboration\", \"CSD: Leader Support (at one school)\"]",
+        "ast": {
+          "type": "test",
+          "field": "solvesTouchpointTypes",
+          "op": "includes any of",
+          "values": ["HQIM-Based Teacher Collaboration", "HSD Only: Supplemental Time Teacher Collaboration", "CSD: Leader Support (at one school)"]
+        }
+      },
+      "mondayColumn": "text_mm6n9813",
+      "notes": "Asked once per log (not once per touchpoint).",
+      "options": [
+        {
+          "text": "School to Learn From",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Median School",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "School Experiencing Challenges",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "HQIM not used this visit",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Immediate Attention Needed",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesPostVisitFollowUp",
+      "field": "solvesPostVisitFollowUp",
+      "repeatingGroup": null,
+      "shortName": "Snapshot follow-up",
+      "section": "NYC Solves",
+      "block": "",
+      "order": 730,
+      "text": "NYC Solves: Additional information and follow up notes based on the Post Visit Snapshot indication.",
+      "helper": "",
+      "type": "long text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesPostVisitSnapshot in [\"HQIM not used this visit\", \"Immediate Attention Needed\"]",
+        "ast": {
+          "type": "test",
+          "field": "solvesPostVisitSnapshot",
+          "op": "in",
+          "values": ["HQIM not used this visit", "Immediate Attention Needed"]
+        }
+      },
+      "mondayColumn": "text_mm6ne4t8",
+      "notes": "",
+      "options": []
+    },
+    {
+      "id": "solvesSustainability",
+      "field": "solvesSustainability",
+      "repeatingGroup": null,
+      "shortName": "Solves sustainability",
+      "section": "NYC Solves",
+      "block": "",
+      "order": 740,
+      "text": "NYC Solves: Select at most 2 conditions of sustainability that were most closely aligned to the support given today.",
+      "helper": "See a detailed description of each sustainability factor in the [Sustainability Reflection Tool](https://docs.google.com/document/d/1JCw0HRVEP5vV06Lwzt-Ea-W-7ljnxPVfd7MGTUbtDMQ/edit?tab=t.0).",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": 2,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Solves Coach/D75 Math Coach\" AND canceled != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Solves Coach/D75 Math Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mm7dbgm2",
+      "notes": "Asked once per Solves log, including Professional Learning sessions.",
+      "options": [
+        {
+          "text": "Coherence, alignment, and integrity of HQIM",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Professional learning and adult learning structures",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Data-driven instruction, assessment, and continuous improvement systems",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Instructional leadership across the vertical spine",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Stakeholder engagement and community partnership",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "None of the above",
+          "order": 6,
+          "exclusive": true,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesGuidanceToolsUsed",
+      "field": "solvesGuidanceToolsUsed",
+      "repeatingGroup": null,
+      "shortName": "Solves guidance used",
+      "section": "NYC Solves",
+      "block": "",
+      "order": 750,
+      "text": "NYC Solves: Which (if any) of these following guidance documents did you use with teachers and/or leaders during your support visit?",
+      "helper": "Reference links for each guidance document are on the Options tab.",
+      "type": "multi select",
+      "optionsFrom": "Options tab",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "nycCoachType = \"Solves Coach/D75 Math Coach\" AND canceled != \"Yes\"",
+        "ast": {
+          "type": "and",
+          "args": [
+            {
+              "type": "test",
+              "field": "nycCoachType",
+              "op": "=",
+              "value": "Solves Coach/D75 Math Coach"
+            },
+            {
+              "type": "test",
+              "field": "canceled",
+              "op": "!=",
+              "value": "Yes"
+            }
+          ]
+        }
+      },
+      "mondayColumn": "text_mm6n3rjz",
+      "notes": "Asked once per Solves log, including Professional Learning sessions. The form shows the reference links under the question.",
+      "options": [
+        {
+          "text": "Beyond Core",
+          "order": 1,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": "https://sites.google.com/view/nyc-math-resources/multi-tiered-system-of-support-mtss?authuser=0"
+        },
+        {
+          "text": "Additional Time",
+          "order": 2,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/supplemental-programs?authuser=0"
+        },
+        {
+          "text": "MTSS Quick Guide",
+          "order": 3,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": "https://sites.google.com/view/nyc-math-resources/multi-tiered-system-of-support-mtss?authuser=0&pli=1"
+        },
+        {
+          "text": "MLR",
+          "order": 4,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/multilingual-learners?authuser=0"
+        },
+        {
+          "text": "ICT",
+          "order": 5,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/inclusive-and-accessible-hqim?authuser=0"
+        },
+        {
+          "text": "EL",
+          "order": 6,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": "https://sites.google.com/view/nyc-math-resources/inclusive-and-accessible-learning/inclusive-and-accessible-hqim?authuser=0"
+        },
+        {
+          "text": "Fluency",
+          "order": 7,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": "https://sites.google.com/view/nyc-math-resources/developing-fluency-understanding-together?authuser=0"
+        },
+        {
+          "text": "Learning Gap Guidance",
+          "order": 8,
+          "exclusive": false,
+          "opensWriteIn": false,
+          "link": ""
+        },
+        {
+          "text": "Other",
+          "order": 9,
+          "exclusive": false,
+          "opensWriteIn": true,
+          "link": ""
+        },
+        {
+          "text": "N/A- Did not use any NYC Solves guidance/tools/protocols",
+          "order": 10,
+          "exclusive": true,
+          "opensWriteIn": false,
+          "link": ""
+        }
+      ]
+    },
+    {
+      "id": "solvesGuidanceToolsOther",
+      "field": "solvesGuidanceToolsOther",
+      "repeatingGroup": null,
+      "shortName": "Solves guidance: other",
+      "section": "NYC Solves",
+      "block": "",
+      "order": 760,
+      "text": "Please specify the other NYC Solves guidance, tool, or protocol used.",
+      "helper": "",
+      "type": "short text",
+      "optionsFrom": "",
+      "maxSelections": null,
+      "required": true,
+      "showsWhen": {
+        "text": "solvesGuidanceToolsUsed includes \"Other\"",
+        "ast": {
+          "type": "test",
+          "field": "solvesGuidanceToolsUsed",
+          "op": "includes",
+          "value": "Other"
+        }
+      },
+      "mondayColumn": "folded into parent",
+      "notes": "Saved inside solvesGuidanceToolsUsed's column as \"Other: <text>\".",
+      "options": []
+    }
+  ],
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2026-09-22",
+      "summary": "First version of the spec, built from the live form (main @ c02f21ab). Differences from the FY27 Coaching Log doc are on the Discrepancies tab.",
+      "prLink": ""
+    }
+  ]
+}

@@ -6,7 +6,9 @@ import {
 } from "~/domains/coach-log/repository";
 import { coachLogService } from "~/domains/coach-log/service";
 import { insertMondayData } from "~/domains/utils";
+import { CANCELED_OTHER_REASON } from "~/components/coach-log/constants";
 import {
+  isReadsCapacityBuilderDistrict,
   OTHER_OPTION,
   readsShowsDistrictBlock,
   readsShowsLeaderBlock,
@@ -244,10 +246,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // block is gated again here so stale hidden values are never written.
     if (readsTouchpointTypes?.length) {
       if (readsIsPLSession) parentColumns.text_mkv0r1t = readsIsPLSession;
-      if (readsScheduleProvided)
-        parentColumns.text_mm1erdxw = readsScheduleProvided;
-      if (readsHighImpactActivities)
-        parentColumns.text_mm1ec7kg = readsHighImpactActivities;
+      // Capacity-builder questions are only asked in D9/D75.
+      if (isReadsCapacityBuilderDistrict(district)) {
+        if (readsScheduleProvided)
+          parentColumns.text_mm1erdxw = readsScheduleProvided;
+        if (readsHighImpactActivities)
+          parentColumns.text_mm1ec7kg = readsHighImpactActivities;
+      }
       parentColumns[COLUMN.readsTouchpointTypes] = csv(readsTouchpointTypes);
 
       if (readsShowsTeacherBlock(readsTouchpointTypes)) {
@@ -416,7 +421,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     if (canceled === "Yes") {
       parentColumns.text51__1 = cancelReason; // Why session did not take place
-      parentColumns.text99__1 = cancelReasonOther; // "Canceled Other" write-in
+      if (cancelReason === CANCELED_OTHER_REASON)
+        parentColumns.text99__1 = cancelReasonOther; // "Canceled Other" write-in
       parentColumns.text_mkssvd55 = rescheduled; // Rescheduled?
     }
 

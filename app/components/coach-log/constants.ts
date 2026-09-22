@@ -231,3 +231,19 @@ export function shouldShowSolves(
 ): boolean {
   return isNycCoachTypeDistrict(district) && nycCoachType === SOLVES_COACH_TYPE;
 }
+
+/** A Reads or Solves coach logging a Professional Learning session: the form
+ * hides the coaching questions and swaps the scheduled-date dropdown for a free
+ * calendar. Only the shown coach type's PL answer counts, so a stale "Yes" left
+ * behind after switching coach type is ignored. */
+export function isPLSession(
+  district: string,
+  nycCoachType: string,
+  readsIsPLSession: string,
+  solvesIsPLSession: string
+): boolean {
+  return (
+    (shouldShowReads(district, nycCoachType) && readsIsPLSession === "Yes") ||
+    (shouldShowSolves(district, nycCoachType) && solvesIsPLSession === "Yes")
+  );
+}

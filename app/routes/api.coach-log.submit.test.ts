@@ -199,16 +199,28 @@ describe("parent column values", () => {
     await submit({
       ...base,
       canceled: "Yes",
-      cancelReason: "Other",
+      cancelReason: "Canceled Other",
       cancelReasonOther: "Snow day",
       rescheduled: "Yes",
     });
 
     expect(parentColumns()).toMatchObject({
-      text51__1: "Other",
+      text51__1: "Canceled Other",
       text99__1: "Snow day",
       text_mkssvd55: "Yes",
     });
+  });
+
+  it("drops a stale \"Canceled Other\" write-in when another reason is picked", async () => {
+    await submit({
+      ...base,
+      canceled: "Yes",
+      cancelReason: "School Canceled",
+      cancelReasonOther: "Snow day",
+      rescheduled: "No",
+    });
+
+    expect(parentColumns()).not.toHaveProperty("text99__1");
   });
 
   it("skips the Reads blocks whose touchpoint wasn't selected, so stale hidden values aren't written", async () => {

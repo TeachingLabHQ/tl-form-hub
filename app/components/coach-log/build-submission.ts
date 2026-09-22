@@ -1,5 +1,6 @@
 import type { CoachLogSubmission } from "~/domains/coach-log/model";
 import {
+  CANCELED_OTHER_REASON,
   isNycCoachTypeDistrict,
   shouldShowEarlyChildhood,
   shouldShowReads,
@@ -9,6 +10,7 @@ import {
 } from "./constants";
 import type { CoachLogValues } from "./hooks/use-coach-log-form";
 import {
+  isReadsCapacityBuilderDistrict,
   readsShowsDistrictBlock,
   readsShowsLeaderBlock,
   readsShowsTeacherBlock,
@@ -49,6 +51,8 @@ export function buildCoachLogSubmission(
   const sendCoachees = !cancelled && values.did1on1 === "Yes";
   const sendGroup = !cancelled && values.didGroupCoaching === "Yes";
 
+  const sendReadsCapacityBuilder =
+    sendReads && isReadsCapacityBuilderDistrict(values.district);
   const readsTouchpointTypes = sendReads ? values.readsTouchpointTypes : [];
   const sendReadsTeacher = sendReads && readsShowsTeacherBlock(readsTouchpointTypes);
   const sendReadsLeader = sendReads && readsShowsLeaderBlock(readsTouchpointTypes);
@@ -80,8 +84,12 @@ export function buildCoachLogSubmission(
 
     // NYC Reads
     readsIsPLSession: sendReads ? values.readsIsPLSession : "",
-    readsScheduleProvided: sendReads ? values.readsScheduleProvided : "",
-    readsHighImpactActivities: sendReads ? values.readsHighImpactActivities : "",
+    readsScheduleProvided: sendReadsCapacityBuilder
+      ? values.readsScheduleProvided
+      : "",
+    readsHighImpactActivities: sendReadsCapacityBuilder
+      ? values.readsHighImpactActivities
+      : "",
     readsTouchpointTypes,
 
     readsVisitDuration: sendReadsTeacher ? values.readsVisitDuration : "",
@@ -201,7 +209,10 @@ export function buildCoachLogSubmission(
     // Cancellation
     canceled: values.canceled,
     cancelReason: cancelled ? values.cancelReason : "",
-    cancelReasonOther: cancelled ? values.cancelReasonOther : "",
+    cancelReasonOther:
+      cancelled && values.cancelReason === CANCELED_OTHER_REASON
+        ? values.cancelReasonOther
+        : "",
     rescheduled: cancelled ? values.rescheduled : "",
 
     // 1:1 coaching
