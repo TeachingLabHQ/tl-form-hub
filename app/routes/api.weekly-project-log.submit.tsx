@@ -83,8 +83,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return a + (parseFloat(b.workHours) || 0);
     }, 0);
 
-    // Tag the Employee Profile and Home Manager Profile People columns from the
-    // FTE/PTE Details board. A failed lookup shouldn't block the submission.
+    // Employee Profile and Home Manager Profile People values from the FTE/PTE
+    // Details board. A failed lookup shouldn't block the submission.
     const peopleTags = await service.fetchEmployeePeopleTags(employeeId);
     if (peopleTags.error) {
       console.warn("Could not tag people on project log:", peopleTags.error.message);
@@ -105,13 +105,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       numbers8: totalHours,
       notes: comment,
       numeric_mkq25pjh: employeeId,
-      ...peopleColumnValues,
     };
 
     if (isDryRun) {
       return json(
         {
           parentColumnValues,
+          peopleColumnValues,
           peopleTagError: peopleTags.error?.message ?? null,
         },
         { headers }
@@ -119,15 +119,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     //create the parent item
-    let parentItem = await service.createParentItem(name, parentColumnValues);
-    // If create_item fails with People tags (e.g. a deactivated manager), retry
-    // once untagged rather than failing the whole submission. Monday's error
-    // messages aren't stable enough to match on, so any failure retries once.
-    if (parentItem.error && Object.keys(peopleColumnValues).length > 0) {
-      console.warn("create_item failed with people tags, retrying untagged:", parentItem.error.message);
-      const { person, people, ...untaggedColumnValues } = parentColumnValues as Record<string, unknown>;
-      parentItem = await service.createParentItem(name, untaggedColumnValues);
-    }
+    const parentItem = await service.createParentItem(name, parentColumnValues);
     if (!parentItem.data) {
       console.error("create_item failed:", parentItem.error?.message);
       return json(
@@ -180,6 +172,25 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         },
         { status: 502, headers }
       );
+    }
+
+    // Tag the People columns only once the log is complete. They're set after
+    // create_item, not in it, because the board's automation that moves the
+    // entry from "New Submission" into the submitter's group fires on a change
+    // to Employee Profile, and a value set at creation isn't a change.
+    if (Object.keys(peopleColumnValues).length > 0) {
+      let tagged = await service.updateItemColumns(parentItemId, peopleColumnValues);
+      // A rejected Home Manager (e.g. a deactivated user) fails the whole
+      // update, so retry with just Employee Profile, which drives the move
+      if (tagged.error && "people" in peopleColumnValues && "person" in peopleColumnValues) {
+        console.warn("Tagging people failed, retrying Employee Profile only:", tagged.error.message);
+        tagged = await service.updateItemColumns(parentItemId, {
+          person: peopleColumnValues.person,
+        });
+      }
+      if (tagged.error) {
+        console.warn(`Could not tag people on project log ${parentItemId}:`, tagged.error.message);
+      }
     }
 
     return json(

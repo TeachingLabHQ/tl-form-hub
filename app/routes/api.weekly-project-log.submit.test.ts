@@ -8,6 +8,7 @@ const { getTeachingLabUser, service } = vi.hoisted(() => ({
     fetchEmployeePeopleTags: vi.fn(),
     createParentItem: vi.fn(),
     createSubitems: vi.fn(),
+    updateItemColumns: vi.fn(),
     deleteItem: vi.fn(),
   },
 }));
@@ -58,6 +59,7 @@ beforeEach(() => {
     { data: { id: "101" }, error: null },
     { data: { id: "102" }, error: null },
   ]);
+  service.updateItemColumns.mockResolvedValue({ data: { id: "100" }, error: null });
   service.deleteItem.mockResolvedValue({ data: { id: "100" }, error: null });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -165,7 +167,7 @@ describe("duplicate weeks", () => {
 });
 
 describe("a successful submission", () => {
-  it("writes the parent with summed hours and People tags, then the subitems", async () => {
+  it("writes the parent with summed hours, then the subitems, then the People tags", async () => {
     const response = await submit(validBody);
 
     expect(response.status).toBe(200);
@@ -179,9 +181,11 @@ describe("a successful submission", () => {
       date4: { date: "2026-09-07" },
       numbers8: 40,
       numeric_mkq25pjh: "8",
-      person: { personsAndTeams: [{ id: 22039575, kind: "person" }] },
-      people: { personsAndTeams: [{ id: 22044513, kind: "person" }] },
     });
+    // Set after creation so the board automation moving the entry into the
+    // submitter's group sees an Employee Profile change
+    expect(columnValues).not.toHaveProperty("person");
+    expect(columnValues).not.toHaveProperty("people");
 
     const [parentId, subitems] = service.createSubitems.mock.calls[0]!;
     expect(parentId).toBe("100");
@@ -193,6 +197,14 @@ describe("a successful submission", () => {
       numbers: 6.5,
       numeric_mkq2d9jn: "8",
     });
+
+    expect(service.updateItemColumns).toHaveBeenCalledWith("100", {
+      person: { personsAndTeams: [{ id: 22039575, kind: "person" }] },
+      people: { personsAndTeams: [{ id: 22044513, kind: "person" }] },
+    });
+    expect(service.updateItemColumns.mock.invocationCallOrder[0]).toBeGreaterThan(
+      service.createSubitems.mock.invocationCallOrder[0]!
+    );
   });
 
   it("submits untagged when the People lookup fails", async () => {
@@ -204,9 +216,32 @@ describe("a successful submission", () => {
     const response = await submit(validBody);
 
     expect(response.status).toBe(200);
-    const [, columnValues] = service.createParentItem.mock.calls[0]!;
-    expect(columnValues).not.toHaveProperty("person");
-    expect(columnValues).not.toHaveProperty("people");
+    expect(service.createParentItem).toHaveBeenCalled();
+    expect(service.updateItemColumns).not.toHaveBeenCalled();
+  });
+
+  it("retries with Employee Profile only when tagging both People columns fails", async () => {
+    service.updateItemColumns
+      .mockResolvedValueOnce({ data: null, error: new Error("deactivated user") })
+      .mockResolvedValueOnce({ data: { id: "100" }, error: null });
+
+    const response = await submit(validBody);
+
+    expect(response.status).toBe(200);
+    expect(service.updateItemColumns).toHaveBeenCalledTimes(2);
+    expect(service.updateItemColumns.mock.calls[1]).toEqual([
+      "100",
+      { person: { personsAndTeams: [{ id: 22039575, kind: "person" }] } },
+    ]);
+  });
+
+  it("still succeeds when the People tags can't be written at all", async () => {
+    service.updateItemColumns.mockResolvedValue({ data: null, error: new Error("nope") });
+
+    const response = await submit(validBody);
+
+    expect(response.status).toBe(200);
+    expect(service.deleteItem).not.toHaveBeenCalled();
   });
 
   it("returns the column values without writing on a dry run", async () => {
@@ -218,6 +253,7 @@ describe("a successful submission", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       parentColumnValues: { numbers8: 40 },
+      peopleColumnValues: { person: { personsAndTeams: [{ id: 22039575, kind: "person" }] } },
     });
     expect(service.createParentItem).not.toHaveBeenCalled();
     expect(service.createSubitems).not.toHaveBeenCalled();
@@ -225,20 +261,6 @@ describe("a successful submission", () => {
 });
 
 describe("write failures", () => {
-  it("retries the parent untagged when create_item fails with People tags", async () => {
-    service.createParentItem
-      .mockResolvedValueOnce({ data: null, error: new Error("deactivated user") })
-      .mockResolvedValueOnce({ data: { id: "100" }, error: null });
-
-    const response = await submit(validBody);
-
-    expect(response.status).toBe(200);
-    expect(service.createParentItem).toHaveBeenCalledTimes(2);
-    const [, retried] = service.createParentItem.mock.calls[1]!;
-    expect(retried).not.toHaveProperty("person");
-    expect(retried).not.toHaveProperty("people");
-  });
-
   it("502s and doesn't create subitems when the parent can't be created", async () => {
     service.createParentItem.mockResolvedValue({
       data: null,
@@ -248,7 +270,9 @@ describe("write failures", () => {
     const response = await submit(validBody);
 
     expect(response.status).toBe(502);
+    expect(service.createParentItem).toHaveBeenCalledTimes(1);
     expect(service.createSubitems).not.toHaveBeenCalled();
+    expect(service.updateItemColumns).not.toHaveBeenCalled();
   });
 
   it("deletes the parent and 502s when a subitem fails, so no partial log is left", async () => {
@@ -261,6 +285,7 @@ describe("write failures", () => {
 
     expect(response.status).toBe(502);
     expect(service.deleteItem).toHaveBeenCalledWith("100");
+    expect(service.updateItemColumns).not.toHaveBeenCalled();
     expect(((await response.json()) as { error: string }).error).toContain("1 of 2 project rows");
   });
 

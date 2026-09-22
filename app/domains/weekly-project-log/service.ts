@@ -12,6 +12,7 @@ export function weeklyProjectLogService(
     fetchSubmittedWeeks: weeklyProjectLogRepository.fetchSubmittedWeeks,
     createParentItem: weeklyProjectLogRepository.createParentItem,
     createSubitems: weeklyProjectLogRepository.createSubitems,
+    updateItemColumns: weeklyProjectLogRepository.updateItemColumns,
     deleteItem: weeklyProjectLogRepository.deleteItem,
     fetchEmployeePeopleTags: employees.fetchEmployeePeopleTags,
 

@@ -89,6 +89,10 @@ export interface WeeklyProjectLogRepository {
     parentItemId: string,
     subitems: SubitemInput[]
   ): Promise<Errorable<{ id: string }>[]>;
+  updateItemColumns(
+    itemId: string,
+    columnValues: Record<string, unknown>
+  ): Promise<Errorable<{ id: string }>>;
   deleteItem(itemId: string): Promise<Errorable<{ id: string }>>;
 }
 
@@ -194,8 +198,8 @@ export function weeklyProjectLogRepository(): WeeklyProjectLogRepository {
       );
     },
 
-    // Single attempt: the submit route has its own untagged fallback, and a
-    // failure caused by bad column values wouldn't succeed on a retry anyway
+    // Single attempt: a failure caused by bad column values wouldn't succeed
+    // on a retry anyway
     createParentItem: async (
       itemName: string,
       columnValues: Record<string, unknown>
@@ -208,6 +212,19 @@ export function weeklyProjectLogRepository(): WeeklyProjectLogRepository {
           columnVals: JSON.stringify(columnValues),
         },
         "create_item",
+        1
+      ),
+
+    // Single attempt, like createParentItem: a rejected People value (e.g. a
+    // deactivated manager) wouldn't succeed on a retry
+    updateItemColumns: async (
+      itemId: string,
+      columnValues: Record<string, unknown>
+    ) =>
+      mutateWithRetry(
+        `mutation ($itemId: ID!, $columnVals: JSON!) { change_multiple_column_values (board_id: ${WEEKLY_PROJECT_LOG_BOARD_ID}, item_id: $itemId, column_values: $columnVals) { id } }`,
+        { itemId, columnVals: JSON.stringify(columnValues) },
+        "change_multiple_column_values",
         1
       ),
 
