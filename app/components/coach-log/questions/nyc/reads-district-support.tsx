@@ -3,7 +3,6 @@ import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   JES_GLOSSARY_URL,
   MAX_READS_DISTRICT_CAPACITY_FOCUS,
-  MAX_READS_SUSTAINABILITY,
   READS_DISTRICT_CAPACITY_FOCUS_OPTIONS,
   READS_DISTRICT_DATA_STRATEGY_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_FOCUS_DATA_STRATEGY,
@@ -13,10 +12,9 @@ import {
   READS_DISTRICT_PL_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_SCHOOL_VISITS_SUBCOMPONENT_OPTIONS,
   READS_DISTRICT_STRATEGIC_PLANNING_SUBCOMPONENT_OPTIONS,
-  READS_SUSTAINABILITY_OPTIONS,
-  SUSTAINABILITY_REFLECTION_TOOL_URL,
 } from "./constants";
 import { QuestionField } from "./field";
+import { SustainabilityQuestion } from "./sustainability-question";
 
 type Props = {
   form: CoachLogForm;
@@ -32,21 +30,6 @@ const GLOSSARY_NOTE = (
       className="font-bold underline"
     >
       Key Concepts of the JES Manual
-    </a>
-    .
-  </>
-);
-
-const SUSTAINABILITY_NOTE = (
-  <>
-    See a detailed description of each sustainability factor in the{" "}
-    <a
-      href={SUSTAINABILITY_REFLECTION_TOOL_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="font-bold underline"
-    >
-      Sustainability Reflection Tool
     </a>
     .
   </>
@@ -141,17 +124,7 @@ export const ReadsDistrictSupport = ({ form }: Props) => {
         </QuestionField>
       )}
 
-      <QuestionField
-        label="Select at most 2 conditions of sustainability that were most closely aligned to the support given today.*"
-        note={SUSTAINABILITY_NOTE}
-      >
-        <MultiSelect
-          placeholder="Select up to 2 conditions"
-          data={READS_SUSTAINABILITY_OPTIONS}
-          maxValues={MAX_READS_SUSTAINABILITY}
-          {...form.getInputProps("readsDistrictSustainability")}
-        />
-      </QuestionField>
+      <SustainabilityQuestion form={form} field="readsDistrictSustainability" />
     </>
   );
 };

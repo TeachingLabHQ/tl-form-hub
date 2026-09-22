@@ -169,7 +169,6 @@ export type CoachLogSubmission = {
   // NYC Reads — shown once per submission
   readsGuidanceToolsUsed: string[];
   readsGuidanceToolsOther: string;
-  readsNotes: string;
 
   // NYC Solves coach
   solvesIsPLSession: YesNo | "";
@@ -207,9 +206,9 @@ export type CoachLogSubmission = {
   solvesPostVisitFollowUp: string;
 
   // NYC Solves — shown once per submission
+  solvesSustainability: string[];
   solvesGuidanceToolsUsed: string[];
   solvesGuidanceToolsOther: string;
-  solvesNotes: string;
 
   // Cancellation
   canceled: YesNo | "";

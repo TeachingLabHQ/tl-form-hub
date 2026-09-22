@@ -1,6 +1,7 @@
 import { Select, Textarea } from "@mantine/core";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
+  SOLVES_POST_VISIT_SNAPSHOT_GUIDANCE_URL,
   SOLVES_POST_VISIT_SNAPSHOT_OPTIONS,
   solvesShowsPostVisitFollowUp,
 } from "./constants";
@@ -10,6 +11,21 @@ type Props = {
   form: CoachLogForm;
 };
 
+const SNAPSHOT_GUIDANCE_NOTE = (
+  <>
+    Additional guidance around each option here:{" "}
+    <a
+      href={SOLVES_POST_VISIT_SNAPSHOT_GUIDANCE_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="font-bold underline"
+    >
+      Guidance for NYC Solves Post-visit Snapshot
+    </a>
+    .
+  </>
+);
+
 /**
  * Shown once per submission when HQIM-Based Teacher Collaboration, HSD
  * Supplemental Time, or CSD Leader Support is selected — a single overall
@@ -17,7 +33,10 @@ type Props = {
  */
 export const SolvesPostVisitSnapshot = ({ form }: Props) => (
   <>
-    <QuestionField label="NYC Solves: Post Visit Snapshot*">
+    <QuestionField
+      label="NYC Solves: Post Visit Snapshot*"
+      note={SNAPSHOT_GUIDANCE_NOTE}
+    >
       <Select
         placeholder="Select a snapshot"
         data={SOLVES_POST_VISIT_SNAPSHOT_OPTIONS}

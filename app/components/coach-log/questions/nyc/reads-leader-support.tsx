@@ -4,7 +4,6 @@ import {
   FREQUENCY_OPTIONS,
   JES_GLOSSARY_URL,
   MAX_READS_LEADER_CAPACITY_FOCUS,
-  MAX_READS_SUSTAINABILITY,
   READS_LEADER_CAPACITY_FOCUS_OPTIONS,
   READS_LEADER_FOCUS_MODELING,
   READS_LEADER_FOCUS_PL,
@@ -13,10 +12,9 @@ import {
   READS_LEADER_PL_SUBCOMPONENT_OPTIONS,
   READS_LEADER_SCHOOL_VISITS_SUBCOMPONENT_OPTIONS,
   READS_LEADER_VISIT_DURATION_OPTIONS,
-  READS_SUSTAINABILITY_OPTIONS,
-  SUSTAINABILITY_REFLECTION_TOOL_URL,
 } from "./constants";
 import { QuestionField } from "./field";
+import { SustainabilityQuestion } from "./sustainability-question";
 
 type Props = {
   form: CoachLogForm;
@@ -32,21 +30,6 @@ const GLOSSARY_NOTE = (
       className="font-bold underline"
     >
       Key Concepts of the JES Manual
-    </a>
-    .
-  </>
-);
-
-const SUSTAINABILITY_NOTE = (
-  <>
-    See a detailed description of each sustainability factor in the{" "}
-    <a
-      href={SUSTAINABILITY_REFLECTION_TOOL_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="font-bold underline"
-    >
-      Sustainability Reflection Tool
     </a>
     .
   </>
@@ -136,17 +119,7 @@ export const ReadsLeaderSupport = ({ form }: Props) => {
         </QuestionField>
       )}
 
-      <QuestionField
-        label="Select at most 2 conditions of sustainability that were most closely aligned to the support given today.*"
-        note={SUSTAINABILITY_NOTE}
-      >
-        <MultiSelect
-          placeholder="Select up to 2 conditions"
-          data={READS_SUSTAINABILITY_OPTIONS}
-          maxValues={MAX_READS_SUSTAINABILITY}
-          {...form.getInputProps("readsLeaderSustainability")}
-        />
-      </QuestionField>
+      <SustainabilityQuestion form={form} field="readsLeaderSustainability" />
 
       <QuestionField label="How often were district leaders present and engaged during your support time with school leaders?*">
         <Select

@@ -1,4 +1,4 @@
-import { MultiSelect, Textarea, TextInput } from "@mantine/core";
+import { MultiSelect, TextInput } from "@mantine/core";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   applyNAExclusivity,
@@ -14,7 +14,7 @@ type Props = {
 
 /**
  * Shown once per NYC Reads submission (not per touchpoint block): which
- * NYC Reads guidance/tools/protocols were used, plus an optional notes field.
+ * NYC Reads guidance/tools/protocols were used.
  */
 export const ReadsGuidanceNotes = ({ form }: Props) => {
   const guidanceToolsUsed = form.values.readsGuidanceToolsUsed;
@@ -44,18 +44,6 @@ export const ReadsGuidanceNotes = ({ form }: Props) => {
           <TextInput {...form.getInputProps("readsGuidanceToolsOther")} />
         </QuestionField>
       )}
-
-      <QuestionField
-        label="Optional Notes"
-        note="Add any notes here for your own use. There are no expectations to use this data for any analysis purposes."
-      >
-        <Textarea
-          placeholder="Optional"
-          autosize
-          minRows={3}
-          {...form.getInputProps("readsNotes")}
-        />
-      </QuestionField>
     </>
   );
 };

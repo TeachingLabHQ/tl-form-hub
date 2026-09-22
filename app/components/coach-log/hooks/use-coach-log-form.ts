@@ -84,7 +84,6 @@ export type CoachLogValues = {
   // NYC Reads — shown once per submission
   readsGuidanceToolsUsed: string[];
   readsGuidanceToolsOther: string;
-  readsNotes: string;
 
   // NYC Solves coach
   solvesIsPLSession: YesNo | "";
@@ -122,9 +121,9 @@ export type CoachLogValues = {
   solvesPostVisitFollowUp: string;
 
   // NYC Solves — shown once per submission
+  solvesSustainability: string[];
   solvesGuidanceToolsUsed: string[];
   solvesGuidanceToolsOther: string;
-  solvesNotes: string;
 
   // Cancellation
   canceled: YesNo | "";
@@ -194,7 +193,6 @@ const INITIAL_VALUES: CoachLogValues = {
 
   readsGuidanceToolsUsed: [],
   readsGuidanceToolsOther: "",
-  readsNotes: "",
 
   solvesIsPLSession: "",
   solvesTouchpointTypes: [],
@@ -224,9 +222,9 @@ const INITIAL_VALUES: CoachLogValues = {
   solvesPostVisitSnapshot: "",
   solvesPostVisitFollowUp: "",
 
+  solvesSustainability: [],
   solvesGuidanceToolsUsed: [],
   solvesGuidanceToolsOther: "",
-  solvesNotes: "",
 
   canceled: "",
   cancelReason: "",
@@ -254,12 +252,6 @@ const readsShown = (v: CoachLogValues) =>
   shouldShowReads(v.district, v.nycCoachType);
 const solvesShown = (v: CoachLogValues) =>
   shouldShowSolves(v.district, v.nycCoachType);
-
-/** Guidance/tools + notes questions are hidden entirely for a PL session log. */
-const readsShownNotPL = (v: CoachLogValues) =>
-  readsShown(v) && v.readsIsPLSession !== "Yes";
-const solvesShownNotPL = (v: CoachLogValues) =>
-  solvesShown(v) && v.solvesIsPLSession !== "Yes";
 
 const PICK_YES_NO = "Please select Yes or No";
 const PICK_ONE = "Please select an option";
@@ -475,10 +467,10 @@ export function useCoachLogForm() {
       ),
 
       readsGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
-        readsShownNotPL(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+        readsShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
       ),
       readsGuidanceToolsOther: whenNotCancelled((value, values) =>
-        readsShownNotPL(values) &&
+        readsShown(values) &&
         values.readsGuidanceToolsUsed.includes(OTHER_OPTION) &&
         !value
           ? "Please specify"
@@ -622,11 +614,14 @@ export function useCoachLogForm() {
           : null
       ),
 
+      solvesSustainability: whenNotCancelled((value: string[], values) =>
+        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+      ),
       solvesGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
-        solvesShownNotPL(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
       ),
       solvesGuidanceToolsOther: whenNotCancelled((value, values) =>
-        solvesShownNotPL(values) &&
+        solvesShown(values) &&
         values.solvesGuidanceToolsUsed.includes(OTHER_OPTION) &&
         !value
           ? "Please specify"

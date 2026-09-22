@@ -27,18 +27,40 @@ export const JES_GLOSSARY_URL =
 export const JES_STRATEGIES_RESOURCES_URL =
   "https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.2gvxyy4nkj21";
 
-/** Sustainability Reflection Tool, referenced by the leader and district sustainability questions. */
+/** Sustainability Reflection Tool, referenced by the sustainability questions. */
 export const SUSTAINABILITY_REFLECTION_TOOL_URL =
   "https://docs.google.com/document/d/1JCw0HRVEP5vV06Lwzt-Ea-W-7ljnxPVfd7MGTUbtDMQ/edit?tab=t.0";
+
+/** Exclusive response — can't be combined with any sustainability condition. */
+export const SUSTAINABILITY_NONE_OPTION = "None of the above";
+
+/**
+ * Conditions of sustainability — shared by the Reads leader and district
+ * support blocks and the once-per-submission Solves question.
+ */
+export const SUSTAINABILITY_OPTIONS = [
+  "Coherence, alignment, and integrity of HQIM",
+  "Professional learning and adult learning structures",
+  "Data-driven instruction, assessment, and continuous improvement systems",
+  "Instructional leadership across the vertical spine",
+  "Stakeholder engagement and community partnership",
+  SUSTAINABILITY_NONE_OPTION,
+];
+export const MAX_SUSTAINABILITY = 2;
+
+/** Guidance for NYC Solves Post-visit Snapshot, referenced by the Solves post visit snapshot question. */
+export const SOLVES_POST_VISIT_SNAPSHOT_GUIDANCE_URL =
+  "https://docs.google.com/document/d/1VqBl7Z0W9kN8aUWhPZKANNIzDLBbu4PXLPqX9n-d0Ng/edit?tab=t.0#heading=h.duoznt5x4f4o";
 
 /** "Key Concepts" glossary of the JES Manual, referenced by the teacher capacity-building strategies question. */
 export const JES_TEACHER_GLOSSARY_URL =
   "https://docs.google.com/document/d/1H2wTOgyeuvU5P5naShraX-uAS9GNHvBjQ--QtTiZHa0/edit?tab=t.0#heading=h.cslg194210x2";
 
 /**
- * Multi-select helper for the guidance/tools questions: their "N/A" option is
- * mutually exclusive with every other option — picking N/A clears the rest,
- * and picking anything else clears N/A.
+ * Multi-select helper for questions with an exclusive option (the guidance/tools
+ * "N/A", the sustainability "None of the above"): that option is mutually
+ * exclusive with every other option — picking it clears the rest, and picking
+ * anything else clears it.
  */
 export function applyNAExclusivity(
   next: string[],
@@ -155,16 +177,6 @@ export const READS_LEADER_PL_SUBCOMPONENT_OPTIONS = [
   "Co-facilitating professional learning for school-level staff.",
   "Planning and building capacity for the school leadership team to facilitate meetings based on jointly identified professional learning needs.",
 ];
-
-/** Shared between the leader and district support blocks. */
-export const READS_SUSTAINABILITY_OPTIONS = [
-  "Coherence, alignment, and integrity of HQIM",
-  "Professional learning and adult learning structures",
-  "Data-driven instruction, assessment, and continuous improvement systems",
-  "Instructional leadership across the vertical spine",
-  "Stakeholder engagement and community partnership",
-];
-export const MAX_READS_SUSTAINABILITY = 2;
 
 // --- District team support ---------------------------------------------------
 

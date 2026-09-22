@@ -23,6 +23,7 @@ import { SolvesGuidanceNotes } from "./solves-guidance-notes";
 import { SolvesHqimSupport } from "./solves-hqim-support";
 import { SolvesHsdSupport } from "./solves-hsd-support";
 import { SolvesPostVisitSnapshot } from "./solves-post-visit-snapshot";
+import { SustainabilityQuestion } from "./sustainability-question";
 
 type Props = {
   form: CoachLogForm;
@@ -85,7 +86,13 @@ export const SolvesQuestion = ({ form, district, dbnsByDistrict }: Props) => {
         <SolvesPostVisitSnapshot form={form} />
       )}
 
-      {form.values.solvesIsPLSession !== "Yes" && <SolvesGuidanceNotes form={form} />}
+      <SustainabilityQuestion
+        form={form}
+        field="solvesSustainability"
+        labelPrefix="NYC Solves: "
+      />
+
+      <SolvesGuidanceNotes form={form} />
     </>
   );
 };

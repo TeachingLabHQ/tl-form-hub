@@ -1,4 +1,4 @@
-import { MultiSelect, Textarea, TextInput } from "@mantine/core";
+import { MultiSelect, TextInput } from "@mantine/core";
 import { Fragment } from "react";
 import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
@@ -35,7 +35,7 @@ const GUIDANCE_TOOL_LINKS_NOTE = (
 
 /**
  * Shown once per NYC Solves submission (not per touchpoint block): which
- * NYC Solves guidance documents were used, plus an optional notes field.
+ * NYC Solves guidance documents were used.
  */
 export const SolvesGuidanceNotes = ({ form }: Props) => {
   const guidanceToolsUsed = form.values.solvesGuidanceToolsUsed;
@@ -65,18 +65,6 @@ export const SolvesGuidanceNotes = ({ form }: Props) => {
           <TextInput {...form.getInputProps("solvesGuidanceToolsOther")} />
         </QuestionField>
       )}
-
-      <QuestionField
-        label="Optional Notes"
-        note="Add any notes here for your own use. There are no expectations to use this data for any analysis purposes."
-      >
-        <Textarea
-          placeholder="Optional"
-          autosize
-          minRows={3}
-          {...form.getInputProps("solvesNotes")}
-        />
-      </QuestionField>
     </>
   );
 };

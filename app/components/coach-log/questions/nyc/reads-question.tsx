@@ -28,7 +28,7 @@ type Props = {
  * asked earlier (top-level, right after coach type) since it gates the coaching
  * questions and the session-date input; this set covers capacity-builder,
  * touchpoint type(s), the per-touchpoint sub-blocks, and the shared
- * guidance/notes questions at the end. Touchpoint type is a multi-select, so
+ * guidance question at the end. Touchpoint type is a multi-select, so
  * more than one sub-block can be shown/answered in the same submission (e.g.
  * a coach can log both teacher AND district support from the same visit).
  */
@@ -102,7 +102,7 @@ export const ReadsQuestion = ({ form, district }: Props) => {
         </TouchpointSection>
       )}
 
-      {form.values.readsIsPLSession !== "Yes" && <ReadsGuidanceNotes form={form} />}
+      <ReadsGuidanceNotes form={form} />
     </>
   );
 };
