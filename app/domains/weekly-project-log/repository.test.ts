@@ -125,6 +125,22 @@ describe("mutateWithRetry (through createSubitems)", () => {
     expect(result.data).toBeNull();
   });
 
+  it("updates item columns with a single attempt", async () => {
+    insertMondayData.mockResolvedValue({ errors: [{ message: "deactivated user" }] });
+
+    const result = await runWithTimers(
+      weeklyProjectLogRepository().updateItemColumns("5", { person: null })
+    );
+
+    expect(insertMondayData).toHaveBeenCalledTimes(1);
+    expect(insertMondayData.mock.calls[0]![0]).toContain("change_multiple_column_values");
+    expect(insertMondayData.mock.calls[0]![1]).toEqual({
+      itemId: "5",
+      columnVals: JSON.stringify({ person: null }),
+    });
+    expect(result.data).toBeNull();
+  });
+
   it("retries deleteItem up to 3 times", async () => {
     insertMondayData.mockResolvedValue({ errors: [{ message: "nope" }] });
 
