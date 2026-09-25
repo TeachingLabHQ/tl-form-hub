@@ -130,7 +130,7 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
     ? SCHOOL_LEVEL_OPTIONS
     : sheetSubSchoolOptions;
 
-  // Sub-school shows for D75 + Solves, but only when the sheet actually has
+  // Sub-school shows for D75 + Reads or Solves, but only when the sheet actually has
   // sub-schools for this district + school combo (otherwise there's nothing to
   // pick, so we hide the question rather than show an empty dropdown).
   const showSubSchool =

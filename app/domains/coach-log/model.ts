@@ -97,7 +97,7 @@ export type CoachLogIdentity = {
    * Reads) for the same school/date, so it's part of the duplicate key. Empty
    * for non-NYC districts (matches other empty-coach-type logs). */
   nycCoachType: string;
-  /** Sub-school — when the form requires one (D75 + Solves), the same coach can
+  /** Sub-school — when the form requires one (D75 + Reads or Solves), the same coach can
    * log different sub-schools for the same school/date, so it's part of the
    * duplicate key. Empty when sub-school doesn't apply (matches other
    * empty-sub-school logs). */
