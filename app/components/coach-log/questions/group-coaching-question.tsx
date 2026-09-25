@@ -1,5 +1,5 @@
 import { MultiSelect, Select, Textarea } from "@mantine/core";
-import { DURATION_OPTIONS, ROLE_OPTIONS, YES_NO_OPTIONS } from "../constants";
+import { GROUP_DURATION_OPTIONS, ROLE_OPTIONS, YES_NO_OPTIONS } from "../constants";
 import type { CoachLogForm } from "../hooks/use-coach-log-form";
 
 type Props = {
@@ -58,7 +58,7 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
             <h1 className="font-medium text-lg">Duration (mins):*</h1>
             <Select
               placeholder="Select duration"
-              data={DURATION_OPTIONS}
+              data={GROUP_DURATION_OPTIONS}
               searchable
               {...form.getInputProps("groupDurationMins")}
             />

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { shouldShowSubSchool } from "./constants";
+import {
+  DURATION_OPTIONS,
+  GROUP_DURATION_OPTIONS,
+  shouldShowSubSchool,
+} from "./constants";
 
 describe("shouldShowSubSchool", () => {
   it("shows for D75 Reads and Solves coaches", () => {
@@ -24,5 +28,20 @@ describe("shouldShowSubSchool", () => {
     expect(shouldShowSubSchool("NY_D11", "Solves Coach/D75 Math Coach")).toBe(
       false
     );
+  });
+});
+
+describe("GROUP_DURATION_OPTIONS", () => {
+  it("extends the shared durations up to 480 in 30-min steps", () => {
+    expect(GROUP_DURATION_OPTIONS.slice(0, DURATION_OPTIONS.length)).toEqual(
+      DURATION_OPTIONS
+    );
+    expect(GROUP_DURATION_OPTIONS.slice(DURATION_OPTIONS.length)).toEqual([
+      "210", "240", "270", "300", "330", "360", "390", "420", "450", "480",
+    ]);
+  });
+
+  it("leaves the 1:1 durations capped at 180", () => {
+    expect(DURATION_OPTIONS.at(-1)).toBe("180");
   });
 });
