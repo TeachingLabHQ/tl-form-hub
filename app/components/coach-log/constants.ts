@@ -19,6 +19,14 @@ export const DURATION_OPTIONS: string[] = (() => {
   return values.map(String);
 })();
 
+/** Group coaching duration (mins): the shared list, then 210–480 in 30-min
+ * steps so full-day group sessions (up to 8 hours) can be logged. */
+export const GROUP_DURATION_OPTIONS: string[] = (() => {
+  const values: string[] = [...DURATION_OPTIONS];
+  for (let m = 210; m <= 480; m += 30) values.push(String(m));
+  return values;
+})();
+
 export const NYC_COACH_TYPE_OPTIONS = [
   "Reads Coach",
   "ELA Coach (non-Reads)",
