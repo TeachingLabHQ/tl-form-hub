@@ -1,4 +1,8 @@
-import { useForm, type UseFormReturnType } from "@mantine/form";
+import {
+  useForm,
+  type FormValidateInput,
+  type UseFormReturnType,
+} from "@mantine/form";
 import type { CoacheeRow, YesNo } from "~/domains/coach-log/model";
 import {
   CANCELED_OTHER_REASON,
@@ -151,7 +155,7 @@ export const EMPTY_COACHEE_ROW: CoacheeRow = {
   durationMins: "",
 };
 
-const INITIAL_VALUES: CoachLogValues = {
+export const INITIAL_VALUES: CoachLogValues = {
   district: "",
   school: "",
   nycCoachType: "",
@@ -257,429 +261,433 @@ const PICK_YES_NO = "Please select Yes or No";
 const PICK_ONE = "Please select an option";
 const PICK_AT_LEAST_ONE = "Please select at least one option";
 
+/** Per-field validation; exported so the spec tests can use it as the
+ * reference for when each required question is shown. */
+export const coachLogValidate: FormValidateInput<CoachLogValues> = {
+  district: required("District is required"),
+  school: required("School is required"),
+  nycCoachType: (value, values) =>
+    isNycCoachTypeDistrict(values.district) && !value
+      ? "Coach type is required"
+      : null,
+  sessionDate: required("Date of session is required"),
+
+  ecTouchpoint: whenNotCancelled((value, values) =>
+    shouldShowEarlyChildhood(values.district, values.nycCoachType) && !value
+      ? "Please select a touchpoint type"
+      : null
+  ),
+  ecTeacherStrategies: whenNotCancelled((value: string[], values) =>
+    shouldShowEarlyChildhood(values.district, values.nycCoachType) &&
+    ecShowsTeacherStrategies(values.ecTouchpoint) &&
+    value.length === 0
+      ? "Please select at least one strategy"
+      : null
+  ),
+  ecLeaderCapacityFocus: whenNotCancelled((value: string[], values) =>
+    shouldShowEarlyChildhood(values.district, values.nycCoachType) &&
+    ecShowsLeaderCapacity(values.ecTouchpoint) &&
+    value.length === 0
+      ? "Please select at least one focus area"
+      : null
+  ),
+
+  // --- NYC Reads ----------------------------------------------------
+  readsIsPLSession: whenNotCancelled((value, values) =>
+    readsShown(values) && !value ? PICK_YES_NO : null
+  ),
+  readsScheduleProvided: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    isReadsCapacityBuilderDistrict(values.district) &&
+    !value
+      ? PICK_YES_NO
+      : null
+  ),
+  readsHighImpactActivities: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    isReadsCapacityBuilderDistrict(values.district) &&
+    !value
+      ? PICK_YES_NO
+      : null
+  ),
+  readsTouchpointTypes: whenNotCancelled((value: string[], values) =>
+    readsShown(values) && value.length === 0
+      ? "Please select at least one touchpoint type"
+      : null
+  ),
+
+  readsVisitDuration: whenNotCancelled((value, values) =>
+    readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  readsGradeBands: whenNotCancelled((value: string[], values) =>
+    readsShown(values) &&
+    readsShowsTeacherBlock(values.readsTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+  readsTeacherStrategies: whenNotCancelled((value: string[], values) =>
+    readsShown(values) &&
+    readsShowsTeacherBlock(values.readsTouchpointTypes) &&
+    value.length === 0
+      ? "Please select at least one strategy"
+      : null
+  ),
+  readsTeacherSchoolLeaderPresence: whenNotCancelled((value, values) =>
+    readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  readsTeacherDistrictLeaderPresence: whenNotCancelled((value, values) =>
+    readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  readsMajorityUsingHQIM: whenNotCancelled((value, values) =>
+    readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+      ? PICK_YES_NO
+      : null
+  ),
+  readsHQIMContext: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsTeacherBlock(values.readsTouchpointTypes) &&
+    values.readsMajorityUsingHQIM === "No" &&
+    !value
+      ? "Please share additional context"
+      : null
+  ),
+  readsInterventionsScheduled: whenNotCancelled((value, values) =>
+    readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
+      ? PICK_YES_NO
+      : null
+  ),
+  readsInterventionsContext: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsTeacherBlock(values.readsTouchpointTypes) &&
+    values.readsInterventionsScheduled === "No" &&
+    !value
+      ? "Please share additional context"
+      : null
+  ),
+
+  readsLeaderVisitDuration: whenNotCancelled((value, values) =>
+    readsShown(values) && readsShowsLeaderBlock(values.readsTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  readsLeaderCapacityFocus: whenNotCancelled((value: string[], values) =>
+    readsShown(values) &&
+    readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+  readsLeaderFocusSchoolVisitsSubcomponent: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+    values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_SCHOOL_VISITS) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  readsLeaderFocusModelingSubcomponent: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+    values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_MODELING) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  readsLeaderFocusPLSubcomponent: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+    values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_PL) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  readsLeaderSustainability: whenNotCancelled((value: string[], values) =>
+    readsShown(values) &&
+    readsShowsLeaderBlock(values.readsTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+  readsLeaderDistrictPresence: whenNotCancelled((value, values) =>
+    readsShown(values) && readsShowsLeaderBlock(values.readsTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+
+  readsDistrictCapacityFocus: whenNotCancelled((value: string[], values) =>
+    readsShown(values) &&
+    readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+  readsDistrictFocusStrategicPlanningSubcomponent: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+    values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_STRATEGIC_PLANNING) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  readsDistrictFocusPLSubcomponent: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+    values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_PL) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  readsDistrictFocusDataStrategySubcomponent: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+    values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_DATA_STRATEGY) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  readsDistrictFocusSchoolVisitsSubcomponent: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+    values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_SCHOOL_VISITS) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  readsDistrictSustainability: whenNotCancelled((value: string[], values) =>
+    readsShown(values) &&
+    readsShowsDistrictBlock(values.readsTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+
+  readsGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
+    readsShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+  ),
+  readsGuidanceToolsOther: whenNotCancelled((value, values) =>
+    readsShown(values) &&
+    values.readsGuidanceToolsUsed.includes(OTHER_OPTION) &&
+    !value
+      ? "Please specify"
+      : null
+  ),
+
+  // --- NYC Solves ---------------------------------------------------
+  solvesIsPLSession: whenNotCancelled((value, values) =>
+    solvesShown(values) && !value ? PICK_YES_NO : null
+  ),
+  solvesTouchpointTypes: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) && value.length === 0
+      ? "Please select at least one touchpoint type"
+      : null
+  ),
+
+  solvesHqimVisitDuration: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsHqim(values.solvesTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  solvesHqimGradeContentAreas: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) &&
+    solvesShowsHqim(values.solvesTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+  solvesHqimLeaderPresent: whenNotCancelled((value, values) =>
+    solvesShown(values) &&
+    solvesShowsHqim(values.solvesTouchpointTypes) &&
+    solvesShowsHqimLeaderPresent(values.solvesHqimGradeContentAreas) &&
+    !value
+      ? PICK_YES_NO
+      : null
+  ),
+  solvesHqimProtocols: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) &&
+    solvesShowsHqim(values.solvesTouchpointTypes) &&
+    value.length === 0
+      ? "Please select at least one protocol"
+      : null
+  ),
+
+  solvesHsdVisitDuration: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsHsd(values.solvesTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  solvesHsdGradeContentAreas: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) &&
+    solvesShowsHsd(values.solvesTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+  solvesHsdPrimaryResources: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) &&
+    solvesShowsHsd(values.solvesTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+  solvesHsdPrimaryResourcesOther: whenNotCancelled((value, values) =>
+    solvesShown(values) &&
+    solvesShowsHsd(values.solvesTouchpointTypes) &&
+    values.solvesHsdPrimaryResources.includes(OTHER_OPTION) &&
+    !value
+      ? "Please specify"
+      : null
+  ),
+  solvesHsdProtocols: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) &&
+    solvesShowsHsd(values.solvesTouchpointTypes) &&
+    value.length === 0
+      ? "Please select at least one protocol"
+      : null
+  ),
+  solvesHsdLeaderPresent: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsHsd(values.solvesTouchpointTypes) && !value
+      ? PICK_YES_NO
+      : null
+  ),
+
+  solvesEsVisitDuration: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsEs(values.solvesTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  solvesEsGradeLevels: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) &&
+    solvesShowsEs(values.solvesTouchpointTypes) &&
+    value.length === 0
+      ? PICK_AT_LEAST_ONE
+      : null
+  ),
+
+  solvesCsdVisitDuration: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsCsd(values.solvesTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  solvesCsdTrack: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsCsd(values.solvesTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+
+  solvesDistrictWideVisitDuration: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsDistrictWide(values.solvesTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  solvesDistrictWideSupportType: whenNotCancelled((value, values) =>
+    solvesShown(values) && solvesShowsDistrictWide(values.solvesTouchpointTypes) && !value
+      ? PICK_ONE
+      : null
+  ),
+  solvesDistrictWideDBNs: whenNotCancelled((value, values) =>
+    solvesShown(values) &&
+    solvesShowsDistrictWide(values.solvesTouchpointTypes) &&
+    solvesShowsDistrictWideDBNs(values.solvesDistrictWideSupportType) &&
+    value.length === 0
+      ? "Please select the school DBNs"
+      : null
+  ),
+
+  solvesPostVisitSnapshot: whenNotCancelled((value, values) =>
+    solvesShown(values) &&
+    solvesShowsPostVisitSnapshot(values.solvesTouchpointTypes) &&
+    !value
+      ? PICK_ONE
+      : null
+  ),
+  solvesPostVisitFollowUp: whenNotCancelled((value, values) =>
+    solvesShown(values) &&
+    solvesShowsPostVisitSnapshot(values.solvesTouchpointTypes) &&
+    solvesShowsPostVisitFollowUp(values.solvesPostVisitSnapshot) &&
+    !value
+      ? "Please share additional information"
+      : null
+  ),
+
+  solvesSustainability: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+  ),
+  solvesGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
+    solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
+  ),
+  solvesGuidanceToolsOther: whenNotCancelled((value, values) =>
+    solvesShown(values) &&
+    values.solvesGuidanceToolsUsed.includes(OTHER_OPTION) &&
+    !value
+      ? "Please specify"
+      : null
+  ),
+
+  canceled: required("Please select Yes or No"),
+  cancelReason: (value, values) =>
+    values.canceled === "Yes" && !value ? "A reason is required" : null,
+  cancelReasonOther: (value, values) =>
+    values.canceled === "Yes" &&
+    values.cancelReason === CANCELED_OTHER_REASON &&
+    !value
+      ? "Please describe the reason"
+      : null,
+  rescheduled: (value, values) =>
+    values.canceled === "Yes" && !value
+      ? "Please select Yes or No"
+      : null,
+
+  did1on1: whenNotCancelled((value) =>
+    value ? null : "Please select Yes or No"
+  ),
+  coacheeRows: {
+    coacheeName: whenNotCancelled((value, values) =>
+      values.did1on1 === "Yes" && !value ? "Coachee is required" : null
+    ),
+    role: whenNotCancelled((value, values) =>
+      values.did1on1 === "Yes" && !value ? "Role is required" : null
+    ),
+    durationMins: whenNotCancelled((value, values) =>
+      values.did1on1 === "Yes" && !value ? "Duration is required" : null
+    ),
+  },
+
+  didGroupCoaching: whenNotCancelled((value) =>
+    value ? null : "Please select Yes or No"
+  ),
+  groupParticipants: whenNotCancelled((value: string[], values) =>
+    values.didGroupCoaching === "Yes" && value.length === 0
+      ? "At least one participant is required"
+      : null
+  ),
+  groupParticipantRole: whenNotCancelled((value: string[], values) =>
+    values.didGroupCoaching === "Yes" && value.length === 0
+      ? "Role is required"
+      : null
+  ),
+  groupTopic: whenNotCancelled((value, values) =>
+    values.didGroupCoaching === "Yes" && !value
+      ? "Topic of session is required"
+      : null
+  ),
+  groupDurationMins: whenNotCancelled((value, values) =>
+    values.didGroupCoaching === "Yes" && !value
+      ? "Duration is required"
+      : null
+  ),
+};
+
 export function useCoachLogForm() {
   return useForm<CoachLogValues>({
     mode: "controlled",
     initialValues: INITIAL_VALUES,
-    validate: {
-      district: required("District is required"),
-      school: required("School is required"),
-      nycCoachType: (value, values) =>
-        isNycCoachTypeDistrict(values.district) && !value
-          ? "Coach type is required"
-          : null,
-      sessionDate: required("Date of session is required"),
-
-      ecTouchpoint: whenNotCancelled((value, values) =>
-        shouldShowEarlyChildhood(values.district, values.nycCoachType) && !value
-          ? "Please select a touchpoint type"
-          : null
-      ),
-      ecTeacherStrategies: whenNotCancelled((value: string[], values) =>
-        shouldShowEarlyChildhood(values.district, values.nycCoachType) &&
-        ecShowsTeacherStrategies(values.ecTouchpoint) &&
-        value.length === 0
-          ? "Please select at least one strategy"
-          : null
-      ),
-      ecLeaderCapacityFocus: whenNotCancelled((value: string[], values) =>
-        shouldShowEarlyChildhood(values.district, values.nycCoachType) &&
-        ecShowsLeaderCapacity(values.ecTouchpoint) &&
-        value.length === 0
-          ? "Please select at least one focus area"
-          : null
-      ),
-
-      // --- NYC Reads ----------------------------------------------------
-      readsIsPLSession: whenNotCancelled((value, values) =>
-        readsShown(values) && !value ? PICK_YES_NO : null
-      ),
-      readsScheduleProvided: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        isReadsCapacityBuilderDistrict(values.district) &&
-        !value
-          ? PICK_YES_NO
-          : null
-      ),
-      readsHighImpactActivities: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        isReadsCapacityBuilderDistrict(values.district) &&
-        !value
-          ? PICK_YES_NO
-          : null
-      ),
-      readsTouchpointTypes: whenNotCancelled((value: string[], values) =>
-        readsShown(values) && value.length === 0
-          ? "Please select at least one touchpoint type"
-          : null
-      ),
-
-      readsVisitDuration: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      readsGradeBands: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      readsTeacherStrategies: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
-        value.length === 0
-          ? "Please select at least one strategy"
-          : null
-      ),
-      readsTeacherSchoolLeaderPresence: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      readsTeacherDistrictLeaderPresence: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      readsMajorityUsingHQIM: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
-          ? PICK_YES_NO
-          : null
-      ),
-      readsHQIMContext: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
-        values.readsMajorityUsingHQIM === "No" &&
-        !value
-          ? "Please share additional context"
-          : null
-      ),
-      readsInterventionsScheduled: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsTeacherBlock(values.readsTouchpointTypes) && !value
-          ? PICK_YES_NO
-          : null
-      ),
-      readsInterventionsContext: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsTeacherBlock(values.readsTouchpointTypes) &&
-        values.readsInterventionsScheduled === "No" &&
-        !value
-          ? "Please share additional context"
-          : null
-      ),
-
-      readsLeaderVisitDuration: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsLeaderBlock(values.readsTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      readsLeaderCapacityFocus: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      readsLeaderFocusSchoolVisitsSubcomponent: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
-        values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_SCHOOL_VISITS) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      readsLeaderFocusModelingSubcomponent: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
-        values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_MODELING) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      readsLeaderFocusPLSubcomponent: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
-        values.readsLeaderCapacityFocus.includes(READS_LEADER_FOCUS_PL) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      readsLeaderSustainability: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsLeaderBlock(values.readsTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      readsLeaderDistrictPresence: whenNotCancelled((value, values) =>
-        readsShown(values) && readsShowsLeaderBlock(values.readsTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-
-      readsDistrictCapacityFocus: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      readsDistrictFocusStrategicPlanningSubcomponent: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
-        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_STRATEGIC_PLANNING) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      readsDistrictFocusPLSubcomponent: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
-        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_PL) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      readsDistrictFocusDataStrategySubcomponent: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
-        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_DATA_STRATEGY) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      readsDistrictFocusSchoolVisitsSubcomponent: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
-        values.readsDistrictCapacityFocus.includes(READS_DISTRICT_FOCUS_SCHOOL_VISITS) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      readsDistrictSustainability: whenNotCancelled((value: string[], values) =>
-        readsShown(values) &&
-        readsShowsDistrictBlock(values.readsTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-
-      readsGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
-        readsShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
-      ),
-      readsGuidanceToolsOther: whenNotCancelled((value, values) =>
-        readsShown(values) &&
-        values.readsGuidanceToolsUsed.includes(OTHER_OPTION) &&
-        !value
-          ? "Please specify"
-          : null
-      ),
-
-      // --- NYC Solves ---------------------------------------------------
-      solvesIsPLSession: whenNotCancelled((value, values) =>
-        solvesShown(values) && !value ? PICK_YES_NO : null
-      ),
-      solvesTouchpointTypes: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) && value.length === 0
-          ? "Please select at least one touchpoint type"
-          : null
-      ),
-
-      solvesHqimVisitDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsHqim(values.solvesTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesHqimGradeContentAreas: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) &&
-        solvesShowsHqim(values.solvesTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      solvesHqimLeaderPresent: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
-        solvesShowsHqim(values.solvesTouchpointTypes) &&
-        solvesShowsHqimLeaderPresent(values.solvesHqimGradeContentAreas) &&
-        !value
-          ? PICK_YES_NO
-          : null
-      ),
-      solvesHqimProtocols: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) &&
-        solvesShowsHqim(values.solvesTouchpointTypes) &&
-        value.length === 0
-          ? "Please select at least one protocol"
-          : null
-      ),
-
-      solvesHsdVisitDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsHsd(values.solvesTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesHsdGradeContentAreas: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) &&
-        solvesShowsHsd(values.solvesTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      solvesHsdPrimaryResources: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) &&
-        solvesShowsHsd(values.solvesTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-      solvesHsdPrimaryResourcesOther: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
-        solvesShowsHsd(values.solvesTouchpointTypes) &&
-        values.solvesHsdPrimaryResources.includes(OTHER_OPTION) &&
-        !value
-          ? "Please specify"
-          : null
-      ),
-      solvesHsdProtocols: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) &&
-        solvesShowsHsd(values.solvesTouchpointTypes) &&
-        value.length === 0
-          ? "Please select at least one protocol"
-          : null
-      ),
-      solvesHsdLeaderPresent: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsHsd(values.solvesTouchpointTypes) && !value
-          ? PICK_YES_NO
-          : null
-      ),
-
-      solvesEsVisitDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsEs(values.solvesTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesEsGradeLevels: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) &&
-        solvesShowsEs(values.solvesTouchpointTypes) &&
-        value.length === 0
-          ? PICK_AT_LEAST_ONE
-          : null
-      ),
-
-      solvesCsdVisitDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsCsd(values.solvesTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesCsdTrack: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsCsd(values.solvesTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-
-      solvesDistrictWideVisitDuration: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsDistrictWide(values.solvesTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesDistrictWideSupportType: whenNotCancelled((value, values) =>
-        solvesShown(values) && solvesShowsDistrictWide(values.solvesTouchpointTypes) && !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesDistrictWideDBNs: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
-        solvesShowsDistrictWide(values.solvesTouchpointTypes) &&
-        solvesShowsDistrictWideDBNs(values.solvesDistrictWideSupportType) &&
-        value.length === 0
-          ? "Please select the school DBNs"
-          : null
-      ),
-
-      solvesPostVisitSnapshot: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
-        solvesShowsPostVisitSnapshot(values.solvesTouchpointTypes) &&
-        !value
-          ? PICK_ONE
-          : null
-      ),
-      solvesPostVisitFollowUp: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
-        solvesShowsPostVisitSnapshot(values.solvesTouchpointTypes) &&
-        solvesShowsPostVisitFollowUp(values.solvesPostVisitSnapshot) &&
-        !value
-          ? "Please share additional information"
-          : null
-      ),
-
-      solvesSustainability: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
-      ),
-      solvesGuidanceToolsUsed: whenNotCancelled((value: string[], values) =>
-        solvesShown(values) && value.length === 0 ? PICK_AT_LEAST_ONE : null
-      ),
-      solvesGuidanceToolsOther: whenNotCancelled((value, values) =>
-        solvesShown(values) &&
-        values.solvesGuidanceToolsUsed.includes(OTHER_OPTION) &&
-        !value
-          ? "Please specify"
-          : null
-      ),
-
-      canceled: required("Please select Yes or No"),
-      cancelReason: (value, values) =>
-        values.canceled === "Yes" && !value ? "A reason is required" : null,
-      cancelReasonOther: (value, values) =>
-        values.canceled === "Yes" &&
-        values.cancelReason === CANCELED_OTHER_REASON &&
-        !value
-          ? "Please describe the reason"
-          : null,
-      rescheduled: (value, values) =>
-        values.canceled === "Yes" && !value
-          ? "Please select Yes or No"
-          : null,
-
-      did1on1: whenNotCancelled((value) =>
-        value ? null : "Please select Yes or No"
-      ),
-      coacheeRows: {
-        coacheeName: whenNotCancelled((value, values) =>
-          values.did1on1 === "Yes" && !value ? "Coachee is required" : null
-        ),
-        role: whenNotCancelled((value, values) =>
-          values.did1on1 === "Yes" && !value ? "Role is required" : null
-        ),
-        durationMins: whenNotCancelled((value, values) =>
-          values.did1on1 === "Yes" && !value ? "Duration is required" : null
-        ),
-      },
-
-      didGroupCoaching: whenNotCancelled((value) =>
-        value ? null : "Please select Yes or No"
-      ),
-      groupParticipants: whenNotCancelled((value: string[], values) =>
-        values.didGroupCoaching === "Yes" && value.length === 0
-          ? "At least one participant is required"
-          : null
-      ),
-      groupParticipantRole: whenNotCancelled((value: string[], values) =>
-        values.didGroupCoaching === "Yes" && value.length === 0
-          ? "Role is required"
-          : null
-      ),
-      groupTopic: whenNotCancelled((value, values) =>
-        values.didGroupCoaching === "Yes" && !value
-          ? "Topic of session is required"
-          : null
-      ),
-      groupDurationMins: whenNotCancelled((value, values) =>
-        values.didGroupCoaching === "Yes" && !value
-          ? "Duration is required"
-          : null
-      ),
-    },
+    validate: coachLogValidate,
   });
 }

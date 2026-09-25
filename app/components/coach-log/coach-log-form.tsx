@@ -15,6 +15,7 @@ import { buildCoachLogSubmission } from "./build-submission";
 import { ParticipantRosterForm } from "./participant-roster/participant-roster-form";
 import {
   isNycCoachTypeDistrict,
+  isPLSession,
   SCHOOL_LEVEL_OPTIONS,
   shouldShowEarlyChildhood,
   shouldShowReads,
@@ -168,12 +169,12 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
   const showSolves = shouldShowSolves(district, nycCoachType);
   const showActivities = canceled !== "Yes";
 
-  // A Reads or Solves coach logging a Professional Learning session: hide the
-  // coaching questions and pick the session date from a free calendar instead
-  // of the scheduled coaching-calendar dropdown.
-  const isPLSession =
-    (showReads && readsIsPLSession === "Yes") ||
-    (showSolves && solvesIsPLSession === "Yes");
+  const isPLSessionLog = isPLSession(
+    district,
+    nycCoachType,
+    readsIsPLSession,
+    solvesIsPLSession
+  );
 
   const resetCoacheeSelections = () => {
     form.setFieldValue("coacheeRows", [{ ...EMPTY_COACHEE_ROW }]);
@@ -420,7 +421,7 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                 />
               )}
 
-              {isPLSession ? (
+              {isPLSessionLog ? (
                 <SessionDateCalendarQuestion form={form} />
               ) : (
                 <SessionDateQuestion
@@ -462,7 +463,7 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
 
                 {showActivities && (
                   <>
-                    {!isPLSession && (
+                    {!isPLSessionLog && (
                       <>
                         <OneOnOneCoachingQuestion
                           form={form}
