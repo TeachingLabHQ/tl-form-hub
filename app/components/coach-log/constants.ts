@@ -183,12 +183,15 @@ export function isD75District(district: string): boolean {
   return districtKey(district) === D75_DISTRICT_KEY;
 }
 
-/** Sub-school is shown only for D75 + Solves coach. Source board still TBD. */
+/** Sub-school is shown only for a D75 Reads or Solves coach. */
 export function shouldShowSubSchool(
   district: string,
   nycCoachType: string
 ): boolean {
-  return isD75District(district) && nycCoachType === SOLVES_COACH_TYPE;
+  return (
+    isD75District(district) &&
+    (nycCoachType === READS_COACH_TYPE || nycCoachType === SOLVES_COACH_TYPE)
+  );
 }
 
 /** Elementary/Middle reuses the sub-school field for D11 Solves coaches at the
