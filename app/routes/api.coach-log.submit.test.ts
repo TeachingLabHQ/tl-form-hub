@@ -5,6 +5,7 @@ import {
   SUSTAINABILITY_NONE_OPTION,
   READS_TOUCHPOINT_LEADER,
   READS_TOUCHPOINT_TEACHER,
+  SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION,
   SOLVES_TOUCHPOINT_HQIM,
 } from "~/components/coach-log/questions/nyc/constants";
 
@@ -325,6 +326,22 @@ describe("parent column values", () => {
     expect(columns.text_mkthtzhb).toBe("60");
     expect(columns.text_mkthqrth).toBe("Protocol A");
     expect(columns).not.toHaveProperty("text_mm6nx5fv");
+  });
+
+  it("writes the Solves post visit snapshot as a dropdown label", async () => {
+    await submit({
+      ...base,
+      solvesTouchpointTypes: [SOLVES_TOUCHPOINT_HQIM],
+      solvesPostVisitSnapshot: SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION,
+      solvesPostVisitFollowUp: "Follow up with the principal",
+    });
+
+    expect(parentColumns()).toMatchObject({
+      dropdown_mm7j4tnc: {
+        labels: [SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION],
+      },
+      text_mm6ne4t8: "Follow up with the principal",
+    });
   });
 
   it("writes group coaching columns with the duration as a number", async () => {
