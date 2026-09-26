@@ -97,7 +97,7 @@ const COLUMN = {
   solvesDistrictWideSupportType: "text_mm6n3zqp",
   solvesDistrictWideDBNs: "text_mm6ncnt7",
   // NYC Solves — shown once, if HQIM/HSD/CSD selected
-  solvesPostVisitSnapshot: "text_mm6n9813",
+  solvesPostVisitSnapshot: "dropdown_mm7j4tnc", // dropdown column (replaced the text column text_mm6n9813)
   solvesPostVisitFollowUp: "text_mm6ne4t8",
   // NYC Solves — shown once per submission
   solvesSustainability: "text_mm7dbgm2",
@@ -396,7 +396,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       if (solvesShowsPostVisitSnapshot(solvesTouchpointTypes)) {
         if (solvesPostVisitSnapshot)
-          parentColumns[COLUMN.solvesPostVisitSnapshot] = solvesPostVisitSnapshot;
+          parentColumns[COLUMN.solvesPostVisitSnapshot] = {
+            labels: [solvesPostVisitSnapshot],
+          };
         if (
           solvesPostVisitSnapshot &&
           solvesShowsPostVisitFollowUp(solvesPostVisitSnapshot) &&
