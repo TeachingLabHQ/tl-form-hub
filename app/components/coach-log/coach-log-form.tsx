@@ -15,7 +15,8 @@ import { buildCoachLogSubmission } from "./build-submission";
 import { ParticipantRosterForm } from "./participant-roster/participant-roster-form";
 import {
   isNycCoachTypeDistrict,
-  SCHOOL_LEVEL_OPTIONS,
+  isD75District,
+  schoolLevelOptions,
   shouldShowEarlyChildhood,
   shouldShowReads,
   shouldShowSchoolLevel,
@@ -122,15 +123,17 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
     [subSchools, district, school]
   );
 
-  // D11 Solves coaches at the 8 K-8 schools get a fixed Elementary/Middle
-  // choice instead — it reuses the same form field/Monday column as sub-school
-  // so a coach can submit one log per level for the same school/date.
+  // D11 Solves coaches at the 8 K-8 schools, and D75 Reads / ELA (non-Reads)
+  // coaches, get a fixed Elementary/Middle choice instead — it reuses the same
+  // form field/Monday column as sub-school so a coach can submit one log per
+  // level for the same school/date.
   const showSchoolLevel = shouldShowSchoolLevel(district, school, nycCoachType);
   const subSchoolOptions = showSchoolLevel
-    ? SCHOOL_LEVEL_OPTIONS
+    ? schoolLevelOptions(district)
     : sheetSubSchoolOptions;
+  const isD75SchoolLevel = showSchoolLevel && isD75District(district);
 
-  // Sub-school shows for D75 + Reads or Solves, but only when the sheet actually has
+  // Sub-school shows for D75 + Solves, but only when the sheet actually has
   // sub-schools for this district + school combo (otherwise there's nothing to
   // pick, so we hide the question rather than show an empty dropdown).
   const showSubSchool =
@@ -223,12 +226,10 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
 
   const handleNycCoachTypeChange = (value: string) => {
     form.setFieldValue("nycCoachType", value);
-    if (
-      !shouldShowSubSchool(district, value) &&
-      !shouldShowSchoolLevel(district, school, value)
-    ) {
-      form.setFieldValue("subSchool", "");
-    }
+    // The coach type decides whether the field holds a sheet-driven sub-school
+    // or an Elementary/Middle level (e.g. D75 Solves vs Reads), so a previous
+    // answer may not be a valid option anymore.
+    form.setFieldValue("subSchool", "");
     if (!shouldShowEarlyChildhood(district, value)) {
       resetEarlyChildhood();
     }
@@ -411,11 +412,24 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
 
               {showSubSchool && (
                 <SubSchoolQuestion
+                  // Remount when the coach type changes so the searchable
+                  // Select drops its stale text (see CLAUDE.md gotcha).
+                  key={`sub-school-${nycCoachType}`}
                   form={form}
                   options={subSchoolOptions}
-                  label={showSchoolLevel ? "Elementary or Middle?" : undefined}
+                  label={
+                    isD75SchoolLevel
+                      ? "Was this coaching session for Elementary School or Middle School?"
+                      : showSchoolLevel
+                        ? "Elementary or Middle?"
+                        : undefined
+                  }
                   placeholder={
-                    showSchoolLevel ? "Select Elementary or Middle" : undefined
+                    isD75SchoolLevel
+                      ? "Select Elementary School or Middle School"
+                      : showSchoolLevel
+                        ? "Select Elementary or Middle"
+                        : undefined
                   }
                 />
               )}

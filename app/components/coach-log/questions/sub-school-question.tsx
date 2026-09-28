@@ -10,9 +10,10 @@ type Props = {
 
 /**
  * Sub-school selector, reused for two cases that share the same form field
- * and Monday column: D75 + Reads or Solves coach sessions (sheet-driven sub-school
- * names) and D11 + Solves coach sessions at K-8 schools (fixed
- * Elementary/Middle options, passed via `label`/`placeholder`/`options`).
+ * and Monday column: D75 + Solves coach sessions (sheet-driven sub-school
+ * names), and D11 + Solves coach sessions at K-8 schools and D75 + Reads / ELA
+ * (non-Reads) coach sessions (fixed Elementary/Middle options, passed via
+ * `label`/`placeholder`/`options`).
  */
 export const SubSchoolQuestion = ({
   form,
