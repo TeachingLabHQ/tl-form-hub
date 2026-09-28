@@ -5,6 +5,7 @@ import {
   ecShowsLeaderCapacity,
   ecShowsTeacherStrategies,
   isNycCoachTypeDistrict,
+  requiresSchoolLevel,
   shouldShowEarlyChildhood,
   shouldShowReads,
   shouldShowSolves,
@@ -267,6 +268,14 @@ export function useCoachLogForm() {
       nycCoachType: (value, values) =>
         isNycCoachTypeDistrict(values.district) && !value
           ? "Coach type is required"
+          : null,
+      subSchool: (value, values) =>
+        requiresSchoolLevel(
+          values.district,
+          values.school,
+          values.nycCoachType
+        ) && !value
+          ? "Please select Elementary School or Middle School"
           : null,
       sessionDate: required("Date of session is required"),
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   D75_SCHOOL_LEVEL_OPTIONS,
   SCHOOL_LEVEL_OPTIONS,
+  requiresSchoolLevel,
   schoolLevelOptions,
   shouldShowSchoolLevel,
   shouldShowSubSchool,
@@ -77,5 +78,23 @@ describe("schoolLevelOptions", () => {
 
   it("keeps the D11 options unchanged", () => {
     expect(schoolLevelOptions("NY_D11")).toEqual(SCHOOL_LEVEL_OPTIONS);
+  });
+});
+
+describe("requiresSchoolLevel", () => {
+  it("requires the answer for D75 Reads and ELA (non-Reads) coaches", () => {
+    expect(requiresSchoolLevel("NY_D75", "P123", "Reads Coach")).toBe(true);
+    expect(
+      requiresSchoolLevel("NY_D75", "P123", "ELA Coach (non-Reads)")
+    ).toBe(true);
+  });
+
+  it("doesn't require it when the question is hidden or for D11", () => {
+    expect(
+      requiresSchoolLevel("NY_D75", "P123", "Solves Coach/D75 Math Coach")
+    ).toBe(false);
+    expect(
+      requiresSchoolLevel("NY_D11", "019", "Solves Coach/D75 Math Coach")
+    ).toBe(false);
   });
 });

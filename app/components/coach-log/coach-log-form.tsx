@@ -419,7 +419,7 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                   options={subSchoolOptions}
                   label={
                     isD75SchoolLevel
-                      ? "Was this coaching session for Elementary School or Middle School?"
+                      ? "Was this coaching session for Elementary School or Middle School?*"
                       : showSchoolLevel
                         ? "Elementary or Middle?"
                         : undefined

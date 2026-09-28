@@ -223,6 +223,19 @@ export function shouldShowSchoolLevel(
   );
 }
 
+/** The Elementary/Middle School answer is required for D75 (it populates the
+ * D75 Coaching Logistics status); D11's stays optional. */
+export function requiresSchoolLevel(
+  district: string,
+  school: string,
+  nycCoachType: string
+): boolean {
+  return (
+    isD75District(district) &&
+    shouldShowSchoolLevel(district, school, nycCoachType)
+  );
+}
+
 /** Elementary/Middle options for the district. D75's match the labels of the
  * status column on the D75 Coaching Logistics board. */
 export function schoolLevelOptions(district: string): string[] {
