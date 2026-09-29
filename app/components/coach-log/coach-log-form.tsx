@@ -19,9 +19,9 @@ import {
   schoolLevelOptions,
   shouldShowEarlyChildhood,
   shouldShowReads,
+  requiresSubSchool,
   shouldShowSchoolLevel,
   shouldShowSolves,
-  shouldShowSubSchool,
 } from "./constants";
 import { CancellationQuestion } from "./questions/cancellation-question";
 import { CoachNameQuestion } from "./questions/coach-name-question";
@@ -58,7 +58,7 @@ const DEFAULT_TAB = "coach-log";
 
 export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) => {
   const { mondayProfile } = useSession();
-  const form = useCoachLogForm();
+  const form = useCoachLogForm(subSchools);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -135,11 +135,14 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
 
   // Sub-school shows for D75 + Solves, but only when the sheet actually has
   // sub-schools for this district + school combo (otherwise there's nothing to
-  // pick, so we hide the question rather than show an empty dropdown).
-  const showSubSchool =
-    showSchoolLevel ||
-    (shouldShowSubSchool(district, nycCoachType) &&
-      sheetSubSchoolOptions.length > 0);
+  // pick, so we hide the question rather than show an empty dropdown). It's
+  // required whenever it shows.
+  const showSubSchool = requiresSubSchool(
+    district,
+    school,
+    nycCoachType,
+    sheetSubSchoolOptions
+  );
 
   // One log per coach + district + school + date — plus sub-school when the form
   // requires one, so different sub-schools on the same date aren't collapsed
@@ -421,7 +424,7 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                     isD75SchoolLevel
                       ? "Was this coaching session for Elementary School or Middle School?*"
                       : showSchoolLevel
-                        ? "Elementary or Middle?"
+                        ? "Elementary or Middle?*"
                         : undefined
                   }
                   placeholder={

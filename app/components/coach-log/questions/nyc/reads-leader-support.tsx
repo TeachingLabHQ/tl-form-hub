@@ -58,7 +58,6 @@ export const ReadsLeaderSupport = ({ form }: Props) => {
     <>
       <QuestionField
         label="What was the duration of your visit with school leaders in hours? Please round to the nearest option.*"
-        note="This information will be used to track days of support delivered for ongoing monitoring and will not be used for invoicing."
       >
         <Select
           placeholder="Select duration"
@@ -119,7 +118,11 @@ export const ReadsLeaderSupport = ({ form }: Props) => {
         </QuestionField>
       )}
 
-      <SustainabilityQuestion form={form} field="readsLeaderSustainability" />
+      <SustainabilityQuestion
+        form={form}
+        field="readsLeaderSustainability"
+        allowNone={false}
+      />
 
       <QuestionField label="How often were district leaders present and engaged during your support time with school leaders?*">
         <Select
