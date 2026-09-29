@@ -1,5 +1,8 @@
 import type { ActionFunctionArgs } from "@vercel/remix";
-import type { CoachLogSubmission } from "~/domains/coach-log/model";
+import {
+  subSchoolKey,
+  type CoachLogSubmission,
+} from "~/domains/coach-log/model";
 import {
   COACH_LOG_BOARD_ID,
   coachLogRepository,
@@ -21,7 +24,10 @@ import {
   solvesShowsPostVisitFollowUp,
   solvesShowsPostVisitSnapshot,
 } from "~/components/coach-log/questions/nyc/constants";
-import { requiresSchoolLevel } from "~/components/coach-log/constants";
+import {
+  shouldShowSchoolLevel,
+  shouldShowSubSchool,
+} from "~/components/coach-log/constants";
 
 // Joins a multi-select array into the comma-separated string the Monday text
 // columns expect (matching the legacy form's serialization).
@@ -194,11 +200,29 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
   }
 
-  if (requiresSchoolLevel(district, school, nycCoachType) && !subSchool) {
-    return new Response(null, {
-      status: 400,
-      statusText: "Elementary or Middle School is required",
-    });
+  const service = coachLogService(coachLogRepository());
+
+  // Sub-school is required whenever the form shows it (see requiresSubSchool).
+  if (!subSchool) {
+    if (shouldShowSchoolLevel(district, school, nycCoachType)) {
+      return new Response(null, {
+        status: 400,
+        statusText: "Elementary or Middle School is required",
+      });
+    }
+    // D75 Solves only shows it when the sheet lists sub-schools for the school.
+    // If the sheet can't be read, don't block the submit on it.
+    if (shouldShowSubSchool(district, nycCoachType)) {
+      const subSchools = await service.fetchSubSchoolMap();
+      if (subSchools.error) {
+        console.error("Error fetching sub-schools:", subSchools.error);
+      } else if (subSchools.data[subSchoolKey(district, school)]?.length) {
+        return new Response(null, {
+          status: 400,
+          statusText: "Sub-school is required",
+        });
+      }
+    }
   }
 
   try {
@@ -210,7 +234,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     // D75 + Solves logs, or D11 + Solves logs at the 8 K-8 schools and D75 +
     // Reads / ELA (non-Reads) logs (where it holds the Elementary/Middle level
     // instead of a sub-school name).
-    const service = coachLogService(coachLogRepository());
     const duplicate = await service.hasExistingLog({
       coachMondayId,
       coachName,

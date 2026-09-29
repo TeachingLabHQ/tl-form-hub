@@ -3,6 +3,7 @@ import type { CoachLogForm } from "../../hooks/use-coach-log-form";
 import {
   applyNAExclusivity,
   MAX_SUSTAINABILITY,
+  SUSTAINABILITY_CONDITIONS,
   SUSTAINABILITY_NONE_OPTION,
   SUSTAINABILITY_OPTIONS,
   SUSTAINABILITY_REFLECTION_TOOL_URL,
@@ -17,6 +18,8 @@ type Props = {
     | "solvesSustainability";
   /** Prefix for the label, e.g. "NYC Solves: ". */
   labelPrefix?: string;
+  /** Offer the exclusive "None of the above" response (off for the Reads leader block). */
+  allowNone?: boolean;
 };
 
 const SUSTAINABILITY_NOTE = (
@@ -37,9 +40,14 @@ const SUSTAINABILITY_NOTE = (
 /**
  * "Select at most 2 conditions of sustainability" — asked in the Reads leader
  * and district blocks and once per Solves submission. "None of the above" is
- * an exclusive response.
+ * an exclusive response, offered unless `allowNone` is false.
  */
-export const SustainabilityQuestion = ({ form, field, labelPrefix = "" }: Props) => {
+export const SustainabilityQuestion = ({
+  form,
+  field,
+  labelPrefix = "",
+  allowNone = true,
+}: Props) => {
   const selected = form.values[field];
 
   return (
@@ -49,7 +57,7 @@ export const SustainabilityQuestion = ({ form, field, labelPrefix = "" }: Props)
     >
       <MultiSelect
         placeholder="Select up to 2 conditions"
-        data={SUSTAINABILITY_OPTIONS}
+        data={allowNone ? SUSTAINABILITY_OPTIONS : SUSTAINABILITY_CONDITIONS}
         maxValues={MAX_SUSTAINABILITY}
         value={selected}
         onChange={(next) =>

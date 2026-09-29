@@ -1,13 +1,19 @@
 import { useForm, type UseFormReturnType } from "@mantine/form";
-import type { CoacheeRow, YesNo } from "~/domains/coach-log/model";
+import {
+  subSchoolKey,
+  type CoacheeRow,
+  type SubSchoolMap,
+  type YesNo,
+} from "~/domains/coach-log/model";
 import {
   CANCELED_OTHER_REASON,
   ecShowsLeaderCapacity,
   ecShowsTeacherStrategies,
   isNycCoachTypeDistrict,
-  requiresSchoolLevel,
+  requiresSubSchool,
   shouldShowEarlyChildhood,
   shouldShowReads,
+  shouldShowSchoolLevel,
   shouldShowSolves,
 } from "../constants";
 import {
@@ -258,7 +264,7 @@ const PICK_YES_NO = "Please select Yes or No";
 const PICK_ONE = "Please select an option";
 const PICK_AT_LEAST_ONE = "Please select at least one option";
 
-export function useCoachLogForm() {
+export function useCoachLogForm(subSchools: SubSchoolMap) {
   return useForm<CoachLogValues>({
     mode: "controlled",
     initialValues: INITIAL_VALUES,
@@ -269,14 +275,18 @@ export function useCoachLogForm() {
         isNycCoachTypeDistrict(values.district) && !value
           ? "Coach type is required"
           : null,
-      subSchool: (value, values) =>
-        requiresSchoolLevel(
-          values.district,
-          values.school,
-          values.nycCoachType
-        ) && !value
-          ? "Please select Elementary School or Middle School"
-          : null,
+      subSchool: (value, values) => {
+        const { district, school, nycCoachType } = values;
+        const sheetSubSchools = subSchools[subSchoolKey(district, school)] ?? [];
+        if (
+          value ||
+          !requiresSubSchool(district, school, nycCoachType, sheetSubSchools)
+        )
+          return null;
+        return shouldShowSchoolLevel(district, school, nycCoachType)
+          ? "Please select Elementary or Middle School"
+          : "Please select a sub-school";
+      },
       sessionDate: required("Date of session is required"),
 
       ecTouchpoint: whenNotCancelled((value, values) =>

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   D75_SCHOOL_LEVEL_OPTIONS,
   SCHOOL_LEVEL_OPTIONS,
-  requiresSchoolLevel,
+  requiresSubSchool,
   schoolLevelOptions,
   shouldShowSchoolLevel,
   shouldShowSubSchool,
@@ -81,20 +81,39 @@ describe("schoolLevelOptions", () => {
   });
 });
 
-describe("requiresSchoolLevel", () => {
-  it("requires the answer for D75 Reads and ELA (non-Reads) coaches", () => {
-    expect(requiresSchoolLevel("NY_D75", "P123", "Reads Coach")).toBe(true);
+describe("requiresSubSchool", () => {
+  it("requires Elementary/Middle for D75 Reads and ELA (non-Reads) coaches", () => {
+    expect(requiresSubSchool("NY_D75", "P123", "Reads Coach", [])).toBe(true);
     expect(
-      requiresSchoolLevel("NY_D75", "P123", "ELA Coach (non-Reads)")
+      requiresSubSchool("NY_D75", "P123", "ELA Coach (non-Reads)", [])
     ).toBe(true);
   });
 
-  it("doesn't require it when the question is hidden or for D11", () => {
+  it("requires Elementary/Middle for D11 Solves coaches at the K-8 schools", () => {
     expect(
-      requiresSchoolLevel("NY_D75", "P123", "Solves Coach/D75 Math Coach")
+      requiresSubSchool("NY_D11", "019", "Solves Coach/D75 Math Coach", [])
+    ).toBe(true);
+  });
+
+  it("requires a D75 Solves sub-school only when the sheet lists some", () => {
+    expect(
+      requiresSubSchool("NY_D75", "P123", "Solves Coach/D75 Math Coach", [
+        "P123 @ X",
+      ])
+    ).toBe(true);
+    expect(
+      requiresSubSchool("NY_D75", "P123", "Solves Coach/D75 Math Coach", [])
+    ).toBe(false);
+  });
+
+  it("doesn't require it when the question is hidden", () => {
+    expect(
+      requiresSubSchool("NY_D11", "999", "Solves Coach/D75 Math Coach", [])
     ).toBe(false);
     expect(
-      requiresSchoolLevel("NY_D11", "019", "Solves Coach/D75 Math Coach")
+      requiresSubSchool("NY_D75", "P123", "Math Coach (non-Solves/non-D75)", [
+        "x",
+      ])
     ).toBe(false);
   });
 });

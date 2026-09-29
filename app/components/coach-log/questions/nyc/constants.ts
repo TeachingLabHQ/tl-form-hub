@@ -38,12 +38,16 @@ export const SUSTAINABILITY_NONE_OPTION = "None of the above";
  * Conditions of sustainability — shared by the Reads leader and district
  * support blocks and the once-per-submission Solves question.
  */
-export const SUSTAINABILITY_OPTIONS = [
+export const SUSTAINABILITY_CONDITIONS = [
   "Coherence, alignment, and integrity of HQIM",
   "Professional learning and adult learning structures",
   "Data-driven instruction, assessment, and continuous improvement systems",
   "Instructional leadership across the vertical spine",
   "Stakeholder engagement and community partnership",
+];
+/** Conditions plus "None of the above" — the Reads leader block omits the latter. */
+export const SUSTAINABILITY_OPTIONS = [
+  ...SUSTAINABILITY_CONDITIONS,
   SUSTAINABILITY_NONE_OPTION,
 ];
 export const MAX_SUSTAINABILITY = 2;

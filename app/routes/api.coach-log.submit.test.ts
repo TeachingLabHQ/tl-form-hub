@@ -1,25 +1,32 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { CoachLogSubmission } from "~/domains/coach-log/model";
+import {
+  subSchoolKey,
+  type CoachLogSubmission,
+} from "~/domains/coach-log/model";
 import {
   OTHER_OPTION,
   SUSTAINABILITY_NONE_OPTION,
+  READS_TOUCHPOINT_DISTRICT,
   READS_TOUCHPOINT_LEADER,
   READS_TOUCHPOINT_TEACHER,
   SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION,
   SOLVES_TOUCHPOINT_HQIM,
 } from "~/components/coach-log/questions/nyc/constants";
 
-const { insertMondayData, hasExistingLog } = vi.hoisted(() => ({
-  insertMondayData: vi.fn(),
-  hasExistingLog: vi.fn(),
-}));
+const { insertMondayData, hasExistingLog, fetchSubSchoolMap } = vi.hoisted(
+  () => ({
+    insertMondayData: vi.fn(),
+    hasExistingLog: vi.fn(),
+    fetchSubSchoolMap: vi.fn(),
+  })
+);
 
 vi.mock("~/domains/utils", async (importOriginal) => {
   const actual = await importOriginal<typeof import("~/domains/utils")>();
   return { ...actual, insertMondayData };
 });
 vi.mock("~/domains/coach-log/service", () => ({
-  coachLogService: () => ({ hasExistingLog }),
+  coachLogService: () => ({ hasExistingLog, fetchSubSchoolMap }),
 }));
 vi.mock("~/domains/coach-log/repository", () => ({
   COACH_LOG_BOARD_ID: "18416482214",
@@ -27,6 +34,8 @@ vi.mock("~/domains/coach-log/repository", () => ({
 }));
 
 const { action } = await import("./api.coach-log.submit");
+
+const SOLVES_COACH = "Solves Coach/D75 Math Coach";
 
 const base = {
   coachName: "A Coach",
@@ -120,6 +129,7 @@ const parentColumns = () =>
 
 beforeEach(() => {
   hasExistingLog.mockResolvedValue({ data: false, error: null });
+  fetchSubSchoolMap.mockResolvedValue({ data: {}, error: null });
   insertMondayData.mockImplementation(async (query: string) =>
     query.includes("create_subitem")
       ? { data: { create_subitem: { id: "200" } } }
@@ -150,6 +160,37 @@ describe("guards", () => {
 
     expect(response.status).toBe(400);
     expect(insertMondayData).not.toHaveBeenCalled();
+  });
+
+  it("400s when a D11 K-8 Solves log is missing Elementary/Middle", async () => {
+    const response = await submit({
+      ...base,
+      district: "NY_D11",
+      school: "019",
+      nycCoachType: SOLVES_COACH,
+    });
+
+    expect(response.status).toBe(400);
+    expect(insertMondayData).not.toHaveBeenCalled();
+  });
+
+  it("400s when a D75 Solves log skips a sub-school the sheet lists", async () => {
+    fetchSubSchoolMap.mockResolvedValue({
+      data: { [subSchoolKey("NYC D75", "P123")]: ["P123 @ X"] },
+      error: null,
+    });
+
+    const response = await submit({ ...base, nycCoachType: SOLVES_COACH });
+
+    expect(response.status).toBe(400);
+    expect(insertMondayData).not.toHaveBeenCalled();
+  });
+
+  it("lets a D75 Solves log through when the sheet has no sub-schools", async () => {
+    const response = await submit({ ...base, nycCoachType: SOLVES_COACH });
+
+    expect(response.status).toBe(200);
+    expect(fetchSubSchoolMap).toHaveBeenCalled();
   });
 
   it("409s when a log already exists for the same coach/school/date", async () => {
@@ -284,11 +325,11 @@ describe("parent column values", () => {
     await submit({
       ...base,
       nycCoachType: "NYC Reads",
-      readsTouchpointTypes: [READS_TOUCHPOINT_LEADER],
-      readsLeaderSustainability: [SUSTAINABILITY_NONE_OPTION],
+      readsTouchpointTypes: [READS_TOUCHPOINT_DISTRICT],
+      readsDistrictSustainability: [SUSTAINABILITY_NONE_OPTION],
     });
 
-    expect(parentColumns().text_mm6nbxvj).toBe("None of the above");
+    expect(parentColumns().text_mm6n46cw).toBe("None of the above");
   });
 
   it("leaves a bare Other alone when there is no write-in", async () => {

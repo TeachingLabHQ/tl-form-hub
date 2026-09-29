@@ -18,7 +18,7 @@ type Props = {
 export const SubSchoolQuestion = ({
   form,
   options,
-  label = "Identify Sub-school",
+  label = "Identify Sub-school*",
   placeholder = "Select a sub-school",
 }: Props) => {
   return (

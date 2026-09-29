@@ -223,16 +223,18 @@ export function shouldShowSchoolLevel(
   );
 }
 
-/** The Elementary/Middle School answer is required for D75 (it populates the
- * D75 Coaching Logistics status); D11's stays optional. */
-export function requiresSchoolLevel(
+/** Whether the sub-school field shows — and so is required: the Elementary/
+ * Middle choice, or a D75 Solves coach at a school the sheet lists
+ * sub-schools for (`sheetSubSchools`; with none there's nothing to pick). */
+export function requiresSubSchool(
   district: string,
   school: string,
-  nycCoachType: string
+  nycCoachType: string,
+  sheetSubSchools: string[]
 ): boolean {
   return (
-    isD75District(district) &&
-    shouldShowSchoolLevel(district, school, nycCoachType)
+    shouldShowSchoolLevel(district, school, nycCoachType) ||
+    (shouldShowSubSchool(district, nycCoachType) && sheetSubSchools.length > 0)
   );
 }
 
