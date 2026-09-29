@@ -119,6 +119,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               <Button
                 component={Link}
                 to="/staffing-dashboard"
+                prefetch="intent"
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
               >
@@ -153,6 +154,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               <Button
                 component={Link}
                 to="/vendor-payment-form"
+                prefetch="intent"
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
               >
@@ -187,6 +189,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               <Button
                 component={Link}
                 to="/coach-log-form"
+                prefetch="intent"
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
               >

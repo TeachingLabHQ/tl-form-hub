@@ -5,7 +5,7 @@ import { CoachLogForm } from "~/components/coach-log/coach-log-form";
 import { AccessDeniedState } from "~/components/vendor-payment-form/access-denied-state";
 import { coachLogRepository } from "~/domains/coach-log/repository";
 import { coachLogService } from "~/domains/coach-log/service";
-import { LoadingSpinner } from "~/utils/LoadingSpinner";
+import { FormSkeleton } from "~/components/form-kit";
 
 // District -> schools tree, the sub-school map, and the NYC DBN-by-district
 // map are all user-independent reference data (the latter two sourced from
@@ -51,7 +51,7 @@ export default function CoachLogFormRoute() {
   const { districts, subSchools, dbnsByDistrict } = useLoaderData<typeof loader>();
 
   if (isSessionLoading || mondayProfile === null) {
-    return <LoadingSpinner message="Loading session..." />;
+    return <FormSkeleton message="Loading session…" rows={7} />;
   }
 
   // FTE/PTE employees are resolved via the employee board's "people" column,

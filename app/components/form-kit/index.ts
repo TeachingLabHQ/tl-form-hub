@@ -3,3 +3,4 @@ export type {
   RepeatableRowContext,
   RepeatableRowWidgetProps,
 } from "./repeatable-row-widget";
+export { FormSkeleton } from "./form-skeleton";

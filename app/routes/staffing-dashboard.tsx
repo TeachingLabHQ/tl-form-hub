@@ -1,5 +1,5 @@
 import { useSession } from "~/components/auth/hooks/useSession";
-import BackgroundImg from "~/assets/background.png";
+import BackgroundImg from "~/assets/background.webp";
 import { useState } from "react";
 import { LoadingSpinner } from "~/utils/LoadingSpinner";
 

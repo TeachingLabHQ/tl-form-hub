@@ -9,7 +9,7 @@ import {
   Alert,
 } from "@mantine/core";
 import TLLogo from "../../assets/tllogo.png";
-import BackgroundImg from "../../assets/background.png";
+import BackgroundImg from "../../assets/background.webp";
 import { useEffect } from "react";
 import { useSession } from "./hooks/useSession";
 import { Auth } from "@supabase/auth-ui-react";

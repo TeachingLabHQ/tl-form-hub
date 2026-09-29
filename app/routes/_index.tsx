@@ -1,7 +1,7 @@
 import { useSession } from "~/components/auth/hooks/useSession";
 import { FormHubLanding } from "~/components/form-hub-landing";
 import { LoginPage } from "~/components/auth/login-page";
-import BackgroundImg from "../assets/background.png";
+import BackgroundImg from "../assets/background.webp";
 import { useEffect } from "react";
 import { useNavigate } from "@remix-run/react";
 export const headers = () => {
