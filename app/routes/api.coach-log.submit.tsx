@@ -21,6 +21,7 @@ import {
   solvesShowsPostVisitFollowUp,
   solvesShowsPostVisitSnapshot,
 } from "~/components/coach-log/questions/nyc/constants";
+import { requiresSchoolLevel } from "~/components/coach-log/constants";
 
 // Joins a multi-select array into the comma-separated string the Monday text
 // columns expect (matching the legacy form's serialization).
@@ -193,14 +194,22 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     });
   }
 
+  if (requiresSchoolLevel(district, school, nycCoachType) && !subSchool) {
+    return new Response(null, {
+      status: 400,
+      statusText: "Elementary or Middle School is required",
+    });
+  }
+
   try {
     // ---- Duplicate guard ------------------------------------------------
     // One log per coach + district + school + date + coach type + sub-school
     // (cancelled logs count). This is the authoritative check; the form also
     // pre-checks for a better UX. `subSchool` is already gated to "" by the
     // client when sub-school doesn't apply, so it only narrows the key for
-    // D75 + Reads or Solves logs, or D11 + Solves logs at the 8 K-8 schools (where it
-    // holds "Elementary"/"Middle" instead of a sub-school name).
+    // D75 + Solves logs, or D11 + Solves logs at the 8 K-8 schools and D75 +
+    // Reads / ELA (non-Reads) logs (where it holds the Elementary/Middle level
+    // instead of a sub-school name).
     const service = coachLogService(coachLogRepository());
     const duplicate = await service.hasExistingLog({
       coachMondayId,

@@ -58,6 +58,7 @@ export const canOverrideCoach = (email: string | undefined | null) =>
 export const READS_COACH_TYPE = "Reads Coach";
 export const SOLVES_COACH_TYPE = "Solves Coach/D75 Math Coach";
 export const ELA_EARLY_CHILDHOOD_COACH_TYPE = "ELA Early Childhood Coach";
+export const ELA_NON_READS_COACH_TYPE = "ELA Coach (non-Reads)";
 
 // ---------------------------------------------------------------------------
 // ELA Early Childhood Coach — touchpoint + capacity-building question set.
@@ -163,6 +164,7 @@ const D11_ELEMENTARY_MIDDLE_SCHOOLS = [
 ];
 
 export const SCHOOL_LEVEL_OPTIONS = ["Elementary", "Middle"];
+export const D75_SCHOOL_LEVEL_OPTIONS = ["Elementary School", "Middle School"];
 
 export function isD11ElementaryMiddleSchool(
   district: string,
@@ -191,29 +193,55 @@ export function isD75District(district: string): boolean {
   return districtKey(district) === D75_DISTRICT_KEY;
 }
 
-/** Sub-school is shown only for a D75 Reads or Solves coach. */
+/** Sub-school is shown only for a D75 Solves coach. */
 export function shouldShowSubSchool(
   district: string,
   nycCoachType: string
 ): boolean {
-  return (
-    isD75District(district) &&
-    (nycCoachType === READS_COACH_TYPE || nycCoachType === SOLVES_COACH_TYPE)
-  );
+  return isD75District(district) && nycCoachType === SOLVES_COACH_TYPE;
 }
+
+/** D75 coach types asked whether the session was Elementary or Middle School
+ * (D75 Reads schools may be Elementary only, Middle only, or both). */
+const D75_SCHOOL_LEVEL_COACH_TYPES = [READS_COACH_TYPE, ELA_NON_READS_COACH_TYPE];
 
 /** Elementary/Middle reuses the sub-school field for D11 Solves coaches at the
  * 8 K-8 schools, so a coach can submit one log per level for the same
- * school/date instead of being blocked as a duplicate. */
+ * school/date instead of being blocked as a duplicate — and for D75 Reads /
+ * ELA (non-Reads) coaches, whose answer populates the level status on the D75
+ * Coaching Logistics board. */
 export function shouldShowSchoolLevel(
   district: string,
   school: string,
   nycCoachType: string
 ): boolean {
   return (
-    isD11ElementaryMiddleSchool(district, school) &&
-    nycCoachType === SOLVES_COACH_TYPE
+    (isD11ElementaryMiddleSchool(district, school) &&
+      nycCoachType === SOLVES_COACH_TYPE) ||
+    (isD75District(district) &&
+      D75_SCHOOL_LEVEL_COACH_TYPES.includes(nycCoachType))
   );
+}
+
+/** The Elementary/Middle School answer is required for D75 (it populates the
+ * D75 Coaching Logistics status); D11's stays optional. */
+export function requiresSchoolLevel(
+  district: string,
+  school: string,
+  nycCoachType: string
+): boolean {
+  return (
+    isD75District(district) &&
+    shouldShowSchoolLevel(district, school, nycCoachType)
+  );
+}
+
+/** Elementary/Middle options for the district. D75's match the labels of the
+ * status column on the D75 Coaching Logistics board. */
+export function schoolLevelOptions(district: string): string[] {
+  return isD75District(district)
+    ? D75_SCHOOL_LEVEL_OPTIONS
+    : SCHOOL_LEVEL_OPTIONS;
 }
 
 /** ELA Early Childhood question set shows for an EC coach in an NYC district. */
