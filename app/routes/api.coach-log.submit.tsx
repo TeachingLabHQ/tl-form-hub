@@ -11,7 +11,6 @@ import {
   readsShowsDistrictBlock,
   readsShowsLeaderBlock,
   readsShowsTeacherBlock,
-  requiresSchoolLevel,
   solvesShowsCsd,
   solvesShowsDistrictWide,
   solvesShowsDistrictWideDBNs,
@@ -22,6 +21,7 @@ import {
   solvesShowsPostVisitFollowUp,
   solvesShowsPostVisitSnapshot,
 } from "~/components/coach-log/questions/nyc/constants";
+import { requiresSchoolLevel } from "~/components/coach-log/constants";
 
 // Joins a multi-select array into the comma-separated string the Monday text
 // columns expect (matching the legacy form's serialization).
