@@ -145,6 +145,13 @@ describe("guards", () => {
     expect(insertMondayData).not.toHaveBeenCalled();
   });
 
+  it("400s when a D75 Reads log is missing Elementary/Middle School", async () => {
+    const response = await submit({ ...base, nycCoachType: "Reads Coach" });
+
+    expect(response.status).toBe(400);
+    expect(insertMondayData).not.toHaveBeenCalled();
+  });
+
   it("409s when a log already exists for the same coach/school/date", async () => {
     hasExistingLog.mockResolvedValue({ data: true, error: null });
 

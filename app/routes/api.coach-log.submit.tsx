@@ -11,6 +11,7 @@ import {
   readsShowsDistrictBlock,
   readsShowsLeaderBlock,
   readsShowsTeacherBlock,
+  requiresSchoolLevel,
   solvesShowsCsd,
   solvesShowsDistrictWide,
   solvesShowsDistrictWideDBNs,
@@ -190,6 +191,13 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return new Response(null, {
       status: 400,
       statusText: "Submission inputs are not valid",
+    });
+  }
+
+  if (requiresSchoolLevel(district, school, nycCoachType) && !subSchool) {
+    return new Response(null, {
+      status: 400,
+      statusText: "Elementary or Middle School is required",
     });
   }
 
