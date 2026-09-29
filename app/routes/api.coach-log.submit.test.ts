@@ -189,7 +189,7 @@ describe("guards", () => {
   it("lets a D75 Solves log through when the sheet has no sub-schools", async () => {
     const response = await submit({ ...base, nycCoachType: SOLVES_COACH });
 
-    expect(response.status).not.toBe(400);
+    expect(response.status).toBe(200);
     expect(fetchSubSchoolMap).toHaveBeenCalled();
   });
 
