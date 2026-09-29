@@ -199,22 +199,6 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
           </Card>
         </Grid.Col>
       </Grid>
-
-      <Card
-        shadow="sm"
-        p="xl"
-        radius="md"
-        withBorder
-        className="bg-white/80 backdrop-blur-sm mt-8"
-      >
-        <Title order={4} mb="xs">
-          Coming Soon
-        </Title>
-        <Text>
-          We're working on adding more forms and tools to make your work easier.
-          Check back soon for updates!
-        </Text>
-      </Card>
     </Container>
   );
 };
