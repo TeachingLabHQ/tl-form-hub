@@ -39,9 +39,13 @@ const EMPTY_ROW: VendorPaymentRow = {
 };
 
 function gridClass(canDelete: boolean) {
-  return cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
-    "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]": canDelete,
-  });
+  return cn(
+    "grid gap-3 grid-cols-[minmax(0,2fr)_minmax(0,2fr)_6.5rem_6.5rem_7rem]",
+    {
+      "grid-cols-[minmax(0,2fr)_minmax(0,2fr)_6.5rem_6.5rem_7rem_2.25rem]":
+        canDelete,
+    }
+  );
 }
 
 export const VendorPaymentWidget = ({
@@ -250,7 +254,7 @@ export const VendorPaymentWidget = ({
               onChange={(value) =>
                 updateRow({ workHours: value?.toString() || "" })
               }
-              placeholder="Enter work hours"
+              placeholder="Hours"
               max={taskData?.maxHours ?? undefined}
               min={0}
               readOnly={taskData?.fixedHours != null}

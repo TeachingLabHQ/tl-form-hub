@@ -9,7 +9,7 @@ interface FormSkeletonProps {
   rows?: number;
   // Match the real form's FormPage width
   width?: FormWidth;
-  // Reserve space for the reminders banner above the card
+  // Reserve the reminders aside beside (or above) the card
   withReminders?: boolean;
 }
 
@@ -38,13 +38,18 @@ export const FormSkeleton = ({
   return (
     <div role="status" aria-busy="true">
       <span className="sr-only">{message}</span>
-      <FormPage width={width}>
-        {withReminders && (
-          <Paper withBorder aria-hidden="true" className="p-5 flex flex-col gap-3">
-            <Bar className="h-5 w-1/4" />
-            <Bar className="h-4 w-3/4" />
-          </Paper>
-        )}
+      <FormPage
+        width={width}
+        aside={
+          withReminders ? (
+            <Paper withBorder aria-hidden="true" className="p-5 flex flex-col gap-3">
+              <Bar className="h-5 w-1/2" />
+              <Bar className="h-4 w-full" />
+              <Bar className="h-4 w-5/6" />
+            </Paper>
+          ) : undefined
+        }
+      >
         <Paper
           withBorder
           shadow="xl"

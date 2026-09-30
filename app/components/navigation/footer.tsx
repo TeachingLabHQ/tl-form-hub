@@ -4,7 +4,12 @@ export const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="w-full bg-black/20 backdrop-blur-sm border-t border-white/10 py-6 mt-auto">
+    <footer className="relative w-full bg-black/20 backdrop-blur-sm py-6 mt-auto">
+      {/* Teaching Lab's four brand colors, as in the background photo's edge */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(to_right,#2e95d3_0_24%,#e4683a_24%_50%,#479a8b_50%_76%,#2b6fbf_76%)]"
+      />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           {/* Left side - Copyright */}

@@ -10,6 +10,11 @@ const WIDTHS: Record<FormWidth, string> = {
   md: "max-w-[720px]",
   lg: "max-w-5xl",
 };
+// With an aside the page widens so the form keeps its lg width beside it
+const WIDTHS_WITH_ASIDE: Record<FormWidth, string> = {
+  md: "max-w-[1080px]",
+  lg: "max-w-[1400px]",
+};
 
 // Card padding, shared with FormActions so its sticky bar can bleed to the
 // card's edges
@@ -19,20 +24,42 @@ const CARD_PADDING = "p-5 sm:p-8";
  * Page wrapper for a form route: a centered column over the background photo.
  * min-h-screen keeps the footer below the fold while data loads (FormSkeleton
  * uses the same wrapper, so the swap doesn't shift layout).
+ *
+ * `aside` (e.g. reminders) sits above the form on smaller screens and becomes
+ * a sticky right-hand column from the xl breakpoint.
  */
 export const FormPage = ({
   width = "md",
+  aside,
   className,
   children,
 }: {
   width?: FormWidth;
+  aside?: ReactNode;
   className?: string;
   children: ReactNode;
 }) => (
   <div className="min-h-screen w-full px-4 py-8 md:py-12">
-    <div className={cn("mx-auto flex flex-col gap-6", WIDTHS[width], className)}>
-      {children}
-    </div>
+    {aside ? (
+      <div
+        className={cn(
+          "mx-auto grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_320px]",
+          WIDTHS_WITH_ASIDE[width],
+          className
+        )}
+      >
+        <aside className="min-w-0 xl:col-start-2 xl:row-start-1 xl:sticky xl:top-20 xl:self-start">
+          {aside}
+        </aside>
+        <div className="min-w-0 flex flex-col gap-6 xl:col-start-1 xl:row-start-1">
+          {children}
+        </div>
+      </div>
+    ) : (
+      <div className={cn("mx-auto flex flex-col gap-6", WIDTHS[width], className)}>
+        {children}
+      </div>
+    )}
   </div>
 );
 

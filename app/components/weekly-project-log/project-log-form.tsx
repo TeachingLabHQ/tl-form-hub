@@ -293,9 +293,7 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
   };
 
   return (
-    <FormPage width="lg">
-      <Reminders items={REMINDER_ITEMS} />
-
+    <FormPage width="lg" aside={<Reminders items={REMINDER_ITEMS} />}>
       <FormCard title="Weekly Project Log Form">
         <form
           onSubmit={(e) => {

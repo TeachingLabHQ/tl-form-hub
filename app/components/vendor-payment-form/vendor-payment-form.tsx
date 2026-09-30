@@ -148,9 +148,7 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
   };
 
   return (
-    <FormPage width="lg">
-      <Reminders items={REMINDER_ITEMS} />
-
+    <FormPage width="lg" aside={<Reminders items={REMINDER_ITEMS} />}>
       <FormCard>
         <Tabs defaultValue="new">
           <Tabs.List>

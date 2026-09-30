@@ -86,7 +86,7 @@ export const Navbar = () => {
         {isAuthenticated && (
           <>
             <span className="hidden md:inline text-sm text-[var(--mantine-color-dimmed)]">
-              Hi {mondayProfile?.name}!
+              {mondayProfile?.name}
             </span>
             <Button variant="default" onClick={logOut}>
               Log Out

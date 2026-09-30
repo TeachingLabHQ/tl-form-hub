@@ -20,9 +20,15 @@ const EMPTY_ROW: ProjectLogRows = {
 };
 
 function gridClass(canDelete: boolean) {
-  return cn("grid gap-4 grid-cols-[2fr_1.3fr_1fr_1fr_1fr]", {
-    "grid-cols-[2fr_1.3fr_1fr_1fr_1fr_0.5fr]": canDelete,
-  });
+  // Activity gets the most room after the project (its longest option is
+  // long); hours and the read-only budget only ever hold short numbers
+  return cn(
+    "grid gap-3 grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)_minmax(0,1.6fr)_6.5rem_7.5rem]",
+    {
+      "grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)_minmax(0,1.6fr)_6.5rem_7.5rem_2.25rem]":
+        canDelete,
+    }
+  );
 }
 
 export const ProjectLogsWidget = ({
@@ -91,7 +97,7 @@ export const ProjectLogsWidget = ({
           <Select
             value={row.activity}
             onChange={(value) => updateRow({ activity: value || "" })}
-            placeholder="Select an activity"
+            placeholder="Select activity"
             data={activityList}
             searchable
             onKeyDown={handleKeyDown}
@@ -113,7 +119,7 @@ export const ProjectLogsWidget = ({
                 updateRow({ workHours: value?.toString() || "" });
               }
             }}
-            placeholder="Enter work hours"
+            placeholder="Hours"
             onKeyDown={handleKeyDown}
             min={0.01}
             decimalScale={2}

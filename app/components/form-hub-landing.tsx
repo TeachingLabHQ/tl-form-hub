@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "@remix-run/react";
-import { Button, Paper, Text, ThemeIcon, Title } from "@mantine/core";
+import { Paper, Text, ThemeIcon, Title } from "@mantine/core";
 import {
   IconClipboardList,
   IconChartBar,
@@ -9,7 +9,6 @@ import {
   IconSchool,
   type Icon,
 } from "@tabler/icons-react";
-import TLLogo from "../assets/tllogo.png";
 
 interface FormHubLandingProps {
   userName: string;
@@ -62,36 +61,42 @@ const HUB_LINKS: HubLink[] = [
   },
 ];
 
+// Time-of-day greeting in the viewer's local time. The hub only renders on the
+// client (ProtectedRoute holds a skeleton until the session resolves), so this
+// can't mismatch the server render.
+const greetingFor = (date: Date) => {
+  const hour = date.getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+};
+
 export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
+  const firstName = userName.trim().split(/\s+/)[0];
+
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-8 md:py-12 flex flex-col gap-6">
-      <Paper withBorder shadow="xl" className="p-6 sm:p-8">
-        <div className="flex items-center gap-4">
-          <img
-            src={TLLogo}
-            alt="Teaching Lab Logo"
-            className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 dark:rounded-full dark:bg-white/90 dark:p-0.5"
-          />
-          <div>
-            <Title order={1} className="text-2xl sm:text-3xl">
-              Teaching Lab Form Hub
-            </Title>
-            <Text c="dimmed">
-              Welcome, {userName}! Access all your forms and dashboards in one
-              place.
-            </Text>
-          </div>
-        </div>
-      </Paper>
+    <div className="w-full max-w-5xl mx-auto px-4 py-10 md:py-16 flex flex-col gap-8">
+      <div className="text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.35)]">
+        <Title order={1} c="white" className="text-3xl sm:text-4xl">
+          {greetingFor(new Date())}
+          {firstName ? `, ${firstName}` : ""}
+        </Title>
+        <Text size="lg" c="white" className="opacity-90 mt-1">
+          What would you like to work on today?
+        </Text>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {HUB_LINKS.map(
           ({ to, icon: LinkIcon, title, description, action, prefetch }) => (
             <Paper
               key={to}
+              component={Link}
+              to={to}
+              prefetch={prefetch ?? "intent"}
               withBorder
               shadow="md"
-              className="p-6 sm:p-8 flex flex-col gap-3 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-xl motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+              className="group p-6 sm:p-8 flex flex-col gap-3 transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--mantine-primary-color-filled)] motion-reduce:transition-none motion-reduce:hover:translate-y-0"
             >
               <ThemeIcon variant="light" size={48} radius="md">
                 <LinkIcon size={28} stroke={1.75} />
@@ -100,15 +105,13 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               <Text c="dimmed" className="flex-1">
                 {description}
               </Text>
-              <Button
-                component={Link}
-                to={to}
-                prefetch={prefetch ?? "intent"}
-                rightSection={<IconArrowRight size={16} />}
-                className="self-start"
-              >
+              <span className="inline-flex items-center gap-1.5 font-semibold text-[var(--mantine-color-anchor)]">
                 {action}
-              </Button>
+                <IconArrowRight
+                  size={16}
+                  className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none"
+                />
+              </span>
             </Paper>
           )
         )}
