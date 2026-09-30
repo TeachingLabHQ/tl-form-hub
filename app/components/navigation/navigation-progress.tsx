@@ -46,7 +46,7 @@ const TopProgressBar = ({ active }: { active: boolean }) => {
     >
       <div
         className={cn(
-          "h-full w-0 rounded-r-full bg-[#0053B3] shadow-[0_0_8px_rgba(0,83,179,0.7)]",
+          "h-full w-0 rounded-r-full bg-[var(--mantine-primary-color-filled)] shadow-[0_0_8px_var(--mantine-primary-color-filled)]",
           visible && "animate-nav-progress motion-reduce:animate-none motion-reduce:w-full"
         )}
       />

@@ -1,4 +1,5 @@
 import { Button, Loader, Notification, Tabs, Text } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { useSearchParams } from "@remix-run/react";
 import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
@@ -9,6 +10,13 @@ import {
   type SessionDateOption,
   type SubSchoolMap,
 } from "~/domains/coach-log/model";
+import {
+  FormActions,
+  FormCard,
+  FormPage,
+  FormSection,
+  Reveal,
+} from "~/components/form-kit";
 import { cn } from "~/utils/utils";
 import { useSession } from "../auth/hooks/useSession";
 import { buildCoachLogSubmission } from "./build-submission";
@@ -56,7 +64,11 @@ type Props = {
 const TAB_VALUES = ["coach-log", "roster"] as const;
 const DEFAULT_TAB = "coach-log";
 
-export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) => {
+export const CoachLogForm = ({
+  districts,
+  subSchools,
+  dbnsByDistrict,
+}: Props) => {
   const { mondayProfile } = useSession();
   const form = useCoachLogForm(subSchools);
 
@@ -218,7 +230,8 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
   // (they're hidden but still required), and clears the date since the input
   // switches between the calendar and the scheduled dropdown.
   const handlePLSessionChange =
-    (fieldName: "readsIsPLSession" | "solvesIsPLSession") => (value: string) => {
+    (fieldName: "readsIsPLSession" | "solvesIsPLSession") =>
+    (value: string) => {
       form.setFieldValue(fieldName, value as CoachLogValues[typeof fieldName]);
       form.setFieldValue("sessionDate", "");
       if (value === "Yes") {
@@ -338,6 +351,14 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
         setIsSuccessful(null);
       } else {
         setIsSuccessful(response.ok);
+        if (response.ok) {
+          notifications.show({
+            color: "teal",
+            icon: <IconCheck size={18} />,
+            title: "Coach log submitted",
+            message: "Your coach log was submitted successfully!",
+          });
+        }
       }
     } catch (e) {
       console.error(e);
@@ -348,166 +369,182 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
   };
 
   return (
-    <div className="w-full h-full grid grid-cols-12 gap-8 py-8">
-      <div className="col-start-2 col-span-10 h-fit p-8 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white">
+    <FormPage width="md">
+      <FormCard>
         <Tabs value={activeTab} onChange={handleTabChange}>
           <Tabs.List>
-            <Tabs.Tab value="coach-log" className="hover:bg-white/10">
-              Coach Log
-            </Tabs.Tab>
-            <Tabs.Tab value="roster" className="hover:bg-white/10">
-              Participant Roster Form
-            </Tabs.Tab>
+            <Tabs.Tab value="coach-log">Coach Log</Tabs.Tab>
+            <Tabs.Tab value="roster">Participant Roster Form</Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value="coach-log" pt="lg">
+          <Tabs.Panel value="coach-log" pt="xl">
             <form
               onSubmit={form.onSubmit(handleSubmit, () =>
                 setShowErrorBanner(true)
               )}
-              className="flex flex-col gap-4"
+              className="flex flex-col gap-8"
             >
-              {canOverride && (
-                <CoachNameQuestion
-                  value={coachOverrideId}
-                  options={coachOptions.map((c) => ({
-                    value: c.mondayId,
-                    label: c.name,
-                  }))}
-                  loading={loadingCoachOptions}
-                  onChange={(value) => {
-                    setCoachOverrideId(value);
-                    // The new coach has a different date list; drop any stale pick.
-                    form.setFieldValue("sessionDate", "");
-                  }}
-                />
-              )}
-
-              <DistrictSchoolQuestion
-                form={form}
-                districts={districts}
-                onDistrictChange={handleDistrictChange}
-                onSchoolChange={handleSchoolChange}
-              />
-
-              {showNycCoachType && (
-                <NycCoachTypeQuestion
-                  form={form}
-                  onChange={handleNycCoachTypeChange}
-                />
-              )}
-
-              {showReads && (
-                <PlSessionQuestion
-                  form={form}
-                  fieldName="readsIsPLSession"
-                  onChange={handlePLSessionChange("readsIsPLSession")}
-                />
-              )}
-
-              {showSolves && (
-                <PlSessionQuestion
-                  form={form}
-                  fieldName="solvesIsPLSession"
-                  onChange={handlePLSessionChange("solvesIsPLSession")}
-                />
-              )}
-
-              {showSubSchool && (
-                <SubSchoolQuestion
-                  // Remount when the coach type changes so the searchable
-                  // Select drops its stale text (see CLAUDE.md gotcha).
-                  key={`sub-school-${nycCoachType}`}
-                  form={form}
-                  options={subSchoolOptions}
-                  label={
-                    isD75SchoolLevel
-                      ? "Was this coaching session for Elementary School or Middle School?*"
-                      : showSchoolLevel
-                        ? "Elementary or Middle?*"
-                        : undefined
-                  }
-                  placeholder={
-                    isD75SchoolLevel
-                      ? "Select Elementary School or Middle School"
-                      : showSchoolLevel
-                        ? "Select Elementary or Middle"
-                        : undefined
-                  }
-                />
-              )}
-
-              {isPLSession ? (
-                <SessionDateCalendarQuestion form={form} />
-              ) : (
-                <SessionDateQuestion
-                  form={form}
-                  options={sessionDateOptions}
-                  loading={loadingSessionDates}
-                />
-              )}
-
-              {checkingDuplicate && (
-                <div className="flex items-center gap-2">
-                  <Loader size="sm" />
-                  <Text size="sm" c="white">
-                    Checking whether a log already exists for this school and
-                    date...
-                  </Text>
-                </div>
-              )}
-
-              {duplicateCheckError && (
-                <Notification
-                  icon={<IconX size={20} />}
-                  color="red"
-                  title="We couldn't verify whether a log already exists for this date."
-                  withCloseButton={false}
-                >
-                  To avoid creating a duplicate submission, we strongly recommend
-                  reaching out to the technology team before submitting this log.
-                </Notification>
-              )}
-
-              <fieldset
-                disabled={lockActivities}
-                className={cn("flex flex-col gap-4 m-0 p-0 border-0 min-w-0", {
-                  "opacity-60 pointer-events-none": lockActivities,
-                })}
+              <FormSection
+                step={1}
+                title="Session details"
+                description="Where and when the coaching took place"
               >
-                <CancellationQuestion form={form} />
-
-                {showActivities && (
-                  <>
-                    {!isPLSession && (
-                      <>
-                        <OneOnOneCoachingQuestion
-                          form={form}
-                          coacheeOptions={coacheeOptions}
-                          loadingCoachees={loadingCoachees}
-                        />
-                        <GroupCoachingQuestion
-                          form={form}
-                          coacheeOptions={coacheeOptions}
-                        />
-                      </>
-                    )}
-                    {showEarlyChildhood && (
-                      <EarlyChildhoodQuestion form={form} />
-                    )}
-                    {showReads && (
-                      <ReadsQuestion form={form} district={district} />
-                    )}
-                    {showSolves && (
-                      <SolvesQuestion
-                        form={form}
-                        district={district}
-                        dbnsByDistrict={dbnsByDistrict}
-                      />
-                    )}
-                  </>
+                {canOverride && (
+                  <CoachNameQuestion
+                    value={coachOverrideId}
+                    options={coachOptions.map((c) => ({
+                      value: c.mondayId,
+                      label: c.name,
+                    }))}
+                    loading={loadingCoachOptions}
+                    onChange={(value) => {
+                      setCoachOverrideId(value);
+                      // The new coach has a different date list; drop any stale pick.
+                      form.setFieldValue("sessionDate", "");
+                    }}
+                  />
                 )}
-              </fieldset>
+
+                <DistrictSchoolQuestion
+                  form={form}
+                  districts={districts}
+                  onDistrictChange={handleDistrictChange}
+                  onSchoolChange={handleSchoolChange}
+                />
+
+                {showNycCoachType && (
+                  <Reveal>
+                    <NycCoachTypeQuestion
+                      form={form}
+                      onChange={handleNycCoachTypeChange}
+                    />
+                  </Reveal>
+                )}
+
+                {showReads && (
+                  <Reveal>
+                    <PlSessionQuestion
+                      form={form}
+                      fieldName="readsIsPLSession"
+                      onChange={handlePLSessionChange("readsIsPLSession")}
+                    />
+                  </Reveal>
+                )}
+
+                {showSolves && (
+                  <Reveal>
+                    <PlSessionQuestion
+                      form={form}
+                      fieldName="solvesIsPLSession"
+                      onChange={handlePLSessionChange("solvesIsPLSession")}
+                    />
+                  </Reveal>
+                )}
+
+                {showSubSchool && (
+                  <Reveal>
+                    <SubSchoolQuestion
+                      // Remount when the coach type changes so the searchable
+                      // Select drops its stale text (see CLAUDE.md gotcha).
+                      key={`sub-school-${nycCoachType}`}
+                      form={form}
+                      options={subSchoolOptions}
+                      label={
+                        isD75SchoolLevel
+                          ? "Was this coaching session for Elementary School or Middle School?*"
+                          : showSchoolLevel
+                          ? "Elementary or Middle?*"
+                          : undefined
+                      }
+                      placeholder={
+                        isD75SchoolLevel
+                          ? "Select Elementary School or Middle School"
+                          : showSchoolLevel
+                          ? "Select Elementary or Middle"
+                          : undefined
+                      }
+                    />
+                  </Reveal>
+                )}
+
+                {isPLSession ? (
+                  <SessionDateCalendarQuestion form={form} />
+                ) : (
+                  <SessionDateQuestion
+                    form={form}
+                    options={sessionDateOptions}
+                    loading={loadingSessionDates}
+                  />
+                )}
+
+                {checkingDuplicate && (
+                  <div className="flex items-center gap-2">
+                    <Loader size="sm" />
+                    <Text size="sm" c="dimmed">
+                      Checking whether a log already exists for this school and
+                      date...
+                    </Text>
+                  </div>
+                )}
+
+                {duplicateCheckError && (
+                  <Notification
+                    icon={<IconX size={20} />}
+                    color="red"
+                    title="We couldn't verify whether a log already exists for this date."
+                    withCloseButton={false}
+                  >
+                    To avoid creating a duplicate submission, we strongly
+                    recommend reaching out to the technology team before
+                    submitting this log.
+                  </Notification>
+                )}
+              </FormSection>
+
+              <FormSection step={2} title="Coaching activity">
+                <fieldset
+                  disabled={lockActivities}
+                  className={cn(
+                    "flex flex-col gap-4 m-0 p-0 border-0 min-w-0",
+                    {
+                      "opacity-60 pointer-events-none": lockActivities,
+                    }
+                  )}
+                >
+                  <CancellationQuestion form={form} />
+
+                  {showActivities && (
+                    <Reveal>
+                      {!isPLSession && (
+                        <>
+                          <OneOnOneCoachingQuestion
+                            form={form}
+                            coacheeOptions={coacheeOptions}
+                            loadingCoachees={loadingCoachees}
+                          />
+                          <GroupCoachingQuestion
+                            form={form}
+                            coacheeOptions={coacheeOptions}
+                          />
+                        </>
+                      )}
+                      {showEarlyChildhood && (
+                        <EarlyChildhoodQuestion form={form} />
+                      )}
+                      {showReads && (
+                        <ReadsQuestion form={form} district={district} />
+                      )}
+                      {showSolves && (
+                        <SolvesQuestion
+                          form={form}
+                          district={district}
+                          dbnsByDistrict={dbnsByDistrict}
+                        />
+                      )}
+                    </Reveal>
+                  )}
+                </fieldset>
+              </FormSection>
 
               {duplicateExists && (
                 <Notification
@@ -516,21 +553,9 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                   title="A coaching log for this district, site, and coach has already been submitted for this date."
                   withCloseButton={false}
                 >
-                  Please reach out to your project CPM or PMST member if you need
-                  to edit or view this log.
+                  Please reach out to your project CPM or PMST member if you
+                  need to edit or view this log.
                 </Notification>
-              )}
-
-              {!isSubmitting && (
-                <Button
-                  type="submit"
-                  disabled={duplicateExists || checkingDuplicate}
-                >
-                  Submit
-                </Button>
-              )}
-              {isSubmitting && (
-                <Loader size={30} color="rgba(255, 255, 255, 1)" />
               )}
 
               {showErrorBanner && (
@@ -541,14 +566,6 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                   withCloseButton={false}
                 />
               )}
-              {isSuccessful === true && failedCoachees.length === 0 && (
-                <Notification
-                  icon={<IconCheck size={20} />}
-                  color="teal"
-                  title="Your coach log was submitted successfully!"
-                  withCloseButton={false}
-                />
-              )}
               {isSuccessful === true && failedCoachees.length > 0 && (
                 <Notification
                   icon={<IconAlertTriangle size={20} />}
@@ -556,8 +573,8 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                   title="Your coach log was saved, but some 1:1 rows didn't."
                   withCloseButton={false}
                 >
-                  These coachees could not be saved: {failedCoachees.join(", ")}.
-                  Please re-submit them or contact the technology team.
+                  These coachees could not be saved: {failedCoachees.join(", ")}
+                  . Please re-submit them or contact the technology team.
                 </Notification>
               )}
               {isSuccessful === false && (
@@ -568,14 +585,25 @@ export const CoachLogForm = ({ districts, subSchools, dbnsByDistrict }: Props) =
                   withCloseButton={false}
                 />
               )}
+
+              <FormActions>
+                <Button
+                  type="submit"
+                  size="md"
+                  loading={isSubmitting}
+                  disabled={duplicateExists || checkingDuplicate}
+                >
+                  Submit log
+                </Button>
+              </FormActions>
             </form>
           </Tabs.Panel>
 
-          <Tabs.Panel value="roster" pt="lg">
+          <Tabs.Panel value="roster" pt="xl">
             <ParticipantRosterForm districts={districts} />
           </Tabs.Panel>
         </Tabs>
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 };

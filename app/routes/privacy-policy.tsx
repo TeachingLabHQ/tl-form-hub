@@ -1,7 +1,7 @@
 export default function PrivacyPolicy() {
   return (
     <div className="min-h-screen w-full overflow-auto py-12 px-4">
-      <div className="max-w-4xl mx-auto bg-white/90 backdrop-blur-sm rounded-[25px] shadow-lg p-8 md:p-12">
+      <div className="max-w-4xl mx-auto bg-white/95 rounded-[var(--mantine-radius-lg)] shadow-xl p-8 md:p-12">
         <h1 className="text-4xl font-bold text-gray-900 mb-6">Privacy Policy</h1>
         <p className="text-sm text-gray-600 mb-8">Last Updated: {new Date().toLocaleDateString()}</p>
 

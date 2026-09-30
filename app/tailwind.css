@@ -1,3 +1,21 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* The background photo sits under a tint so form cards stand out from it;
+   dark mode darkens it to match the dark surfaces */
+:root {
+  --page-tint: rgba(0, 35, 80, 0.2);
+}
+[data-mantine-color-scheme="dark"] {
+  --page-tint: rgba(10, 12, 18, 0.72);
+}
+body {
+  background-image: linear-gradient(var(--page-tint), var(--page-tint)),
+    var(--page-photo);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}

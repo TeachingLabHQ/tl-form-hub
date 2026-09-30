@@ -32,10 +32,10 @@ const toYmd = (date: Date | null): string => {
 export const SessionDateCalendarQuestion = ({ form }: Props) => {
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="font-medium text-lg">
+      <h1 className="font-semibold">
         Please select the date of your Professional Learning session*
       </h1>
-      <Text size="sm" c="white">
+      <Text size="sm" c="dimmed">
         Select the date this Professional Learning session took place.
       </Text>
       <DateInput

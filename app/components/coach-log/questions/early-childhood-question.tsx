@@ -41,10 +41,10 @@ export const EarlyChildhoodQuestion = ({ form }: Props) => {
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
+        <h1 className="font-semibold">
           What type of touchpoint are you recording?*
         </h1>
-        <Text size="sm" c="white">
+        <Text size="sm" c="dimmed">
           Please only select an option that includes school leader/school
           leadership team if your support included specific support for the
           school leader/school leadership team. If support was primarily for
@@ -61,7 +61,7 @@ export const EarlyChildhoodQuestion = ({ form }: Props) => {
 
       {ecShowsTeacherStrategies(touchpoint) && (
         <div className="flex flex-col gap-1">
-          <h1 className="font-medium text-lg">
+          <h1 className="font-semibold">
             Please select the 1–5 strategies you used to build capacity with
             teacher teams today.*
           </h1>
@@ -77,7 +77,7 @@ export const EarlyChildhoodQuestion = ({ form }: Props) => {
 
       {ecShowsLeaderCapacity(touchpoint) && (
         <div className="flex flex-col gap-1">
-          <h1 className="font-medium text-lg">
+          <h1 className="font-semibold">
             Please select the primary focus of the capacity building provided to
             leaders in this school.*
           </h1>

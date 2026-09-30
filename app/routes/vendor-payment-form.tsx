@@ -228,7 +228,7 @@ export default function VendorPaymentFormRoute() {
     checkCoachOrFacilitator();
   }, [mondayProfile?.email]);
   if (isCoachOrFacilitator === null) {
-    return <FormSkeleton message="Checking form access…" />;
+    return <FormSkeleton message="Checking form access…" width="lg" withReminders />;
   }
 
   if (isCoachOrFacilitator === false) {
@@ -236,8 +236,6 @@ export default function VendorPaymentFormRoute() {
   }
 
   return (
-    <div className="h-full w-full overflow-auto flex items-center justify-center">
-      <VendorPaymentForm cfDetails={cfDetails} />
-    </div>
+    <VendorPaymentForm cfDetails={cfDetails} />
   );
 }

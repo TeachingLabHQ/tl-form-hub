@@ -53,7 +53,7 @@ export default function WeeklyProjectLogForm() {
   }, [mondayProfile?.employeeId, mondayProfile?.email]);
 
   if (isSessionLoading || mondayProfile === null) {
-    return <FormSkeleton message="Loading session…" />;
+    return <FormSkeleton message="Loading session…" width="lg" withReminders />;
   }
 
   if (mondayProfile?.businessFunction === "contractor") {
@@ -61,12 +61,10 @@ export default function WeeklyProjectLogForm() {
   }
 
   if (isLoadingData || !projectData) {
-    return <FormSkeleton message="Loading project data…" />;
+    return <FormSkeleton message="Loading project data…" width="lg" withReminders />;
   }
 
   return (
-    <div className="min-h-screen w-full overflow-auto">
-      <ProjectLogForm projectData={projectData} />
-    </div>
+    <ProjectLogForm projectData={projectData} />
   );
 }

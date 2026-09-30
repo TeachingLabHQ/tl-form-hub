@@ -1,5 +1,5 @@
-import { Button, NumberInput, Select, Text, TextInput } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { ActionIcon, NumberInput, Select, Text, TextInput } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { RepeatableRowWidget } from "~/components/form-kit";
 import { ProjectLogRows } from "~/domains/project/model";
@@ -51,11 +51,11 @@ export const ProjectLogsWidget = ({
       emptyRow={EMPTY_ROW}
       header={({ canDelete }) => (
         <div className={gridClass(canDelete)}>
-          <Text fw={500} size="md">Project Name</Text>
-          <Text fw={500} size="md">Project Role</Text>
-          <Text fw={500} size="md">Activity</Text>
-          <Text fw={500} size="md">Work Hours</Text>
-          <Text fw={500} size="md">Budgeted Hours</Text>
+          <Text fw={600} size="sm">Project Name</Text>
+          <Text fw={600} size="sm">Project Role</Text>
+          <Text fw={600} size="sm">Activity</Text>
+          <Text fw={600} size="sm">Work Hours</Text>
+          <Text fw={600} size="sm">Budgeted Hours</Text>
         </div>
       )}
       renderRow={(row, index, { canDelete, updateRow, deleteRow }) => (
@@ -127,13 +127,15 @@ export const ProjectLogsWidget = ({
           />
           <TextInput value={row.budgetedHours} placeholder="N/A" readOnly />
           {canDelete && (
-            <Button
-              color="red"
-              onClick={deleteRow}
-              size="xs"
-            >
-              <IconX size={20} />
-            </Button>
+            <ActionIcon
+                variant="subtle"
+                color="red"
+                size="input-sm"
+                onClick={deleteRow}
+                aria-label="Remove row"
+              >
+                <IconTrash size={18} />
+              </ActionIcon>
           )}
         </div>
       )}

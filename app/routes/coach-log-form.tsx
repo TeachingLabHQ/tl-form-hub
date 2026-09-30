@@ -65,12 +65,10 @@ export default function CoachLogFormRoute() {
   }
 
   return (
-    <div className="min-h-screen w-full overflow-auto">
-      <CoachLogForm
-        districts={districts}
-        subSchools={subSchools}
-        dbnsByDistrict={dbnsByDistrict}
-      />
-    </div>
+    <CoachLogForm
+      districts={districts}
+      subSchools={subSchools}
+      dbnsByDistrict={dbnsByDistrict}
+    />
   );
 }
