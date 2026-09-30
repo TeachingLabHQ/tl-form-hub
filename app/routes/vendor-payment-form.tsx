@@ -221,6 +221,35 @@ export default function VendorPaymentFormRoute() {
             ],
           });
         }
+        else if(mondayProfile?.email === "duncan.gates@teachinglab.org"){
+          setIsCoachOrFacilitator(true);
+          setCfDetails({
+            email: "duncan.gates@teachinglab.org",
+            name: "Duncan Gates",
+            tier: [{
+              type: "facilitator",
+              value: "Tier 2",
+            },
+            {
+              type: "copyRightPermissions",
+              value: "Tier 2",
+            },
+            {
+              type: "copyEditor",
+              value: "Tier 2",
+            },
+            {
+              type: "presentationDesign",
+              value: "Tier 2",
+            },
+            {
+              type: "contentDeveloper",
+              value: "Tier 2",
+            },
+            
+            ],
+          });
+        }
        
       }
     };
