@@ -10,7 +10,7 @@ import { projectRepository } from "~/domains/project/repository";
 import { projectService } from "~/domains/project/service";
 import { vendorPaymentRepository } from "~/domains/vendor-payment/repository";
 import { vendorPaymentService } from "~/domains/vendor-payment/service";
-import { LoadingSpinner } from "~/utils/LoadingSpinner";
+import { FormSkeleton } from "~/components/form-kit";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { supabaseClient, headers } = createSupabaseServerClient(request);
@@ -228,7 +228,7 @@ export default function VendorPaymentFormRoute() {
     checkCoachOrFacilitator();
   }, [mondayProfile?.email]);
   if (isCoachOrFacilitator === null) {
-    return <LoadingSpinner />;
+    return <FormSkeleton message="Checking form access…" />;
   }
 
   if (isCoachOrFacilitator === false) {

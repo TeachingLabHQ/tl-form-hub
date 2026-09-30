@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { Navigate, useLocation } from "@remix-run/react";
 import { SessionContext } from "./context/sessionContext";
-import { LoadingSpinner } from "~/utils/LoadingSpinner";
+import { FormSkeleton } from "~/components/form-kit";
 
 // List of public routes that don't require authentication
 const publicRoutes = ["/", "/privacy-policy"];
@@ -14,11 +14,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { session, isLoading } = useContext(SessionContext);
   const location = useLocation();
 
-  // Show loading state while checking authentication
+  // Hold the page layout with a skeleton while checking authentication
   if (isLoading) {
-    return (
-      <LoadingSpinner/>
-    );
+    return <FormSkeleton message="Checking your session…" />;
   }
 
   // Check if the current route is public

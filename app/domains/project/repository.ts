@@ -7,10 +7,73 @@ import {
 } from "./model";
 
 
+const BUDGETED_HOURS_BOARD_ID = 18418027639;
+const BUDGETED_HOURS_EMAIL_TEXT_COLUMN = "text_mm4hjbpw";
+const BUDGETED_HOURS_ITEM_FIELDS = `
+  id
+  name
+  column_values(ids: [
+    "lookup_mm5b2k23",
+    "lookup_mkpvs1wj",
+    "numeric_mknhqm6d",
+    "dropdown_mm5h458x",
+    "color_mknhq0s3"
+  ]) {
+    id
+    text
+    ... on StatusValue {
+      label
+    }
+    ... on MirrorValue {
+      display_value
+      id
+    }
+    column {
+      title
+    }
+  }`;
+
+// Items in the FY27 Staffing Assignments group, optionally narrowed by extra
+// items_page rules, following cursors until every page is read.
+async function fetchBudgetedHoursItems(extraRule?: string): Promise<any[]> {
+  const rules = [
+    `{ column_id: "group", compare_value: ["group_mm4cyf8"], operator: any_of }`,
+    ...(extraRule ? [extraRule] : []),
+  ].join(", ");
+  const query = `{
+    boards(ids: ${BUDGETED_HOURS_BOARD_ID}) {
+      items_page(limit: 500, query_params: { rules: [${rules}] }) {
+        cursor
+        items { ${BUDGETED_HOURS_ITEM_FIELDS} }
+      }
+    }
+  }`;
+
+  const rawMondayData = await fetchMondayData(query);
+  let cursor: string | null = rawMondayData.data.boards[0].items_page.cursor;
+  const allItems = rawMondayData.data.boards[0].items_page.items;
+
+  while (cursor) {
+    const cursorQuery = `{
+      next_items_page(limit: 500, cursor: "${cursor}") {
+        cursor
+        items { ${BUDGETED_HOURS_ITEM_FIELDS} }
+      }
+    }`;
+    const rawAdditionalData = await fetchMondayData(cursorQuery);
+    // Add the additional Monday data to the list
+    allItems.push(...rawAdditionalData.data.next_items_page.items);
+    cursor = rawAdditionalData.data.next_items_page.cursor;
+  }
+
+  return allItems;
+}
+
 export interface ProjectRepository {
   fetchAllProjects(): Promise<Errorable<projectsByTypes[]>>;
   fetchProgramProjects(mondayProfileId: string): Promise<Errorable<ProgramProject[]>>;
   fetchAllBudgetedHours(): Promise<Errorable<any>>;
+  fetchBudgetedHoursByEmail(email: string): Promise<Errorable<any>>;
   fetchProjectSourceNames(): Promise<Errorable<string[]>>;
 }
 
@@ -190,100 +253,26 @@ export function projectRepository(): ProjectRepository {
     fetchAllBudgetedHours: async (): Promise<Errorable<any>> => {
       try {
         //NOTE: Not using Monday API filtering by employeeId because it doesn't support filtering lookup columns
-        let query = "";
-           query = `{
-            boards(ids: 18418027639) {
-              items_page(
-                limit: 500
-                query_params: {
-                  rules: [
-                    {
-                      column_id: "group"
-                      compare_value: ["group_mm4cyf8"]
-                      operator: any_of
-                    }
-                  ]
-                }
-              ) {
-                cursor
-                items {
-                  id
-                  name
-                  column_values(ids: [
-                    "lookup_mm5b2k23",
-                    "lookup_mkpvs1wj",
-                    "numeric_mknhqm6d",
-                    "dropdown_mm5h458x",
-                    "color_mknhq0s3"
-                  ]) {
-                    id
-                    text
-                    ... on StatusValue {
-                      label
-                    }
-                    ... on MirrorValue {
-                      display_value
-                      id
-                    }
-                    column {
-                      title
-                    }
-                  }
-                }
-              }
-            }
-          }
-          `;
-
-        let rawMondayData = await fetchMondayData(query);
-        let cursor: string | null =
-          rawMondayData.data.boards[0].items_page.cursor;
-        let allItems = rawMondayData.data.boards[0].items_page.items;
-
-        while (cursor) {
-          const cursorQuery = `{
-            next_items_page(limit: 500, cursor: "${cursor}") {
-              cursor
-              items {
-                id
-                name
-                column_values(ids: [
-                  "lookup_mm5b2k23",
-                  "lookup_mkpvs1wj",
-                  "numeric_mknhqm6d",
-                  "dropdown_mm5h458x",
-                  "color_mknhq0s3"
-                ]) {
-                  id
-                  text
-                  ... on StatusValue {
-                    label
-                  }
-                  ... on MirrorValue {
-                    display_value
-                    id
-                  }
-                  column {
-                    title
-                  }
-                }
-              }
-            }
-          }`;
-
-          const rawAdditionalData = await fetchMondayData(cursorQuery);
-          // Add the additional Monday data to the list
-          allItems.push(...rawAdditionalData.data.next_items_page.items);
-
-          cursor = rawAdditionalData.data.next_items_page.cursor;
-        }
-       
-        return { data: allItems, error: null };
+        return { data: await fetchBudgetedHoursItems(), error: null };
       } catch (e) {
         console.error(e);
         return {
           data: null,
           error: new Error("fetchAllBudgetedHours() went wrong"),
+        };
+      }
+    },
+    fetchBudgetedHoursByEmail: async (email: string): Promise<Errorable<any>> => {
+      try {
+        // "Email (for grouping)" is a plain text copy of the mirrored Email column,
+        // so unlike the lookup columns Monday can filter on it server-side.
+        const emailRule = `{ column_id: "${BUDGETED_HOURS_EMAIL_TEXT_COLUMN}", compare_value: [${JSON.stringify(email)}], operator: any_of }`;
+        return { data: await fetchBudgetedHoursItems(emailRule), error: null };
+      } catch (e) {
+        console.error(e);
+        return {
+          data: null,
+          error: new Error("fetchBudgetedHoursByEmail() went wrong"),
         };
       }
     },

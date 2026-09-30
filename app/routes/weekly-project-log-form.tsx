@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "~/components/auth/hooks/useSession";
 import { AccessDeniedState } from "~/components/vendor-payment-form/access-denied-state";
 import { ProjectLogForm } from "~/components/weekly-project-log/project-log-form";
-import { LoadingSpinner } from "~/utils/LoadingSpinner";
+import { FormSkeleton } from "~/components/form-kit";
 
 export default function WeeklyProjectLogForm() {
   const { mondayProfile, isLoading: isSessionLoading } = useSession();
@@ -53,7 +53,7 @@ export default function WeeklyProjectLogForm() {
   }, [mondayProfile?.employeeId, mondayProfile?.email]);
 
   if (isSessionLoading || mondayProfile === null) {
-    return <LoadingSpinner message="Loading session..." />;
+    return <FormSkeleton message="Loading session…" />;
   }
 
   if (mondayProfile?.businessFunction === "contractor") {
@@ -61,7 +61,7 @@ export default function WeeklyProjectLogForm() {
   }
 
   if (isLoadingData || !projectData) {
-    return <LoadingSpinner message="Loading project data..." />;
+    return <FormSkeleton message="Loading project data…" />;
   }
 
   return (

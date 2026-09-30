@@ -119,6 +119,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               <Button
                 component={Link}
                 to="/staffing-dashboard"
+                prefetch="intent"
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
               >
@@ -153,6 +154,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               <Button
                 component={Link}
                 to="/vendor-payment-form"
+                prefetch="intent"
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
               >
@@ -187,6 +189,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
               <Button
                 component={Link}
                 to="/coach-log-form"
+                prefetch="intent"
                 rightSection={<IconArrowRight size={16} />}
                 color="#0053B3"
               >
@@ -196,22 +199,6 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
           </Card>
         </Grid.Col>
       </Grid>
-
-      <Card
-        shadow="sm"
-        p="xl"
-        radius="md"
-        withBorder
-        className="bg-white/80 backdrop-blur-sm mt-8"
-      >
-        <Title order={4} mb="xs">
-          Coming Soon
-        </Title>
-        <Text>
-          We're working on adding more forms and tools to make your work easier.
-          Check back soon for updates!
-        </Text>
-      </Card>
     </Container>
   );
 };

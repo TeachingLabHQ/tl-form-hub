@@ -11,6 +11,7 @@ export interface ProjectService {
     employeeId?: string | null,
     employeeEmail?: string | null
   ) => Promise<Errorable<EmployeeBudgetedHours[]>>;
+  fetchBudgetedHoursByEmail: (email: string) => Promise<Errorable<any>>;
   fetchProjectSourceNames: () => Promise<Errorable<string[]>>;
 }
 
@@ -90,6 +91,32 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
     },
     fetchProgramProjectsStaffing: projectRepository.fetchProgramProjects,
     fetchBudgetedHoursByEmployee: async (employeeId?: string | null, employeeEmail?: string | null) => {
+        const idKey = typeof employeeId === "string" ? employeeId.trim() : "";
+        const emailKey = typeof employeeEmail === "string" ? employeeEmail.trim().toLowerCase() : "";
+        const findEmployeeRows = (items: any[]) => {
+          // Build inverted index (single pass, transforms all items)
+          const index = buildBudgetedHoursIndex(items);
+          return (
+            (idKey ? index.byEmployeeId.get(idKey) : undefined) ||
+            (emailKey ? index.byEmail.get(emailKey) : undefined) ||
+            []
+          );
+        };
+
+        // Fast path: let Monday filter to this employee's rows by email instead of
+        // paging the whole group (~1s vs ~3.5s). Rows are still matched on the
+        // mirrored ID/email below, so results are the same as the full scan; if the
+        // scoped query finds nothing (e.g. email text not filled in yet), fall back.
+        if (emailKey) {
+          const scoped = await projectRepository.fetchBudgetedHoursByEmail(emailKey);
+          if (scoped.error) {
+            console.error("Error fetching budgeted hours by email:", scoped.error);
+          } else {
+            const employeeData = findEmployeeRows(scoped.data || []);
+            if (employeeData.length > 0) return { data: employeeData, error: null };
+          }
+        }
+
         const allBudgetedHoursResult = await projectRepository.fetchAllBudgetedHours();
         
         if (allBudgetedHoursResult.error) {
@@ -101,18 +128,10 @@ export function projectService(projectRepository: ProjectRepository): ProjectSer
           console.log("No budgeted hours data found");
           return { data: [], error: null };
         }
-        // Build inverted index (single pass, transforms all items)
-        const index = buildBudgetedHoursIndex(allBudgetedHoursResult.data);
-        const idKey = typeof employeeId === "string" ? employeeId.trim() : "";
-        const emailKey = typeof employeeEmail === "string" ? employeeEmail.trim().toLowerCase() : "";
 
-        const employeeData =
-          (idKey ? index.byEmployeeId.get(idKey) : undefined) ||
-          (emailKey ? index.byEmail.get(emailKey) : undefined) ||
-          [];
-        
-        return { data: employeeData, error: null };
+        return { data: findEmployeeRows(allBudgetedHoursResult.data), error: null };
       },
+    fetchBudgetedHoursByEmail: projectRepository.fetchBudgetedHoursByEmail,
     fetchProjectSourceNames: async () => {
       const result = await projectRepository.fetchProjectSourceNames();
       
