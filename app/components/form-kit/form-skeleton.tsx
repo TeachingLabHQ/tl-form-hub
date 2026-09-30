@@ -1,3 +1,4 @@
+import { TopProgressBar } from "~/components/navigation/navigation-progress";
 import { cn } from "~/utils/utils";
 
 interface FormSkeletonProps {
@@ -30,6 +31,9 @@ export const FormSkeleton = ({
     aria-busy="true"
   >
     <span className="sr-only">{message}</span>
+    {/* Client-side data fetches don't show in useNavigation(), so the top bar
+        is driven from here while the skeleton is up */}
+    <TopProgressBar active />
     <div
       aria-hidden="true"
       className="col-span-1 md:col-start-2 md:col-span-10 h-fit p-8 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] flex flex-col gap-6"

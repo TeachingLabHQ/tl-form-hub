@@ -2,21 +2,19 @@ import { useNavigation } from "@remix-run/react";
 import { useEffect, useState } from "react";
 import { cn } from "~/utils/utils";
 
-// Thin bar across the top of the page while a route transition is pending
-// (loader data / route modules in flight), so clicks never feel dead. Waits
-// a beat before appearing so instant navigations don't flash it.
-export const NavigationProgress = () => {
-  const busy = useNavigation().state !== "idle";
+// Thin bar across the top of the page while `active`, so waits never feel
+// dead. Waits a beat before appearing so instant loads don't flash it.
+export const TopProgressBar = ({ active }: { active: boolean }) => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (!busy) {
+    if (!active) {
       setVisible(false);
       return;
     }
     const timer = setTimeout(() => setVisible(true), 100);
     return () => clearTimeout(timer);
-  }, [busy]);
+  }, [active]);
 
   return (
     <div
@@ -35,3 +33,9 @@ export const NavigationProgress = () => {
     </div>
   );
 };
+
+// Route transitions (loader data / route modules in flight). In-page loads
+// that happen after navigation (client fetches) show it via FormSkeleton.
+export const NavigationProgress = () => (
+  <TopProgressBar active={useNavigation().state !== "idle"} />
+);
