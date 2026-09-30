@@ -75,7 +75,7 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
   const firstName = userName.trim().split(/\s+/)[0];
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 py-10 md:py-16 flex flex-col gap-8">
+    <div className="w-full max-w-5xl mx-auto px-4 pt-6 pb-12 md:pt-8 md:pb-16 flex flex-col gap-6">
       <div className="text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.35)]">
         <Title order={1} c="white" className="text-3xl sm:text-4xl">
           {greetingFor(new Date())}
