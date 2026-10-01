@@ -17,12 +17,17 @@ import { ServerStyleContext, ClientStyleContext } from "./context";
 import { Navbar } from "./components/navigation/navbar";
 import { Footer } from "./components/navigation/footer";
 import { NavigationProgress } from "./components/navigation/navigation-progress";
-import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import {
+  ColorSchemeScript,
+  MantineProvider,
+  mantineHtmlProps,
+} from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import "./tailwind.css";
 import { SessionProvider } from "./components/auth/context/sessionContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import BackgroundImg from "./assets/background.webp";
+import { theme } from "./theme";
 
 export const meta: MetaFunction = () => {
   return [
@@ -34,7 +39,8 @@ export const meta: MetaFunction = () => {
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    // ColorSchemeScript sets the saved scheme on <html> before hydration
+    <html lang="en" {...mantineHtmlProps}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -43,16 +49,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <ColorSchemeScript />
       </head>
       <body
-        style={{
-          backgroundImage: `url(${BackgroundImg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          minHeight: "100vh",
-        }}
+        // Painted in tailwind.css under a tint that follows the color scheme
+        style={{ "--page-photo": `url(${BackgroundImg})` } as React.CSSProperties}
       >
-        <MantineProvider withGlobalClasses={false}>
-          <Notifications />
+        <MantineProvider theme={theme} withGlobalClasses={false}>
+          {/* Top-right so toasts don't cover the forms' sticky submit bar */}
+          <Notifications position="top-right" />
           {children}
         </MantineProvider>
         <ScrollRestoration />

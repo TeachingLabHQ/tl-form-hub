@@ -30,7 +30,7 @@ export const DistrictSchoolQuestion = ({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
+        <h1 className="font-semibold">
           What district was your coaching session for?*
         </h1>
         <Select
@@ -44,7 +44,7 @@ export const DistrictSchoolQuestion = ({
       </div>
 
       <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
+        <h1 className="font-semibold">
           What school was your coaching session for?*
         </h1>
         <Select

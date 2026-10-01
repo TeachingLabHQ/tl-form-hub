@@ -10,7 +10,7 @@ type Props = {
 export const NycCoachTypeQuestion = ({ form, onChange }: Props) => {
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="font-medium text-lg">
+      <h1 className="font-semibold">
         Select the NYC Coach type that aligns with the session you are logging*
       </h1>
       <Select

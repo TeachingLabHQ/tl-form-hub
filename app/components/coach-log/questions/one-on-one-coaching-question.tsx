@@ -27,7 +27,7 @@ export const OneOnOneCoachingQuestion = ({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
+        <h1 className="font-semibold">
           Did you complete 1:1 coaching today?*
         </h1>
         <Select

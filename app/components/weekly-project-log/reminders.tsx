@@ -1,6 +1,5 @@
-import { Divider, ScrollArea, Text } from "@mantine/core";
-import { IconChevronDown } from "@tabler/icons-react";
-import { Link } from "@remix-run/react";
+import { Paper, Text } from "@mantine/core";
+import { IconInfoCircle } from "@tabler/icons-react";
 
 export interface ReminderItem {
   title: string | React.ReactNode;
@@ -10,47 +9,45 @@ export interface ReminderItem {
 export interface RemindersProps {
   title?: string;
   items: ReminderItem[];
-  maxHeight?: number;
 }
 
+// Meant for FormPage's `aside`: a sticky side column on wide screens, where it
+// can use nearly the full viewport height, and a shorter scrolling panel above
+// the form on smaller screens.
 export const Reminders = ({
   title = "Important Reminders",
   items,
-  maxHeight = 100,
 }: RemindersProps) => {
   return (
-    <div className="w-full p-6 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white flex flex-col gap-3">
-      <div className="flex justify-between items-center">
-        <Text size="xl" fw={700}>
+    <Paper withBorder shadow="md" className="w-full p-5 flex flex-col gap-3">
+      <div className="flex items-center gap-2 text-[var(--mantine-primary-color-light-color)]">
+        <IconInfoCircle size={20} className="shrink-0" />
+        <Text size="lg" fw={700}>
           {title}
         </Text>
-        {items.length > 1 && (
-          <div className="flex items-center gap-1">
-            <Text size="sm" fw={500}>
-              Scroll for more
-            </Text>
-            <IconChevronDown size={16} className="animate-bounce" />
-          </div>
-        )}
       </div>
 
-      <ScrollArea h={maxHeight} scrollbarSize={6} type="hover" offsetScrollbars>
-        <div className="flex flex-col gap-4 pr-2">
+      <div className="max-h-72 xl:max-h-[calc(100vh-11rem)] overflow-y-auto overscroll-contain -mr-2 pr-2">
+        <div className="flex flex-col divide-y divide-[var(--mantine-color-default-border)]">
           {items.map((item, index) => (
-            <div key={index}>
-              {index > 0 && <Divider />}
-              <div>
-                <Text size="lg" fw={700}>
-                  {item.title}
-                </Text>
-                <Text size="md" fw={500} style={{ whiteSpace: "pre-line" }}>
+            <div key={index} className="py-3 first:pt-0 last:pb-0">
+              <Text size="sm" fw={600}>
+                {item.title}
+              </Text>
+              {item.content && (
+                <Text
+                  size="sm"
+                  mt={4}
+                  className="text-[var(--mantine-color-dimmed)]"
+                  style={{ whiteSpace: "pre-line" }}
+                >
                   {item.content}
                 </Text>
-              </div>
+              )}
             </div>
           ))}
         </div>
-      </ScrollArea>
-    </div>
+      </div>
+    </Paper>
   );
 };

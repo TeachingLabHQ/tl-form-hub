@@ -8,6 +8,7 @@ import { Button } from "@mantine/core";
 import { Link, useNavigate } from "@remix-run/react";
 import { useSession } from "../auth/hooks/useSession";
 import { supabase } from "../../../supabase/supabase.client";
+import { ColorSchemeToggle } from "./color-scheme-toggle";
 
 export const Navbar = () => {
   const {
@@ -70,30 +71,30 @@ export const Navbar = () => {
   };
 
   return (
-    <div className="w-full px-16 py-5 flex bg-[#F7FAFC] justify-between items-center">
-      <div className="flex flex-row gap-5 items-center">
-        <Link to="/">
-          <div className="flex gap-2 items-center">
-            <img src={TLLogo} className="h-[40px]" />
-            <p className="text-2xl">Teaching Lab Form Hub</p>
-          </div>
-        </Link>
+    <header className="sticky top-0 z-50 w-full px-4 sm:px-8 lg:px-16 py-3 flex justify-between items-center gap-4 bg-[var(--mantine-color-body)] border-b border-[var(--mantine-color-default-border)] shadow-sm">
+      <Link to="/" className="flex gap-3 items-center min-w-0">
+        <img
+          src={TLLogo}
+          alt=""
+          className="h-9 w-9 shrink-0 dark:rounded-full dark:bg-white/90 dark:p-0.5"
+        />
+        <span className="text-lg sm:text-xl font-semibold truncate">
+          Teaching Lab Form Hub
+        </span>
+      </Link>
+      <div className="flex flex-row gap-3 items-center shrink-0">
         {isAuthenticated && (
-          <div className="flex gap-4">
-          
-          </div>
-        )}
-      </div>
-      <div>
-        {isAuthenticated && (
-          <div className="flex flex-row gap-4 items-center">
-            <p className="text-blue">Hi {mondayProfile?.name}!</p>
-            <Button variant="outline" onClick={logOut}>
+          <>
+            <span className="hidden md:inline text-sm text-[var(--mantine-color-dimmed)]">
+              {mondayProfile?.name}
+            </span>
+            <Button variant="default" onClick={logOut}>
               Log Out
             </Button>
-          </div>
+          </>
         )}
+        <ColorSchemeToggle />
       </div>
-    </div>
+    </header>
   );
 };

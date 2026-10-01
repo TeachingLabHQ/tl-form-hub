@@ -17,7 +17,7 @@ export const PaymentHistory = ({
 
   if (!paymentRequestHistory?.length) {
     return (
-      <div className="text-white text-center py-8">
+      <div className="text-center py-8 text-[var(--mantine-color-dimmed)]">
         No payment history found
       </div>
     );

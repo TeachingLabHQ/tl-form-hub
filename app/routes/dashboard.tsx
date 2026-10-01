@@ -7,7 +7,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center">
+    // Top-aligned (not vertically centered) so the greeting sits just under
+    // the navbar on tall screens
+    <div className="min-h-screen w-full">
       <FormHubLanding userName={mondayProfile?.name || ""} />
     </div>
   );

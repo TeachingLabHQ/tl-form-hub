@@ -1,3 +1,38 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* The background photo is painted on its own viewport-sized fixed layer (so it
+   doesn't stretch on long pages) under a tint that lifts the form cards off
+   it. Dark mode dims, desaturates and softens it so it recedes behind the dark
+   surfaces instead of competing with them. */
+:root {
+  --page-tint: rgba(0, 35, 80, 0.2);
+  --page-filter: none;
+}
+[data-mantine-color-scheme="dark"] {
+  --page-tint: rgba(6, 8, 12, 0.45);
+  --page-filter: grayscale(0.7) brightness(0.4) blur(3px);
+}
+body {
+  isolation: isolate;
+  min-height: 100vh;
+}
+body::before {
+  content: "";
+  position: fixed;
+  /* Overscan so the blur doesn't leave soft, see-through edges. The extra
+     height at the bottom, with the photo anchored to the top, pushes the
+     brand color bands baked into the photo's bottom edge below the fold (the
+     footer carries them instead). */
+  inset: -12px -12px -12vh;
+  z-index: -1;
+  pointer-events: none;
+  background-image: linear-gradient(var(--page-tint), var(--page-tint)),
+    var(--page-photo);
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  filter: var(--page-filter);
+}

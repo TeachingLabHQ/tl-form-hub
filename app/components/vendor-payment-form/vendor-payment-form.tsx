@@ -1,7 +1,14 @@
-import { Button, Notification, Tabs } from "@mantine/core";
+import { Button, Notification, Tabs, Text } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
-import { useFetcher, useNavigate, useLoaderData } from "@remix-run/react";
+import { notifications } from "@mantine/notifications";
+import { useFetcher, useLoaderData } from "@remix-run/react";
 import { IconCheck, IconX } from "@tabler/icons-react";
+import {
+  FormActions,
+  FormCard,
+  FormPage,
+  FormSection,
+} from "~/components/form-kit";
 import React, { useEffect, useMemo, useState } from "react";
 import { CoachFacilitatorDetails } from "~/domains/coachFacilitator/repository";
 import { Reminders } from "../weekly-project-log/reminders";
@@ -26,9 +33,7 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
   const fetcher = useFetcher<FetcherData>();
   const [isValidated, setIsValidated] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [workDate, setWorkDate] = useState<Date | null>(new Date());
-  const [activeTab, setActiveTab] = useState("new");
   const [vendorPaymentEntries, setVendorPaymentEntries] = useState([
     {
       task: "",
@@ -51,10 +56,14 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
     if (fetcher.data) {
       if (fetcher.data.error) {
         setError(fetcher.data.error);
-        setShowSuccess(false);
       } else {
         setError(null);
-        setShowSuccess(true);
+        notifications.show({
+          color: "teal",
+          icon: <IconCheck size={18} />,
+          title: "Payment request submitted",
+          message: "Your payment request was submitted successfully!",
+        });
         // Reset form after successful submission
         setVendorPaymentEntries([
           {
@@ -88,15 +97,6 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
     }, 0) || 0;
   };
 
-  const getCurrentTotalPay = (): string => {
-    if (activeTab === "new") {
-      return vendorPaymentEntries.length > 0
-        ? calculateTotalPay(vendorPaymentEntries).toFixed(2)
-        : "0.00";
-    } else {
-      return calculateHistoryTotalPay().toFixed(2);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -148,111 +148,129 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
   };
 
   return (
-    <div className="w-full h-full grid grid-cols-1 md:grid-cols-12  gap-8 py-8 px-4 md:px-0">
-       <div className="row-start-1 col-span-1 md:col-start-2 md:col-span-10">
-        <Reminders items={REMINDER_ITEMS} />
-      </div>
-
-      {/* Total Pay Section */}
-      <div className="row-start-2 md:row-start-2 col-span-1 md:col-start-10 md:col-span-2 flex flex-col items-center">
-        <div className="w-full sm:max-w-xs lg:w-fit py-5 px-8 sm:px-10 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white flex flex-col items-center gap-3">
-          <h3 className="text-xl font-bold">
-            {activeTab === "new" ? "Total Pay" : "Total Pay (Current Month)"}
-          </h3>
-          <h1 className="text-2xl font-bold">
-            ${getCurrentTotalPay()}
-          </h1>
-        </div>
-      </div>
-
-      {/* Tabs Section (New Submission / History) */}
-      <div className="row-start-3 md:row-start-2 col-span-1 md:col-start-2 md:col-span-8 h-fit p-8 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white">
-        <Tabs defaultValue="new" onChange={(value: string | null) => setActiveTab(value || "new")}>
+    <FormPage width="lg" aside={<Reminders items={REMINDER_ITEMS} />}>
+      <FormCard>
+        <Tabs defaultValue="new">
           <Tabs.List>
-            <Tabs.Tab value="new" className="hover:bg-white/10">
-              New Submission
-            </Tabs.Tab>
-            <Tabs.Tab value="history" className="hover:bg-white/10">
+            <Tabs.Tab value="new">New Submission</Tabs.Tab>
+            <Tabs.Tab value="history">
               Submission History (Current Month)
             </Tabs.Tab>
           </Tabs.List>
 
-          <Tabs.Panel value="new">
-            <fetcher.Form
-              onSubmit={handleSubmit}
-              className="flex flex-col gap-4 mt-4"
-            >
+          <Tabs.Panel value="new" pt="xl">
+            <fetcher.Form onSubmit={handleSubmit} className="flex flex-col gap-8">
               <div className="flex flex-col gap-2">
-                <h1 className="font-bold text-3xl">Project Consultant Payment Form</h1>
-                <p className="text-white">This form is intended for contractors serving as coaches, facilitators, content developers and designers, and data evaluation consultants. Once submitted, it will be sent to the invoicing system at month-end for CPM approval and payment processing.</p>
-               <p className="text-white">FY27 Facilitation Payment Guide:<br/>
-                Please review the <a href="https://docs.google.com/document/d/1qxZ8BClhZgaj1Ol1p1Dc5EfrIzmBtiiAYNz2I9CogW8/edit?tab=t.0#heading=h.afbcr7vh5ok3" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>FY27 Facilitation Payment Guide</a> for detailed information about payment processes and term definitions.</p>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-white mb-2">Enter the date of the work</label>
-                <DateInput
-                  value={workDate}
-                  onChange={setWorkDate}
-                  placeholder="Select date"
-                  required
-                  className="w-full "
-                  excludeDate={shouldExcludeVendorPaymentDate}
-                  error={isValidated === true && !workDate ? "Date is required" : null}
-                />
-              </div>
-
-              <VendorPaymentWidget
-                isValidated={isValidated}
-                vendorPaymentEntries={vendorPaymentEntries}
-                setVendorPaymentEntries={setVendorPaymentEntries}
-                cfTier={cfDetails?.tier || []}
-                projects={projects}
-              />
-
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-center">
-                  <Button
-                    type="submit"
-                    size="md"
-                    color="#0053B3"
-                    loading={fetcher.state === "submitting"}
-                    disabled={fetcher.state === "submitting"}
+                <h2 className="font-bold text-2xl sm:text-3xl">
+                  Project Consultant Payment Form
+                </h2>
+                <Text c="dimmed">
+                  This form is intended for contractors serving as coaches,
+                  facilitators, content developers and designers, and data
+                  evaluation consultants. Once submitted, it will be sent to the
+                  invoicing system at month-end for CPM approval and payment
+                  processing.
+                </Text>
+                <Text c="dimmed">
+                  FY27 Facilitation Payment Guide:
+                  <br />
+                  Please review the{" "}
+                  <a
+                    href="https://docs.google.com/document/d/1qxZ8BClhZgaj1Ol1p1Dc5EfrIzmBtiiAYNz2I9CogW8/edit?tab=t.0#heading=h.afbcr7vh5ok3"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-[var(--mantine-color-anchor)]"
                   >
-                    Submit
-                  </Button>
+                    FY27 Facilitation Payment Guide
+                  </a>{" "}
+                  for detailed information about payment processes and term
+                  definitions.
+                </Text>
+              </div>
+
+              <FormSection step={1} title="Date of work">
+                <div className="flex flex-col gap-1 sm:max-w-xs">
+                  <label className="font-semibold">
+                    Enter the date of the work
+                  </label>
+                  <DateInput
+                    value={workDate}
+                    onChange={setWorkDate}
+                    placeholder="Select date"
+                    required
+                    excludeDate={shouldExcludeVendorPaymentDate}
+                    error={
+                      isValidated === true && !workDate
+                        ? "Date is required"
+                        : null
+                    }
+                  />
                 </div>
+              </FormSection>
 
-                {error && (
-                  <Notification
-                    icon={<IconX size={20} />}
-                    color="red"
-                    title="Error"
-                    onClose={() => setError(null)}
-                  >
-                    {error}
-                  </Notification>
-                )}
+              <FormSection step={2} title="Tasks">
+                <VendorPaymentWidget
+                  isValidated={isValidated}
+                  vendorPaymentEntries={vendorPaymentEntries}
+                  setVendorPaymentEntries={setVendorPaymentEntries}
+                  cfTier={cfDetails?.tier || []}
+                  projects={projects}
+                />
+              </FormSection>
 
-                {showSuccess && (
-                  <Notification
-                    icon={<IconCheck size={20} />}
-                    color="green"
-                    title="Success"
-                    onClose={() => setShowSuccess(false)}
-                  >
-                    Form submitted successfully!
-                  </Notification>
-                )}
-              </div>
+              {error && (
+                <Notification
+                  icon={<IconX size={20} />}
+                  color="red"
+                  title="Error"
+                  onClose={() => setError(null)}
+                >
+                  {error}
+                </Notification>
+              )}
+
+              <FormActions
+                summary={
+                  <div className="flex items-baseline gap-2">
+                    <Text size="sm" c="dimmed">
+                      Total pay
+                    </Text>
+                    <Text size="xl" fw={700}>
+                      ${calculateTotalPay(vendorPaymentEntries).toFixed(2)}
+                    </Text>
+                  </div>
+                }
+              >
+                <Button
+                  type="submit"
+                  size="md"
+                  loading={fetcher.state === "submitting"}
+                  disabled={fetcher.state === "submitting"}
+                >
+                  Submit
+                </Button>
+              </FormActions>
             </fetcher.Form>
           </Tabs.Panel>
 
-          <Tabs.Panel value="history">
-            <PaymentHistory cfDetails={cfDetails || null} paymentRequestHistory={paymentRequestHistory} />
+          <Tabs.Panel value="history" pt="xl">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-baseline justify-end gap-2">
+                <Text size="sm" c="dimmed">
+                  Total pay (current month)
+                </Text>
+                <Text size="xl" fw={700}>
+                  ${calculateHistoryTotalPay().toFixed(2)}
+                </Text>
+              </div>
+              <PaymentHistory
+                cfDetails={cfDetails || null}
+                paymentRequestHistory={paymentRequestHistory}
+              />
+            </div>
           </Tabs.Panel>
         </Tabs>
-      </div>
-    </div>
+      </FormCard>
+    </FormPage>
   );
 };

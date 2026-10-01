@@ -16,7 +16,7 @@ export const CancellationQuestion = ({ form }: Props) => {
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">Was the Coaching Session Canceled?</h1>
+        <h1 className="font-semibold">Was the Coaching Session Canceled?</h1>
         <Select
           placeholder="Select Yes or No"
           data={YES_NO_OPTIONS}
@@ -27,7 +27,7 @@ export const CancellationQuestion = ({ form }: Props) => {
       {canceled === "Yes" && (
         <>
           <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">
+            <h1 className="font-semibold">
               Why did the session not take place?
             </h1>
             <Select
@@ -39,7 +39,7 @@ export const CancellationQuestion = ({ form }: Props) => {
 
           {cancelReason === CANCELED_OTHER_REASON && (
             <div className="flex flex-col gap-1">
-              <h1 className="font-medium text-lg">
+              <h1 className="font-semibold">
                 What was the reason the activity did not take place?
               </h1>
               <Textarea
@@ -50,7 +50,7 @@ export const CancellationQuestion = ({ form }: Props) => {
           )}
 
           <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">
+            <h1 className="font-semibold">
               Has the coaching activity been rescheduled or will it be?
             </h1>
             <Select

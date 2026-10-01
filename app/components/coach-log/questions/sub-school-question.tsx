@@ -23,7 +23,7 @@ export const SubSchoolQuestion = ({
 }: Props) => {
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="font-medium text-lg">{label}</h1>
+      <h1 className="font-semibold">{label}</h1>
       <Select
         placeholder={placeholder}
         data={options}
