@@ -134,7 +134,17 @@ export const YES_NO_OPTIONS = ["Yes", "No"];
 // ---------------------------------------------------------------------------
 
 /** Show the NYC Coach Type question only for these district keys. */
-export const NYC_COACH_TYPE_DISTRICT_KEYS = ["9", "11", "12", "13", "16", "25", "75"];
+export const NYC_COACH_TYPE_DISTRICT_KEYS = [
+  "7",
+  "9",
+  "11",
+  "12",
+  "13",
+  "16",
+  "25",
+  "75",
+  "79",
+];
 
 /** NYC districts without a numeric key that also reveal the coach-type question. */
 export const NYC_COACH_TYPE_DISTRICT_LABELS = [
