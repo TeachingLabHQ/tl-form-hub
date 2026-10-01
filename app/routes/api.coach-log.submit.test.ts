@@ -9,6 +9,8 @@ import {
   READS_TOUCHPOINT_DISTRICT,
   READS_TOUCHPOINT_LEADER,
   READS_TOUCHPOINT_TEACHER,
+  SOLVES_POST_VISIT_SNAPSHOT_CHALLENGES,
+  SOLVES_POST_VISIT_SNAPSHOT_HQIM_NOT_USED,
   SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION,
   SOLVES_TOUCHPOINT_HQIM,
 } from "~/components/coach-log/questions/nyc/constants";
@@ -390,6 +392,32 @@ describe("parent column values", () => {
       },
       text_mm6ne4t8: "Follow up with the principal",
     });
+  });
+
+  it.each([
+    SOLVES_POST_VISIT_SNAPSHOT_CHALLENGES,
+    SOLVES_POST_VISIT_SNAPSHOT_HQIM_NOT_USED,
+    SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION,
+  ])("writes the Solves snapshot follow-up for %s", async (snapshot) => {
+    await submit({
+      ...base,
+      solvesTouchpointTypes: [SOLVES_TOUCHPOINT_HQIM],
+      solvesPostVisitSnapshot: snapshot,
+      solvesPostVisitFollowUp: "Context for the partner",
+    });
+
+    expect(parentColumns().text_mm6ne4t8).toBe("Context for the partner");
+  });
+
+  it("drops a stale Solves snapshot follow-up for snapshots without one", async () => {
+    await submit({
+      ...base,
+      solvesTouchpointTypes: [SOLVES_TOUCHPOINT_HQIM],
+      solvesPostVisitSnapshot: "Median School",
+      solvesPostVisitFollowUp: "Left over from a previous selection",
+    });
+
+    expect(parentColumns()).not.toHaveProperty("text_mm6ne4t8");
   });
 
   it("writes group coaching columns with the duration as a number", async () => {
