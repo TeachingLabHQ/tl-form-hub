@@ -371,6 +371,8 @@ export const solvesShowsDistrictWideDBNs = (supportType: string): boolean =>
 
 // --- Post Visit Snapshot (shown once, if HQIM/HSD/CSD selected) ------------
 
+export const SOLVES_POST_VISIT_SNAPSHOT_CHALLENGES =
+  "School Experiencing Challenges";
 export const SOLVES_POST_VISIT_SNAPSHOT_HQIM_NOT_USED = "HQIM not used this visit";
 export const SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION =
   "Immediate Attention Needed";
@@ -378,12 +380,14 @@ export const SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION =
 export const SOLVES_POST_VISIT_SNAPSHOT_OPTIONS = [
   "School to Learn From",
   "Median School",
-  "School Experiencing Challenges",
+  SOLVES_POST_VISIT_SNAPSHOT_CHALLENGES,
   SOLVES_POST_VISIT_SNAPSHOT_HQIM_NOT_USED,
   SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION,
 ];
 
+/** The three snapshots partners need context on get a required follow-up. */
 export const solvesShowsPostVisitFollowUp = (snapshot: string): boolean =>
+  snapshot === SOLVES_POST_VISIT_SNAPSHOT_CHALLENGES ||
   snapshot === SOLVES_POST_VISIT_SNAPSHOT_HQIM_NOT_USED ||
   snapshot === SOLVES_POST_VISIT_SNAPSHOT_IMMEDIATE_ATTENTION;
 
