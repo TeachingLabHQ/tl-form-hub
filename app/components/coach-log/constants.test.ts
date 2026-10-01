@@ -2,11 +2,25 @@ import { describe, expect, it } from "vitest";
 import {
   D75_SCHOOL_LEVEL_OPTIONS,
   SCHOOL_LEVEL_OPTIONS,
+  isNycCoachTypeDistrict,
   requiresSubSchool,
   schoolLevelOptions,
   shouldShowSchoolLevel,
   shouldShowSubSchool,
 } from "./constants";
+
+describe("isNycCoachTypeDistrict", () => {
+  it("shows for the NYC Reads/Solves districts", () => {
+    for (const d of ["NY_D7", "NY_D9", "NY_D11", "NY_D75", "NY_D79"]) {
+      expect(isNycCoachTypeDistrict(d)).toBe(true);
+    }
+  });
+
+  it("matches the district number exactly", () => {
+    expect(isNycCoachTypeDistrict("NY_D70")).toBe(false);
+    expect(isNycCoachTypeDistrict("NY_D17")).toBe(false);
+  });
+});
 
 describe("shouldShowSubSchool", () => {
   it("shows for D75 Solves coaches", () => {
