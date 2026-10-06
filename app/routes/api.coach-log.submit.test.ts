@@ -275,7 +275,7 @@ describe("parent column values", () => {
 
     const columns = parentColumns();
     expect(columns.text_mktgt2ah).toBe("3");
-    expect(columns).not.toHaveProperty("text_mktggbxt");
+    expect(columns.text_mktggbxt).toBe("0");
     expect(columns).not.toHaveProperty("text_mm6nc9gw");
   });
 
@@ -375,7 +375,25 @@ describe("parent column values", () => {
     const columns = parentColumns();
     expect(columns.text_mkthtzhb).toBe("60");
     expect(columns.text_mkthqrth).toBe("Protocol A");
-    expect(columns).not.toHaveProperty("text_mm6nx5fv");
+    expect(columns.text_mm6nx5fv).toBe("0");
+  });
+
+  it("writes 0 to every visit-duration column with no duration selected", async () => {
+    await submit({
+      ...base,
+      nycCoachType: "NYC Reads",
+      readsTouchpointTypes: [READS_TOUCHPOINT_DISTRICT],
+    });
+
+    expect(parentColumns()).toMatchObject({
+      text_mktgt2ah: "0", // (NYC Reads) Teacher Support Visit Duration
+      text_mktggbxt: "0", // (NYC Reads) Leader Visit Duration
+      text_mkthtzhb: "0", // (NYC Solves) HQIM-Based Visit Duration
+      text_mm6nqx9x: "0", // (NYC Solves) HSD Only Visit Duration
+      text_mm6nv7jp: "0", // (NYC Solves) ES Visit Duration
+      text_mm6nvcvz: "0", // (NYC Solves) CSD Visit Duration
+      text_mm6nx5fv: "0", // (NYC Solves) District Learning Visit Duration
+    });
   });
 
   it("writes the Solves post visit snapshot as a dropdown label", async () => {

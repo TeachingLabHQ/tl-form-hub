@@ -60,11 +60,13 @@ const COLUMN = {
   // NYC Reads — top-level
   readsTouchpointTypes: "text_mktgtahx", // reused: pre-overhaul readsTouchpoint/ecTouchpoint column
   // NYC Reads — Teacher team support
+  readsVisitDuration: "text_mktgt2ah", // reused: pre-overhaul column
   readsTeacherSchoolLeaderPresence: "text_mm6n1qtd",
   readsTeacherDistrictLeaderPresence: "text_mm6nqxvh",
   readsInterventionsScheduled: "text_mm6n77va",
   readsInterventionsContext: "text_mm6ndxbw",
   // NYC Reads — School Leader/Leadership team support
+  readsLeaderVisitDuration: "text_mktggbxt", // reused: pre-overhaul column
   readsLeaderFocusSchoolVisitsSubcomponent: "text_mm6ngab7",
   readsLeaderFocusModelingSubcomponent: "text_mm6n1fgs",
   readsLeaderFocusPLSubcomponent: "text_mm6ne4nr",
@@ -110,6 +112,19 @@ const COLUMN = {
   solvesSustainability: "text_mm7dbgm2",
   solvesGuidanceToolsUsed: "text_mm6n3rjz", // also holds the "Other" write-in (see csvWithOtherDetail)
 } as const;
+
+// Visit-duration columns are always written: when no duration was selected
+// (block hidden, other subject, cancelled, non-NYC) they get "0" rather than
+// being left blank, so Monday sums/reports treat them as zero.
+const VISIT_DURATION_COLUMNS = [
+  COLUMN.readsVisitDuration,
+  COLUMN.readsLeaderVisitDuration,
+  COLUMN.solvesHqimVisitDuration,
+  COLUMN.solvesHsdVisitDuration,
+  COLUMN.solvesEsVisitDuration,
+  COLUMN.solvesCsdVisitDuration,
+  COLUMN.solvesDistrictWideVisitDuration,
+] as const;
 
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
@@ -283,7 +298,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       parentColumns[COLUMN.readsTouchpointTypes] = csv(readsTouchpointTypes);
 
       if (readsShowsTeacherBlock(readsTouchpointTypes)) {
-        if (readsVisitDuration) parentColumns.text_mktgt2ah = readsVisitDuration;
+        if (readsVisitDuration)
+          parentColumns[COLUMN.readsVisitDuration] = readsVisitDuration;
         if (readsGradeBands?.length)
           parentColumns.text_mktgz9wm = csv(readsGradeBands);
         if (readsTeacherStrategies?.length)
@@ -308,7 +324,8 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
       if (readsShowsLeaderBlock(readsTouchpointTypes)) {
         if (readsLeaderVisitDuration)
-          parentColumns.text_mktggbxt = readsLeaderVisitDuration;
+          parentColumns[COLUMN.readsLeaderVisitDuration] =
+            readsLeaderVisitDuration;
         if (readsLeaderCapacityFocus?.length)
           parentColumns.text_mktggp36 = csv(readsLeaderCapacityFocus);
         if (readsLeaderFocusSchoolVisitsSubcomponent)
@@ -446,6 +463,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
           solvesGuidanceToolsUsed,
           solvesGuidanceToolsOther
         );
+    }
+
+    for (const column of VISIT_DURATION_COLUMNS) {
+      parentColumns[column] ??= "0";
     }
 
     if (canceled === "Yes") {
