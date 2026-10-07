@@ -80,10 +80,10 @@ export const PaymentHistoryItem = ({
 
   return (
     <Accordion.Item value={paymentRequest.id.toString()}>
-      <Accordion.Control className="hover:bg-white/10">
+      <Accordion.Control>
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <span className="text-white">
+            <span>
               {formatDateOnly(paymentRequest.submission_date)}
             </span>
             <ActionIcon
@@ -99,16 +99,16 @@ export const PaymentHistoryItem = ({
               <IconTrash size={16} />
             </ActionIcon>
           </div>
-          <span className="text-white font-bold">
+          <span className="font-bold">
             ${paymentRequest.total_pay.toFixed(2)}
           </span>
         </div>
       </Accordion.Control>
       <Accordion.Panel>
         <div className="overflow-x-auto">
-          <table className="w-full text-white">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/20">
+              <tr className="border-b border-[var(--mantine-color-default-border)]">
                 <th className="text-left py-2 px-4 w-1/4">Task</th>
                 <th className="text-left py-2 px-4">Project</th>
                 <th className="text-left py-2 px-4">Note</th>
@@ -121,7 +121,7 @@ export const PaymentHistoryItem = ({
               {paymentRequest.entries.map((entry, index) => (
                 <tr
                   key={index}
-                  className="border-b border-white/10 last:border-0"
+                  className="border-b border-[var(--mantine-color-default-border)] last:border-0"
                 >
                   <td className="py-3 px-4 w-1/4">{entry.task_name}</td>
                   <td className="py-3 px-4">{entry.project_name}</td>
@@ -137,7 +137,7 @@ export const PaymentHistoryItem = ({
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t border-white/20">
+              <tr className="border-t border-[var(--mantine-color-default-border)]">
                 <td colSpan={5} className="py-2 px-4 text-right font-bold">
                   Total:
                 </td>

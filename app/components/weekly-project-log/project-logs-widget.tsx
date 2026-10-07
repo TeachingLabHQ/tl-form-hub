@@ -1,5 +1,5 @@
-import { Button, NumberInput, Select, Text, TextInput } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { ActionIcon, NumberInput, Select, Text, TextInput } from "@mantine/core";
+import { IconTrash } from "@tabler/icons-react";
 import { useMemo } from "react";
 import { RepeatableRowWidget } from "~/components/form-kit";
 import { ProjectLogRows } from "~/domains/project/model";
@@ -20,9 +20,15 @@ const EMPTY_ROW: ProjectLogRows = {
 };
 
 function gridClass(canDelete: boolean) {
-  return cn("grid gap-4 grid-cols-[2fr_1.3fr_1fr_1fr_1fr]", {
-    "grid-cols-[2fr_1.3fr_1fr_1fr_1fr_0.5fr]": canDelete,
-  });
+  // Activity gets the most room after the project (its longest option is
+  // long); hours and the read-only budget only ever hold short numbers
+  return cn(
+    "grid gap-3 grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)_minmax(0,1.6fr)_6.5rem_7.5rem]",
+    {
+      "grid-cols-[minmax(0,1.8fr)_minmax(0,1.2fr)_minmax(0,1.6fr)_6.5rem_7.5rem_2.25rem]":
+        canDelete,
+    }
+  );
 }
 
 export const ProjectLogsWidget = ({
@@ -51,11 +57,11 @@ export const ProjectLogsWidget = ({
       emptyRow={EMPTY_ROW}
       header={({ canDelete }) => (
         <div className={gridClass(canDelete)}>
-          <Text fw={500} size="md">Project Name</Text>
-          <Text fw={500} size="md">Project Role</Text>
-          <Text fw={500} size="md">Activity</Text>
-          <Text fw={500} size="md">Work Hours</Text>
-          <Text fw={500} size="md">Budgeted Hours</Text>
+          <Text fw={600} size="sm">Project Name</Text>
+          <Text fw={600} size="sm">Project Role</Text>
+          <Text fw={600} size="sm">Activity</Text>
+          <Text fw={600} size="sm">Work Hours</Text>
+          <Text fw={600} size="sm">Budgeted Hours</Text>
         </div>
       )}
       renderRow={(row, index, { canDelete, updateRow, deleteRow }) => (
@@ -91,7 +97,7 @@ export const ProjectLogsWidget = ({
           <Select
             value={row.activity}
             onChange={(value) => updateRow({ activity: value || "" })}
-            placeholder="Select an activity"
+            placeholder="Select activity"
             data={activityList}
             searchable
             onKeyDown={handleKeyDown}
@@ -113,7 +119,7 @@ export const ProjectLogsWidget = ({
                 updateRow({ workHours: value?.toString() || "" });
               }
             }}
-            placeholder="Enter work hours"
+            placeholder="Hours"
             onKeyDown={handleKeyDown}
             min={0.01}
             decimalScale={2}
@@ -127,13 +133,15 @@ export const ProjectLogsWidget = ({
           />
           <TextInput value={row.budgetedHours} placeholder="N/A" readOnly />
           {canDelete && (
-            <Button
-              color="red"
-              onClick={deleteRow}
-              size="xs"
-            >
-              <IconX size={20} />
-            </Button>
+            <ActionIcon
+                variant="subtle"
+                color="red"
+                size="input-sm"
+                onClick={deleteRow}
+                aria-label="Remove row"
+              >
+                <IconTrash size={18} />
+              </ActionIcon>
           )}
         </div>
       )}

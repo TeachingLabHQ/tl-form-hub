@@ -22,8 +22,8 @@ export const CoachNameQuestion = ({
 }: Props) => {
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="font-medium text-lg">Coach (testing override)</h1>
-      <Text size="sm" c="white">
+      <h1 className="font-semibold">Coach (testing override)</h1>
+      <Text size="sm" c="dimmed">
         Testing only: select a coach to preview which session dates would
         populate for them. Leave blank to use your own profile.
       </Text>

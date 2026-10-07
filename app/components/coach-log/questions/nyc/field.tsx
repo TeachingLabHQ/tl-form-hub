@@ -14,9 +14,9 @@ type Props = {
  */
 export const QuestionField = ({ label, note, children }: Props) => (
   <div className="flex flex-col gap-1">
-    <h1 className="font-medium text-lg">{label}</h1>
+    <h1 className="font-semibold">{label}</h1>
     {note ? (
-      <Text size="sm" c="white">
+      <Text size="sm" c="dimmed">
         {note}
       </Text>
     ) : null}
@@ -37,8 +37,8 @@ type TouchpointSectionProps = {
  * checked at once (touchpoint type is a multi-select).
  */
 export const TouchpointSection = ({ title, children }: TouchpointSectionProps) => (
-  <div className="flex flex-col gap-4 rounded-2xl bg-white/10 p-4">
-    <h2 className="font-semibold text-xl">{title}</h2>
+  <div className="flex flex-col gap-4 rounded-lg border border-[var(--mantine-color-default-border)] bg-gray-50 p-4 dark:bg-white/5">
+    <h2 className="font-semibold text-lg">{title}</h2>
     {children}
   </div>
 );

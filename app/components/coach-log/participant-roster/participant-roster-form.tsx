@@ -1,15 +1,16 @@
 import {
   Autocomplete,
   Button,
-  Loader,
   MultiSelect,
   Notification,
   Select,
   Text,
   TextInput,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
+import { FormActions, FormSection } from "~/components/form-kit";
 import type { DistrictWithSchools } from "~/domains/coach-log/model";
 import { useSession } from "../../auth/hooks/useSession";
 import { useCoachOverride } from "../hooks/use-coach-override";
@@ -68,7 +69,8 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
   // A participant belongs to one specific school, so drop the coach-log's
   // "All Schools" aggregate / "N/A" fallback.
   const schoolOptions = useMemo(() => {
-    const schools = districts.find((d) => d.district === district)?.schools ?? [];
+    const schools =
+      districts.find((d) => d.district === district)?.schools ?? [];
     return schools.filter((s) => s !== "All Schools" && s !== "N/A");
   }, [districts, district]);
 
@@ -137,6 +139,12 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
         form.reset();
         setCoachOverrideId("");
         setResetKey((k) => k + 1);
+        notifications.show({
+          color: "teal",
+          icon: <IconCheck size={18} />,
+          title: "Participant added to the roster!",
+          message: "You can add another participant now.",
+        });
       }
     } catch (e) {
       console.error(e);
@@ -150,140 +158,149 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
     <form
       key={resetKey}
       onSubmit={form.onSubmit(handleSubmit, () => setShowErrorBanner(true))}
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-8"
     >
-      {canOverride && (
-        <CoachNameQuestion
-          value={coachOverrideId}
-          options={coachOptions.map((c) => ({
-            value: c.mondayId,
-            label: c.name,
-          }))}
-          loading={loadingCoachOptions}
-          onChange={setCoachOverrideId}
-        />
-      )}
-
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">Participant first name*</h1>
-        <TextInput placeholder="First name" {...form.getInputProps("firstName")} />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">Participant last name*</h1>
-        <TextInput placeholder="Last name" {...form.getInputProps("lastName")} />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">Participant email address*</h1>
-        <TextInput
-          placeholder="name@example.org"
-          {...form.getInputProps("email")}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">Role of participant*</h1>
-        <Select
-          placeholder="Select a role"
-          data={PARTICIPANT_ROLE_OPTIONS}
-          searchable
-          {...form.getInputProps("role")}
-        />
-        {role === OTHER_OPTION && (
-          <TextInput
-            mt="xs"
-            placeholder="Please specify the role"
-            {...form.getInputProps("roleOther")}
+      <FormSection step={1} title="Participant">
+        {canOverride && (
+          <CoachNameQuestion
+            value={coachOverrideId}
+            options={coachOptions.map((c) => ({
+              value: c.mondayId,
+              label: c.name,
+            }))}
+            loading={loadingCoachOptions}
+            onChange={setCoachOverrideId}
           />
         )}
-      </div>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
-          What will supports include for this participant?
-        </h1>
-        <MultiSelect
-          placeholder="Select all that apply"
-          data={SUPPORT_OPTIONS}
-          {...form.getInputProps("supports")}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
-          What is the content area of support for this participant?
-        </h1>
-        <MultiSelect
-          placeholder="Select all that apply"
-          data={CONTENT_AREA_OPTIONS}
-          searchable
-          {...form.getInputProps("contentAreas")}
-        />
-        {contentAreas.includes(OTHER_OPTION) && (
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">Participant first name*</h1>
           <TextInput
-            mt="xs"
-            placeholder="Please specify the content area"
-            {...form.getInputProps("contentAreaOther")}
+            placeholder="First name"
+            {...form.getInputProps("firstName")}
           />
-        )}
-      </div>
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
-          What grade(s) does this participant teach or lead?
-        </h1>
-        <MultiSelect
-          placeholder="Select all that apply"
-          data={GRADE_OPTIONS}
-          {...form.getInputProps("grades")}
-        />
-      </div>
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">Participant last name*</h1>
+          <TextInput
+            placeholder="Last name"
+            {...form.getInputProps("lastName")}
+          />
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">Please select your district*</h1>
-        <Select
-          value={district || null}
-          onChange={handleDistrictChange}
-          placeholder="Select a district"
-          data={districtOptions}
-          searchable
-          error={form.errors.district}
-        />
-      </div>
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">Participant email address*</h1>
+          <TextInput
+            placeholder="name@example.org"
+            {...form.getInputProps("email")}
+          />
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">Please select your school*</h1>
-        <Select
-          // Remount when the district changes so the cleared school value
-          // doesn't keep showing the previous district's selection.
-          key={`school-${district}`}
-          placeholder={district ? "Select a school" : "Select a district first"}
-          data={schoolOptions}
-          searchable
-          disabled={!district}
-          {...form.getInputProps("school")}
-        />
-      </div>
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">Role of participant*</h1>
+          <Select
+            placeholder="Select a role"
+            data={PARTICIPANT_ROLE_OPTIONS}
+            searchable
+            {...form.getInputProps("role")}
+          />
+          {role === OTHER_OPTION && (
+            <TextInput
+              mt="xs"
+              placeholder="Please specify the role"
+              {...form.getInputProps("roleOther")}
+            />
+          )}
+        </div>
 
-      <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
-          If this participant receives group coaching, enter their Group
-          Coaching Name.
-        </h1>
-        <Autocomplete
-          placeholder={
-            district && school
-              ? "Group coaching name"
-              : "Select a district and school first for suggestions"
-          }
-          data={groupNameOptions}
-          {...form.getInputProps("groupCoachingName")}
-        />
-      </div>
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">
+            What will supports include for this participant?
+          </h1>
+          <MultiSelect
+            placeholder="Select all that apply"
+            data={SUPPORT_OPTIONS}
+            {...form.getInputProps("supports")}
+          />
+        </div>
 
-      {!isSubmitting && <Button type="submit">Submit</Button>}
-      {isSubmitting && <Loader size={30} color="rgba(255, 255, 255, 1)" />}
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">
+            What is the content area of support for this participant?
+          </h1>
+          <MultiSelect
+            placeholder="Select all that apply"
+            data={CONTENT_AREA_OPTIONS}
+            searchable
+            {...form.getInputProps("contentAreas")}
+          />
+          {contentAreas.includes(OTHER_OPTION) && (
+            <TextInput
+              mt="xs"
+              placeholder="Please specify the content area"
+              {...form.getInputProps("contentAreaOther")}
+            />
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">
+            What grade(s) does this participant teach or lead?
+          </h1>
+          <MultiSelect
+            placeholder="Select all that apply"
+            data={GRADE_OPTIONS}
+            {...form.getInputProps("grades")}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection step={2} title="School">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">Please select your district*</h1>
+          <Select
+            value={district || null}
+            onChange={handleDistrictChange}
+            placeholder="Select a district"
+            data={districtOptions}
+            searchable
+            error={form.errors.district}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">Please select your school*</h1>
+          <Select
+            // Remount when the district changes so the cleared school value
+            // doesn't keep showing the previous district's selection.
+            key={`school-${district}`}
+            placeholder={
+              district ? "Select a school" : "Select a district first"
+            }
+            data={schoolOptions}
+            searchable
+            disabled={!district}
+            {...form.getInputProps("school")}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <h1 className="font-semibold">
+            If this participant receives group coaching, enter their Group
+            Coaching Name.
+          </h1>
+          <Autocomplete
+            placeholder={
+              district && school
+                ? "Group coaching name"
+                : "Select a district and school first for suggestions"
+            }
+            data={groupNameOptions}
+            {...form.getInputProps("groupCoachingName")}
+          />
+        </div>
+      </FormSection>
 
       {showErrorBanner && (
         <Notification
@@ -301,19 +318,9 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
           withCloseButton={false}
         >
           <Text size="sm">
-            A coachee with this email has already been submitted for this school.
-            To make changes, contact the team.
+            A coachee with this email has already been submitted for this
+            school. To make changes, contact the team.
           </Text>
-        </Notification>
-      )}
-      {isSuccessful === true && (
-        <Notification
-          icon={<IconCheck size={20} />}
-          color="teal"
-          title="Participant added to the roster!"
-          withCloseButton={false}
-        >
-          <Text size="sm">You can add another participant below.</Text>
         </Notification>
       )}
       {isSuccessful === false && (
@@ -324,6 +331,12 @@ export const ParticipantRosterForm = ({ districts }: Props) => {
           withCloseButton={false}
         />
       )}
+
+      <FormActions>
+        <Button type="submit" size="md" loading={isSubmitting}>
+          Add participant
+        </Button>
+      </FormActions>
     </form>
   );
 };

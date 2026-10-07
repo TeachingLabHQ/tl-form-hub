@@ -11,7 +11,7 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
   return (
     <>
       <div className="flex flex-col gap-1">
-        <h1 className="font-medium text-lg">
+        <h1 className="font-semibold">
           Did you complete group coaching today?*
         </h1>
         <Select
@@ -27,7 +27,7 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
       {form.values.didGroupCoaching === "Yes" && (
         <>
           <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">Names of participants*</h1>
+            <h1 className="font-semibold">Names of participants*</h1>
             <MultiSelect
               placeholder="Select participants"
               data={coacheeOptions}
@@ -37,7 +37,7 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">Participants were:*</h1>
+            <h1 className="font-semibold">Participants were:*</h1>
             <MultiSelect
               placeholder="Select a role"
               data={ROLE_OPTIONS}
@@ -47,7 +47,7 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">Topic of session:*</h1>
+            <h1 className="font-semibold">Topic of session:*</h1>
             <Textarea
               placeholder="Describe the topic of the session"
               {...form.getInputProps("groupTopic")}
@@ -55,7 +55,7 @@ export const GroupCoachingQuestion = ({ form, coacheeOptions }: Props) => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">Duration (mins):*</h1>
+            <h1 className="font-semibold">Duration (mins):*</h1>
             <Select
               placeholder="Select duration"
               data={GROUP_DURATION_OPTIONS}

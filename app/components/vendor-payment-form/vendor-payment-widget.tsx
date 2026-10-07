@@ -1,12 +1,12 @@
 import {
-  Button,
+  ActionIcon,
   NumberInput,
   Select,
   Text,
   Textarea,
   TextInput,
 } from "@mantine/core";
-import { IconX } from "@tabler/icons-react";
+import { IconTrash } from "@tabler/icons-react";
 import { RepeatableRowWidget } from "~/components/form-kit";
 import { cn } from "../../utils/utils";
 import {
@@ -39,9 +39,13 @@ const EMPTY_ROW: VendorPaymentRow = {
 };
 
 function gridClass(canDelete: boolean) {
-  return cn("grid gap-4 grid-cols-[2fr_2fr_1fr_1fr_1fr]", {
-    "grid-cols-[2fr_2fr_1fr_1fr_1fr_0.5fr]": canDelete,
-  });
+  return cn(
+    "grid gap-3 grid-cols-[minmax(0,2fr)_minmax(0,2fr)_6.5rem_6.5rem_7rem]",
+    {
+      "grid-cols-[minmax(0,2fr)_minmax(0,2fr)_6.5rem_6.5rem_7rem_2.25rem]":
+        canDelete,
+    }
+  );
 }
 
 export const VendorPaymentWidget = ({
@@ -187,11 +191,11 @@ export const VendorPaymentWidget = ({
       emptyRow={EMPTY_ROW}
       header={({ canDelete }) => (
         <div className={gridClass(canDelete)}>
-          <Text fw={500} size="md">Task</Text>
-          <Text fw={500} size="md">Project</Text>
-          <Text fw={500} size="md">Work Hours</Text>
-          <Text fw={500} size="md">Rate</Text>
-          <Text fw={500} size="md">Total Pay</Text>
+          <Text fw={600} size="sm">Task</Text>
+          <Text fw={600} size="sm">Project</Text>
+          <Text fw={600} size="sm">Work Hours</Text>
+          <Text fw={600} size="sm">Rate</Text>
+          <Text fw={600} size="sm">Total Pay</Text>
         </div>
       )}
       renderRow={(row, _index, { canDelete, updateRow, deleteRow }) => {
@@ -250,7 +254,7 @@ export const VendorPaymentWidget = ({
               onChange={(value) =>
                 updateRow({ workHours: value?.toString() || "" })
               }
-              placeholder="Enter work hours"
+              placeholder="Hours"
               max={taskData?.maxHours ?? undefined}
               min={0}
               readOnly={taskData?.fixedHours != null}
@@ -275,13 +279,15 @@ export const VendorPaymentWidget = ({
               placeholder="Total pay"
             />
             {canDelete && (
-              <Button
+              <ActionIcon
+                variant="subtle"
                 color="red"
+                size="input-sm"
                 onClick={deleteRow}
-                size="xs"
+                aria-label="Remove row"
               >
-                <IconX size={20} />
-              </Button>
+                <IconTrash size={18} />
+              </ActionIcon>
             )}
           </div>
 
@@ -294,7 +300,7 @@ export const VendorPaymentWidget = ({
               minRows={2}
               maxLength={2000}
             />
-            <Text size="xs" c="white" className="opacity-80 mt-1 text-right">
+            <Text size="xs" c="dimmed" className="opacity-80 mt-1 text-right">
               {(row.note || "").length}/2000
             </Text>
           </div>

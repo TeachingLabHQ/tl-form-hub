@@ -1,4 +1,5 @@
 import { Button } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useRef } from "react";
 
@@ -62,7 +63,14 @@ export const RepeatableRowWidget = <T,>({
         );
       })}
 
-      <Button onClick={handleAddRow}>{addRowLabel}</Button>
+      <Button
+        variant="light"
+        leftSection={<IconPlus size={16} />}
+        onClick={handleAddRow}
+        className="justify-self-start"
+      >
+        {addRowLabel}
+      </Button>
     </div>
   );
 };

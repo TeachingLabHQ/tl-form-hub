@@ -30,10 +30,10 @@ export const SessionDateQuestion = ({ form, options, loading }: Props) => {
 
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="font-medium text-lg">
+      <h1 className="font-semibold">
         Please select the date of your coaching session*
       </h1>
-      <Text size="sm" c="white">
+      <Text size="sm" c="dimmed">
         Note: Dates available in this dropdown are pulled directly from your district's Logistics Board in Monday.com. If the date you need is not listed, update the Logistics Board first. Once added there, the date will become available for selection in this form.
       </Text>
       <Select

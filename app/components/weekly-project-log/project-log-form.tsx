@@ -1,9 +1,15 @@
-import { Button, Loader, Notification, Textarea } from "@mantine/core";
+import { Button, Notification, Text, Textarea } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 import { IconAlertTriangle, IconCheck, IconX } from "@tabler/icons-react";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { LoadingSpinner } from "~/utils/LoadingSpinner";
+import {
+  FormActions,
+  FormCard,
+  FormPage,
+  FormSection,
+} from "~/components/form-kit";
 import { useSession } from "../auth/hooks/useSession";
 import { ProjectLogsWidget } from "./project-logs-widget";
 import { Reminders } from "./reminders";
@@ -66,7 +72,6 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
     },
   ]);
   const xIcon = <IconX size={20} />;
-  const checkIcon = <IconCheck size={20} />;
   const totalWorkHours = useMemo(
     () =>
       projectWorkEntries.reduce(
@@ -268,6 +273,12 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
         setSubmittedWeeks((weeks) => [...weeks, result.submitted]);
       }
       setIsSuccessful(true);
+      notifications.show({
+        color: "teal",
+        icon: <IconCheck size={18} />,
+        title: "Weekly project log submitted",
+        message: "To log another week, change the date on the form.",
+      });
       setIsSubmitted(false);
       setIsValidated(null);
       console.log("Form submitted successfully");
@@ -282,54 +293,56 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
   };
 
   return (
-    <div className="w-full h-full grid grid-cols-12 grid-rows-[auto_auto] gap-8 py-8">
-      <div className="row-start-1 col-start-2 col-span-10">
-        <Reminders items={REMINDER_ITEMS} />
-      </div>
-
-      <div className="row-start-2 col-start-2 col-span-8 h-fit p-8 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white">
+    <FormPage width="lg" aside={<Reminders items={REMINDER_ITEMS} />}>
+      <FormCard title="Weekly Project Log Form">
         <form
           onSubmit={(e) => {
             e.preventDefault();
             handleSubmit(form.values, e);
           }}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-8"
         >
-          <h1 className="font-bold text-3xl">Weekly Project Log Form</h1>
-          <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">
-              Enter the Monday of the week:
-            </h1>
-            <DateInput
-              value={selectedDate}
-              placeholder="Date input"
-              excludeDate={(date) => date.getDay() !== 1}
-              error={
-                isValidated === false && !selectedDate
-                  ? "Date is required"
-                  : null
-              }
-              onChange={handleDateChange}
-            />
-          </div>
-          <div>
+          <FormSection step={1} title="Week">
+            <div className="flex flex-col gap-1 sm:max-w-xs">
+              <h1 className="font-semibold">Enter the Monday of the week:</h1>
+              <DateInput
+                value={selectedDate}
+                placeholder="Date input"
+                excludeDate={(date) => date.getDay() !== 1}
+                error={
+                  isValidated === false && !selectedDate
+                    ? "Date is required"
+                    : null
+                }
+                onChange={handleDateChange}
+              />
+            </div>
+          </FormSection>
+
+          <FormSection step={2} title="Hours by project">
             <ProjectLogsWidget
               isValidated={isValidated}
               projectWorkEntries={projectWorkEntries}
               setProjectWorkEntries={setProjectWorkEntries}
               projectData={currentProjectData}
             />
-          </div>
-          <div className="flex flex-col gap-1">
-            <h1 className="font-medium text-lg">
-              Do you have any additional comments?
-            </h1>
-            <Textarea
-              placeholder=""
-              key={form.key("comment")}
-              {...form.getInputProps("comment")}
-            />
-          </div>
+          </FormSection>
+
+          <FormSection step={3} title="Comments">
+            <div className="flex flex-col gap-1">
+              <h1 className="font-semibold">
+                Do you have any additional comments?
+              </h1>
+              <Textarea
+                placeholder=""
+                autosize
+                minRows={3}
+                key={form.key("comment")}
+                {...form.getInputProps("comment")}
+              />
+            </div>
+          </FormSection>
+
           {existingLogForWeek && isSuccessful !== true && selectedDate && (
             <Notification
               icon={<IconAlertTriangle size={20} />}
@@ -349,30 +362,6 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
               . To log a different week, change the date above.
             </Notification>
           )}
-          {/* Stays visible but locked once the selected week has a log;
-              picking another week unlocks it */}
-          <Button
-            type="submit"
-            loading={isSubmitted && isValidated === true && isSuccessful === null}
-            disabled={Boolean(existingLogForWeek)}
-          >
-            {existingLogForWeek
-              ? isSuccessful === true
-                ? "Submitted"
-                : "Already submitted"
-              : "Submit"}
-          </Button>
-          {isSuccessful === true && (
-            <Notification
-              icon={checkIcon}
-              color="teal"
-              title="Form is submitted successfully!"
-              mt="md"
-              withCloseButton={false}
-            >
-              To log another week, change the date above.
-            </Notification>
-          )}
           {isSuccessful === false && (
             <Notification
               icon={xIcon}
@@ -381,15 +370,38 @@ export const ProjectLogForm: React.FC<ProjectLogFormProps> = ({ projectData }) =
               withCloseButton={false}
             ></Notification>
           )}
-        </form>
-      </div>
 
-      <div className="row-start-2 col-start-10 col-span-2 flex flex-col items-center">
-        <div className="w-fit py-5 px-10 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white flex flex-col items-center gap-3">
-          <h3 className="text-xl font-bold">Total Time</h3>
-          <h1 className="text-xl font-bold">{totalWorkHours}</h1>
-        </div>
-      </div>
-    </div>
+          <FormActions
+            summary={
+              <div className="flex items-baseline gap-2">
+                <Text size="sm" c="dimmed">
+                  Total time
+                </Text>
+                <Text size="xl" fw={700}>
+                  {totalWorkHours} hrs
+                </Text>
+              </div>
+            }
+          >
+            {/* Stays visible but locked once the selected week has a log;
+                picking another week unlocks it */}
+            <Button
+              type="submit"
+              size="md"
+              loading={
+                isSubmitted && isValidated === true && isSuccessful === null
+              }
+              disabled={Boolean(existingLogForWeek)}
+            >
+              {existingLogForWeek
+                ? isSuccessful === true
+                  ? "Submitted"
+                  : "Already submitted"
+                : "Submit"}
+            </Button>
+          </FormActions>
+        </form>
+      </FormCard>
+    </FormPage>
   );
 };

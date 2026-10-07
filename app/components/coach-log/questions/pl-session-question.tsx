@@ -18,10 +18,10 @@ type Props = {
 export const PlSessionQuestion = ({ form, fieldName, onChange }: Props) => {
   return (
     <div className="flex flex-col gap-1">
-      <h1 className="font-medium text-lg">
+      <h1 className="font-semibold">
         Are you logging a Professional Learning Session?*
       </h1>
-      <Text size="sm" c="white">
+      <Text size="sm" c="dimmed">
         Professional Learning and coaching activities must be logged separately.
         If you are submitting a Professional Learning session, do not include any
         coaching activities in this log.
