@@ -16,12 +16,14 @@ import {
   dataEvaluationTaskOptions,
   facilitationTaskOptions,
   filterVendorPaymentProjects,
+  isQuarterHourIncrement,
   parseStoredTask,
   presentationDesignTaskOptions,
   StoredTask,
   TaskDetails,
   TL_INTERNAL_ONLY_TASKS,
   TL_INTERNAL_PROJECT,
+  WORK_HOURS_STEP,
 } from "./utils";
 
 type VendorPaymentRow = {
@@ -253,12 +255,17 @@ export const VendorPaymentWidget = ({
               placeholder="Enter work hours"
               max={taskData?.maxHours ?? undefined}
               min={0}
+              step={WORK_HOURS_STEP}
               readOnly={taskData?.fixedHours != null}
               error={
                 isValidated === false &&
                 (!row.workHours || Number(row.workHours) === 0)
                   ? "Work Hours are required"
-                  : null
+                  : isValidated === true &&
+                      row.workHours &&
+                      !isQuarterHourIncrement(row.workHours)
+                    ? "Use 15-minute increments (e.g. 1, 1.25, 1.5)"
+                    : null
               }
             />
             <TextInput

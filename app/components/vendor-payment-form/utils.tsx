@@ -26,6 +26,22 @@ export const parseStoredTask = (task: string): StoredTask | null => {
   }
 };
 
+// The FY27 Facilitation Payment Guide pays hourly work in 15-minute increments
+export const WORK_HOURS_STEP = 0.25;
+
+/**
+ * True when a work-hours value is a positive whole number of 15-minute
+ * increments (e.g. 0.25, 1.5, 2.75). Empty or non-numeric input is false.
+ */
+export const isQuarterHourIncrement = (workHours: string): boolean => {
+  const hours = Number(workHours);
+  if (!workHours || !workHours.trim() || !Number.isFinite(hours) || hours <= 0) {
+    return false;
+  }
+  const steps = hours / WORK_HOURS_STEP;
+  return Math.abs(steps - Math.round(steps)) < 1e-9;
+};
+
 export enum Tier {
   TIER_1 = "Tier 1",
   TIER_2 = "Tier 2",
@@ -56,6 +72,7 @@ export const TL_INTERNAL_ONLY_TASKS = [
   "Learning Opportunities w/ Facilitation Team",
 ];
 
+// Rates and tasks per the FY27 Facilitation Payment Guide
 export const facilitationTaskOptions: TaskDetails[] = [
   {
     taskName: "Onboarding",
@@ -101,14 +118,6 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 4": null,
     maxHours: null,
     fixedHours: 1,
-  },
-  {
-    taskName: "Mentoring of other Facilitation Contractors",
-    "Tier 1": null,
-    "Tier 2": 80,
-    "Tier 3": 80,
-    "Tier 4": null,
-    maxHours: null,
   },
   {
     taskName: "Collaboration",
