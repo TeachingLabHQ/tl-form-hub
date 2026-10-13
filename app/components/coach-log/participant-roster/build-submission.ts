@@ -5,8 +5,8 @@ type Coach = { coachMondayId: string; responderEmail: string };
 
 /**
  * Maps validated form values + the effective coach identity to the flat
- * {@link ParticipantRosterSubmission} payload. "Other" write-ins and the
- * participant name are resolved server-side (the service), so this stays a thin
+ * {@link ParticipantRosterSubmission} payload. "Other" write-ins (trimmed and
+ * gated on "Other" being chosen) and the participant name are resolved server-side (the service), so this stays a thin
  * value → payload mapper kept out of the component.
  */
 export function buildParticipantRosterSubmission(
