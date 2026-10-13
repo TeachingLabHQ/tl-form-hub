@@ -261,7 +261,9 @@ export const VendorPaymentWidget = ({
                 isValidated === false &&
                 (!row.workHours || Number(row.workHours) === 0)
                   ? "Work Hours are required"
-                  : row.workHours && !isQuarterHourIncrement(row.workHours)
+                  : isValidated === true &&
+                      row.workHours &&
+                      !isQuarterHourIncrement(row.workHours)
                     ? "Use 15-minute increments (e.g. 1, 1.25, 1.5)"
                     : null
               }
