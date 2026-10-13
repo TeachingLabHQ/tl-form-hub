@@ -12,13 +12,15 @@ import { ParticipantRosterEntry } from "./model";
 //   dropdown_mkth57c8  = Content Area           dropdown_mktbacaf = Grade Level(s)
 //   coaching_partners  = Site/District           short_text66 = School
 //   text_mm5w13st      = Group Coaching Name     text_mm5w6tnt = Nisa Group ID
+//   text_mm83wne1      = Participant Role (Other) text_mm83dj9h = Content Area (Other)
 export const PARTICIPANT_ROSTER_BOARD_ID = 18416567790;
 const ROSTER_GROUP_ID = "group_mktb1yqy";
 
 // Dropdown columns take a comma-separated list of labels (matching the legacy
 // serialization; no surrounding spaces, since the board's labels have none).
-// create_labels_if_missing on the mutation handles any label not yet on the
-// board, but our option lists already match the existing labels exactly.
+// Only existing labels can be written: despite create_labels_if_missing, Monday
+// rejects the whole create_item for an unknown dropdown label on this board. So
+// "Other" write-ins go to their own text columns, never into a dropdown.
 const labels = (values: string[]) => values.join(",");
 
 const normalize = (v: unknown) => String(v ?? "").trim().toLowerCase();
@@ -71,6 +73,10 @@ export function participantRosterRepository(): ParticipantRosterRepository {
           columns.dropdown_mktbega2 = labels(entry.supports); // Service Type
         if (entry.contentAreas.length)
           columns.dropdown_mkth57c8 = labels(entry.contentAreas); // Content Area
+        if (entry.roleOther)
+          columns.text_mm83wne1 = entry.roleOther; // Participant Role (Other)
+        if (entry.contentAreaOther)
+          columns.text_mm83dj9h = entry.contentAreaOther; // Content Area (Other)
         if (entry.grades.length)
           columns.dropdown_mktbacaf = labels(entry.grades); // Grade Level(s)
         if (entry.groupCoachingName) {

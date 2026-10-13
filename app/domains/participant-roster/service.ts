@@ -32,17 +32,13 @@ export function participantRosterService(
 ): ParticipantRosterService {
   return {
     submitParticipant: async (submission) => {
-      // Resolve "Other" write-ins: the single-select role becomes the typed
-      // text; in the multi-select content areas, "Other" is swapped for it.
-      const role =
-        submission.role === OTHER ? submission.roleOther.trim() : submission.role;
-      const contentAreas = submission.contentAreas.flatMap((c) =>
-        c === OTHER
-          ? submission.contentAreaOther.trim()
-            ? [submission.contentAreaOther.trim()]
-            : []
-          : [c]
-      );
+      // "Other" stays the dropdown label (the board rejects new labels); the
+      // write-ins go to their own text columns, and only when "Other" is chosen.
+      const roleOther =
+        submission.role === OTHER ? submission.roleOther.trim() : "";
+      const contentAreaOther = submission.contentAreas.includes(OTHER)
+        ? submission.contentAreaOther.trim()
+        : "";
       const participantName = `${titleCase(submission.firstName)} ${titleCase(
         submission.lastName
       )}`.trim();
@@ -61,9 +57,11 @@ export function participantRosterService(
         responderEmail: submission.responderEmail,
         participantName,
         email: submission.email.trim(),
-        role,
+        role: submission.role,
+        roleOther,
         supports: submission.supports,
-        contentAreas,
+        contentAreas: submission.contentAreas,
+        contentAreaOther,
         grades: submission.grades,
         groupCoachingName,
         nisaGroupId,
