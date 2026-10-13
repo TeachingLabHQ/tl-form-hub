@@ -56,6 +56,7 @@ export const TL_INTERNAL_ONLY_TASKS = [
   "Learning Opportunities w/ Facilitation Team",
 ];
 
+// Rates and tasks per the FY27 Facilitation Payment Guide
 export const facilitationTaskOptions: TaskDetails[] = [
   {
     taskName: "Onboarding",
@@ -101,14 +102,6 @@ export const facilitationTaskOptions: TaskDetails[] = [
     "Tier 4": null,
     maxHours: null,
     fixedHours: 1,
-  },
-  {
-    taskName: "Mentoring of other Facilitation Contractors",
-    "Tier 1": null,
-    "Tier 2": 80,
-    "Tier 3": 80,
-    "Tier 4": null,
-    maxHours: null,
   },
   {
     taskName: "Collaboration",
