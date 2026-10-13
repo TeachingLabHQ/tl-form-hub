@@ -3,7 +3,10 @@ import { vendorPaymentService } from "~/domains/vendor-payment/service";
 import { vendorPaymentRepository } from "~/domains/vendor-payment/repository";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
 import { formatTierData } from "~/utils/utils";
-import { parseStoredTask } from "~/components/vendor-payment-form/utils";
+import {
+  isQuarterHourIncrement,
+  parseStoredTask,
+} from "~/components/vendor-payment-form/utils";
 
 export async function action({ request }: ActionFunctionArgs) {
   try {
@@ -39,6 +42,12 @@ export async function action({ request }: ActionFunctionArgs) {
       const taskData = parseStoredTask(entry.task);
       if (!taskData) {
         return json({ error: "Invalid task data" }, { status: 400 });
+      }
+      if (!isQuarterHourIncrement(String(entry.workHours ?? ""))) {
+        return json(
+          { error: "Work hours must be in 15-minute increments" },
+          { status: 400 }
+        );
       }
       const hours = parseFloat(entry.workHours);
 

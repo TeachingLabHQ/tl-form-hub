@@ -7,6 +7,7 @@ import { CoachFacilitatorDetails } from "~/domains/coachFacilitator/repository";
 import { Reminders } from "../weekly-project-log/reminders";
 import { PaymentHistory } from "./payment-history/payment-history";
 import {
+  isQuarterHourIncrement,
   parseStoredTask,
   REMINDER_ITEMS,
   shouldExcludeVendorPaymentDate,
@@ -109,6 +110,15 @@ export const VendorPaymentForm = ({ cfDetails }: { cfDetails: CoachFacilitatorDe
 
     if (hasEmptyFields) {
       setError("Please fill in all fields");
+      return;
+    }
+
+    if (
+      vendorPaymentEntries.some(
+        (entry) => !isQuarterHourIncrement(entry.workHours)
+      )
+    ) {
+      setError("Work hours must be in 15-minute increments (e.g. 1, 1.25, 1.5).");
       return;
     }
 
