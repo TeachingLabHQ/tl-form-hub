@@ -1,0 +1,127 @@
+import { describe, expect, it, vi } from "vitest";
+import type { ContractorIntake, SavedProfile } from "./model";
+import type { ContractorAvailabilityRepository } from "./repository";
+import {
+  contractorAvailabilityService,
+  mergeRoster,
+  sanitizeProfile,
+  validateBookout,
+} from "./service";
+import { profileFromIntake } from "./availability";
+
+const intake = (email: string, name: string): ContractorIntake => ({
+  detailsItemId: `d-${email}`,
+  name,
+  email,
+  city: "",
+  state: "NY",
+  timeZone: "",
+  contentAreas: [],
+  intakeProfile: profileFromIntake({ travel: "Virtual", weekdays: "", support: "", scheduleNotes: "", state: "NY" }),
+});
+
+const saved = (email: string, bookoutIds: string[] = []): SavedProfile => ({
+  itemId: `item-${email}`,
+  email,
+  profile: { ...intake(email, "").intakeProfile, confirmedOn: "2026-10-01", daysPerWeek: 3 },
+  bookouts: bookoutIds.map((id) => ({
+    id,
+    type: "nontl",
+    start: "2026-11-10",
+    end: "2026-11-10",
+    portion: "Full day",
+    note: "",
+  })),
+});
+
+const repo = (overrides: Partial<ContractorAvailabilityRepository> = {}) =>
+  ({
+    fetchContractors: vi.fn().mockResolvedValue({ data: [intake("a@tl.org", "Ann")], error: null }),
+    fetchSavedProfiles: vi.fn().mockResolvedValue({ data: [], error: null }),
+    createProfile: vi.fn().mockResolvedValue({ data: "new-item", error: null }),
+    updateProfile: vi.fn().mockResolvedValue({ data: "item-a@tl.org", error: null }),
+    createBookout: vi.fn().mockResolvedValue({ data: "sub-1", error: null }),
+    deleteBookout: vi.fn().mockResolvedValue({ data: "sub-1", error: null }),
+    ...overrides,
+  }) as unknown as ContractorAvailabilityRepository;
+
+describe("mergeRoster", () => {
+  it("uses the saved profile when there is one, else the intake profile", () => {
+    const roster = mergeRoster([intake("b@tl.org", "Bo"), intake("a@tl.org", "Ann")], [saved("b@tl.org")]);
+    expect(roster.map((c) => [c.name, c.profileSource, c.profileItemId])).toEqual([
+      ["Ann", "intake", null],
+      ["Bo", "saved", "item-b@tl.org"],
+    ]);
+  });
+});
+
+describe("sanitizeProfile", () => {
+  it("drops unknown labels and clamps numbers", () => {
+    const p = sanitizeProfile({
+      formats: ["virtual", "teleport"] as never,
+      regions: ["Mars", "West"],
+      weekdays: ["Sat", "Mon"] as never,
+      months: [11, 3, 3, 15] as never,
+      daysPerWeek: 9,
+      outsideWork: "Astronaut",
+    });
+    expect(p).toMatchObject({
+      formats: ["virtual"],
+      regions: ["West"],
+      weekdays: ["Mon"],
+      months: [3, 11],
+      daysPerWeek: 5,
+      outsideWork: "",
+    });
+  });
+});
+
+describe("validateBookout", () => {
+  it("rejects an end date before the start", () => {
+    const r = validateBookout({ type: "nontl", start: "2026-11-10", end: "2026-11-09" });
+    expect(r.error?.message).toMatch(/before the start/);
+  });
+
+  it("defaults a missing end to the start and the portion to a full day", () => {
+    const r = validateBookout({ type: "fac", start: "2026-11-10" });
+    expect(r.data).toMatchObject({ end: "2026-11-10", portion: "Full day" });
+  });
+});
+
+describe("contractor availability service", () => {
+  it("creates the CBS item on first save, stamped with today's date", async () => {
+    const r = repo();
+    const result = await contractorAvailabilityService(r).saveProfile("A@TL.org", saved("a@tl.org").profile);
+    expect(r.createProfile).toHaveBeenCalledOnce();
+    expect(r.updateProfile).not.toHaveBeenCalled();
+    expect(result.data?.profileSource).toBe("saved");
+    expect(result.data?.profile.confirmedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("creates the CBS item before the first bookout", async () => {
+    const r = repo();
+    await contractorAvailabilityService(r).addBookout("a@tl.org", {
+      type: "nontl",
+      start: "2026-11-10",
+      end: "2026-11-12",
+      portion: "Full day",
+      note: "",
+    });
+    expect(r.createBookout).toHaveBeenCalledWith("new-item", "Non-TL bookout · Nov 10–12", expect.anything());
+  });
+
+  // The route has no server-side auth, so this is what keeps a crafted
+  // request from deleting arbitrary Monday items
+  it("only deletes a bookout that belongs to the contractor", async () => {
+    const r = repo({
+      fetchSavedProfiles: vi.fn().mockResolvedValue({ data: [saved("a@tl.org", ["sub-1"])], error: null }),
+    });
+    const service = contractorAvailabilityService(r);
+    expect((await service.removeBookout("a@tl.org", "someone-elses-item")).error?.message).toBe(
+      "Bookout not found"
+    );
+    expect(r.deleteBookout).not.toHaveBeenCalled();
+    await service.removeBookout("a@tl.org", "sub-1");
+    expect(r.deleteBookout).toHaveBeenCalledWith("sub-1");
+  });
+});
