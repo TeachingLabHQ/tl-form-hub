@@ -19,10 +19,11 @@ import { Panel } from "../panel";
 
 const PAGE_SIZE = 10;
 
+// Filled badge shades that pass AA on the dark glass (autoContrast picks the text)
 const STATUS_COLORS: Record<ContractorStatus, string> = {
-  available: "green",
-  booked: "orange",
-  stale: "gray",
+  available: "green.9",
+  booked: "orange.4",
+  stale: "gray.7",
 };
 // Bar colors for the status breakdown, matching the badges
 export const STATUS_BAR: Record<ContractorStatus, string> = {
@@ -31,15 +32,8 @@ export const STATUS_BAR: Record<ContractorStatus, string> = {
   stale: "bg-gray-300",
 };
 
-// Light badge with a darker text shade so it passes AA on white
 const StatusBadge = ({ status }: { status: ContractorStatus }) => (
-  <Badge
-    tt="none"
-    color={STATUS_COLORS[status]}
-    c={`${STATUS_COLORS[status]}.9`}
-    variant="light"
-    className="whitespace-nowrap shrink-0"
-  >
+  <Badge tt="none" color={STATUS_COLORS[status]} autoContrast className="whitespace-nowrap shrink-0">
     {CONTRACTOR_STATUS_LABELS[status]}
   </Badge>
 );
@@ -138,18 +132,18 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
             <button
               type="button"
               onClick={() => onOpen(c.email)}
-              className={cn("w-full rounded-xl bg-white/95 px-3 py-2 text-left text-gray-900", FOCUS_RING)}
+              className={cn("w-full rounded-xl bg-white/[0.06] hover:bg-white/10 px-3 py-2 text-left", FOCUS_RING)}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="font-medium truncate">{c.name}</div>
-                  <div className="text-xs text-gray-600 truncate">
+                  <div className="text-xs text-white/90 truncate">
                     {[c.city, c.state].filter(Boolean).join(", ") || "—"} · {REACH_SHORT[travelReach(c.profile)]}
                   </div>
                 </div>
                 <StatusBadge status={s} />
               </div>
-              <div className="mt-1 text-xs text-gray-600">
+              <div className="mt-1 text-xs text-white/90">
                 GAP {c.profile.confirmedOn ? formatDate(c.profile.confirmedOn) : "never updated"} ·{" "}
                 {upcoming.length === 0
                   ? "no upcoming bookouts"
@@ -163,11 +157,13 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
       <Table.ScrollContainer minWidth={860} className="hidden sm:block">
         <Table
           highlightOnHover
+          highlightOnHoverColor="rgba(255, 255, 255, 0.08)"
+          borderColor="rgba(255, 255, 255, 0.15)"
           verticalSpacing={6}
           fz="sm"
-          className="bg-white/95 text-gray-900 rounded-xl overflow-hidden"
+          className="bg-white/[0.06] text-white rounded-xl overflow-hidden"
         >
-          <Table.Thead className="bg-gray-100 text-xs text-gray-600">
+          <Table.Thead className="bg-white/10 text-xs text-white/90">
             <Table.Tr>
               <Table.Th>Name</Table.Th>
               <Table.Th>Travel radius</Table.Th>
@@ -182,7 +178,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
             {visible.map(({ c, status: s, upcoming }) => (
               <Table.Tr
                 key={c.email}
-                className="cursor-pointer outline-none focus-visible:bg-blue-50 focus-visible:shadow-[inset_3px_0_0_#0053B3]"
+                className="cursor-pointer outline-none focus-visible:bg-white/10 focus-visible:shadow-[inset_3px_0_0_white]"
                 tabIndex={0}
                 aria-label={`Open ${c.name}'s profile`}
                 onClick={() => onOpen(c.email)}
@@ -195,7 +191,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
               >
                 <Table.Td>
                   <div className="font-medium">{c.name}</div>
-                  <div className="text-xs text-gray-600">{[c.city, c.state].filter(Boolean).join(", ") || "—"}</div>
+                  <div className="text-xs text-white/90">{[c.city, c.state].filter(Boolean).join(", ") || "—"}</div>
                 </Table.Td>
                 <Table.Td>{REACH_SHORT[travelReach(c.profile)]}</Table.Td>
                 <Table.Td className="tabular-nums">
@@ -206,23 +202,23 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
                   {c.profile.confirmedOn ? (
                     formatDate(c.profile.confirmedOn)
                   ) : (
-                    <span className="text-gray-600">Never</span>
+                    <span className="text-white/90">Never</span>
                   )}
                 </Table.Td>
                 <Table.Td>
                   {upcoming.length === 0 ? (
-                    <span className="text-gray-600">None logged</span>
+                    <span className="text-white/90">None logged</span>
                   ) : (
                     <div className="flex flex-col gap-0.5">
                       {upcoming.slice(0, 2).map((b) => (
                         <span key={b.id} className="inline-flex items-center gap-1.5 whitespace-nowrap">
                           <span className={cn("h-2 w-2 rounded-sm shrink-0", BOOKOUT_CHIP[b.type])} />
                           <span className="tabular-nums">{formatRange(b.start, b.end)}</span>
-                          <span className="text-xs text-gray-600">{bookoutTypeLabel(b.type)}</span>
+                          <span className="text-xs text-white/90">{bookoutTypeLabel(b.type)}</span>
                         </span>
                       ))}
                       {upcoming.length > 2 && (
-                        <span className="text-xs text-gray-600">+{upcoming.length - 2} more</span>
+                        <span className="text-xs text-white/90">+{upcoming.length - 2} more</span>
                       )}
                     </div>
                   )}

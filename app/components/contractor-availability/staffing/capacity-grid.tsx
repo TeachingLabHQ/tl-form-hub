@@ -55,12 +55,12 @@ export const CapacityGrid = ({
         <table className="border-separate border-spacing-[2px] text-xs">
           <thead className="sticky top-0 z-10">
             <tr>
-              <th className="sticky left-0 z-20 bg-[#3d6ea8]/90 backdrop-blur-sm" />
+              <th className="sticky left-0 z-20 bg-[#1c3355] backdrop-blur-sm" />
               {days.map((d, i) => (
                 <th
                   key={d}
                   className={cn(
-                    "font-normal text-[10px] text-white/90 w-4 leading-3 bg-[#3d6ea8]/60 backdrop-blur-sm",
+                    "font-normal text-[10px] text-white/90 w-4 leading-3 bg-[#1c3355] backdrop-blur-sm",
                     i > 0 && parseDate(d).getDay() === 1 && "pl-1.5"
                   )}
                 >
@@ -72,7 +72,7 @@ export const CapacityGrid = ({
           <tbody>
             {rows.map((c) => (
               <tr key={c.email}>
-                <th className="sticky left-0 z-10 bg-[#3d6ea8]/80 backdrop-blur-sm pr-3 text-left font-medium whitespace-nowrap">
+                <th className="sticky left-0 z-10 bg-[#1c3355] backdrop-blur-sm pr-3 text-left font-medium whitespace-nowrap">
                   <button type="button" className="hover:underline" onClick={() => onOpen(c.email)}>
                     {c.name}
                   </button>
