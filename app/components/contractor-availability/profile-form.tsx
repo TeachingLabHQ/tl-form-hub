@@ -44,9 +44,9 @@ const ago = (days: number) =>
 
 export const ProfileAgeBadge = ({ profile }: { profile: AvailabilityProfile }) => {
   const age = profileAgeDays(profile);
-  if (age === null) return <Badge color="yellow" variant="light">Not confirmed yet</Badge>;
+  if (age === null) return <Badge tt="none" color="yellow" variant="light">Not confirmed yet</Badge>;
   return (
-    <Badge color={age > STALE_PROFILE_DAYS ? "red" : "teal"} variant="light">
+    <Badge tt="none" color={age > STALE_PROFILE_DAYS ? "red" : "teal"} variant="light">
       Updated {ago(age)}
     </Badge>
   );
@@ -102,10 +102,12 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
           </p>
         )}
 
+        {home && (
+          <p className="text-xs text-white/75 -mt-1">Home base: {home} (from your contractor record)</p>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
           <Select
             label="Travel preference"
-            description={home ? `Home base: ${home}` : undefined}
             classNames={FIELD_CLASSES}
             data={options(TRAVEL_REACH_LABELS)}
             value={reach}
@@ -181,7 +183,9 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
             />
           )}
           <div className="sm:col-span-2">
-            <p className={FIELD_CLASSES.label}>Days you usually work</p>
+            <p className={FIELD_CLASSES.label}>
+              Days you usually work <span className="font-normal text-white/70">(none picked = any weekday)</span>
+            </p>
             <Chip.Group
               multiple
               value={values.weekdays}

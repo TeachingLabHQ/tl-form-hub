@@ -179,7 +179,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
                   )}
                 </Table.Td>
                 <Table.Td>
-                  <Badge color={STATUS_COLORS[s]} variant="light" className="whitespace-nowrap">
+                  <Badge tt="none" color={STATUS_COLORS[s]} variant="light" className="whitespace-nowrap">
                     {CONTRACTOR_STATUS_LABELS[s]}
                   </Badge>
                 </Table.Td>

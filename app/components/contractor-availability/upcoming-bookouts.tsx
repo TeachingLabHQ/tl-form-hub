@@ -52,7 +52,7 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
                   </span>
                 )}
               </div>
-              <Badge color={BOOKOUT_COLORS[b.type]} variant="filled" size="sm" className="shrink-0">
+              <Badge tt="none" color={BOOKOUT_COLORS[b.type]} variant="filled" size="sm" className="shrink-0">
                 {bookoutTypeLabel(b.type)}
               </Badge>
               {confirming === b.id ? (

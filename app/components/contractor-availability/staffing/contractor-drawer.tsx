@@ -108,13 +108,13 @@ export const ContractorDrawer = ({
             </Text>
             <Group gap="xs" mt="xs">
               {c.profileSource === "intake" ? (
-                <Badge color="yellow">Onboarding answers only</Badge>
+                <Badge tt="none" color="yellow">Onboarding answers only</Badge>
               ) : (
                 <ProfileAgeBadge profile={c.profile} />
               )}
-              <Badge color="gray">{TRAVEL_REACH_LABELS[travelReach(c.profile)]}</Badge>
+              <Badge tt="none" color="gray">{TRAVEL_REACH_LABELS[travelReach(c.profile)]}</Badge>
               {c.profile.support.map((s) => (
-                <Badge key={s} color="blue" variant="light">
+                <Badge tt="none" key={s} color="blue" variant="light">
                   {s}
                 </Badge>
               ))}
@@ -179,7 +179,7 @@ export const ContractorDrawer = ({
                       className={`flex flex-wrap items-center gap-2 py-1.5 ${b.end < today ? "opacity-55" : ""}`}
                     >
                       <span className="min-w-[110px] font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
-                      <Badge size="sm" color={BOOKOUT_COLORS[b.type]}>
+                      <Badge tt="none" size="sm" color={BOOKOUT_COLORS[b.type]}>
                         {bookoutTypeLabel(b.type)}
                       </Badge>
                       <span className="text-gray-600">

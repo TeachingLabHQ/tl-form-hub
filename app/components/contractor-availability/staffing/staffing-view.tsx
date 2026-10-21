@@ -52,7 +52,7 @@ const Bars = ({
             key={b.key}
             {...(onSelect && { type: "button" as const, onClick: () => onSelect(b.key) })}
             className={cn(
-              "grid grid-cols-[minmax(0,140px)_minmax(0,1fr)_88px] items-center gap-3 rounded-md px-1.5 py-1 text-left text-sm",
+              "grid grid-cols-[minmax(0,190px)_minmax(0,1fr)_88px] items-center gap-3 rounded-md px-1.5 py-1 text-left text-sm",
               onSelect && "hover:bg-white/15",
               b.active && "bg-white/20"
             )}

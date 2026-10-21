@@ -57,7 +57,6 @@ const ResultRow = ({
         <div className="text-xs text-white/75 truncate">
           {[c.city, c.state].filter(Boolean).join(", ")}
           {match.travelNote ? ` · ${match.travelNote}` : ""}
-          {c.profileSource === "intake" ? " · onboarding answers" : ""}
         </div>
       </div>
       <div className="min-w-0">
@@ -83,7 +82,7 @@ const ResultRow = ({
           </div>
         )}
       </div>
-      <Badge color={match.openDays === total ? "teal" : "yellow"} variant="filled" className="justify-self-start md:justify-self-end">
+      <Badge tt="none" color={match.openDays === total ? "teal" : "yellow"} variant="filled" className="justify-self-start md:justify-self-end">
         {match.openDays}/{total} days
       </Badge>
     </button>

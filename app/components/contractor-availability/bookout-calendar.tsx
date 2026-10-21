@@ -124,7 +124,7 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
           <span className="h-2.5 w-2.5 rounded-sm bg-black/15" />
           Outside your usual days
         </span>
-        <span className="ml-auto text-white/75">Tap a day to start a bookout there</span>
+        <span className="w-full text-white/70">Tap a day to start a bookout on it.</span>
       </div>
     </div>
   );
