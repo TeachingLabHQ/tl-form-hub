@@ -10,7 +10,7 @@ import { ParticipantRosterEntry } from "./model";
 //   email_mktht3ax     = Participant Email     email_mkthfrq7 = Responder's Email
 //   dropdown_mkth66bp  = Participant Role       dropdown_mktbega2 = Service Type
 //   dropdown_mkth57c8  = Content Area           dropdown_mktbacaf = Grade Level(s)
-//   coaching_partners  = Site/District           short_text66 = School
+//   dropdown_mm8b6syk  = Site/District           short_text66 = School
 //   text_mm5w13st      = Group Coaching Name     text_mm5w6tnt = Nisa Group ID
 //   text_mm83wne1      = Participant Role (Other) text_mm83dj9h = Content Area (Other)
 export const PARTICIPANT_ROSTER_BOARD_ID = 18416567790;
@@ -55,7 +55,7 @@ export function participantRosterRepository(): ParticipantRosterRepository {
         const columns: Record<string, unknown> = {
           text_mktbkbvy: entry.participantName, // Participant Name
           dropdown_mkth66bp: entry.role, // Participant Role
-          coaching_partners: { label: entry.district }, // Site/District (status)
+          dropdown_mm8b6syk: entry.district, // Site/District (dropdown)
           short_text66: entry.school, // School
         };
         if (entry.email)
@@ -122,8 +122,8 @@ export function participantRosterRepository(): ParticipantRosterRepository {
         const wantDistrict = normalize(district);
         const wantSchool = normalize(school);
 
-        const rules = `[{column_id: "email_mktht3ax", operator: contains_text, compare_value: "${escQueryValue(email)}"}, {column_id: "coaching_partners", operator: contains_text, compare_value: "${escQueryValue(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${escQueryValue(school)}"}]`;
-        const columnIds = `["email_mktht3ax","coaching_partners","short_text66"]`;
+        const rules = `[{column_id: "email_mktht3ax", operator: contains_text, compare_value: "${escQueryValue(email)}"}, {column_id: "dropdown_mm8b6syk", operator: contains_text, compare_value: "${escQueryValue(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${escQueryValue(school)}"}]`;
+        const columnIds = `["email_mktht3ax","dropdown_mm8b6syk","short_text66"]`;
         const buildQuery = (cursor: string | null) =>
           cursor
             ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { column_values(ids:${columnIds}) { id text } } } }`
@@ -134,7 +134,7 @@ export function participantRosterRepository(): ParticipantRosterRepository {
             item.column_values.find((c: any) => c.id === id);
           return (
             normalize(col("email_mktht3ax")?.text) === wantEmail &&
-            normalize(col("coaching_partners")?.text) === wantDistrict &&
+            normalize(col("dropdown_mm8b6syk")?.text) === wantDistrict &&
             normalize(col("short_text66")?.text) === wantSchool
           );
         };
@@ -221,8 +221,8 @@ export function participantRosterRepository(): ParticipantRosterRepository {
         const wantSchool = normalize(school);
         if (!wantDistrict || !wantSchool) return { data: [], error: null };
 
-        const rules = `[{column_id: "coaching_partners", operator: contains_text, compare_value: "${escQueryValue(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${escQueryValue(school)}"}]`;
-        const columnIds = `["text_mm5w13st","coaching_partners","short_text66"]`;
+        const rules = `[{column_id: "dropdown_mm8b6syk", operator: contains_text, compare_value: "${escQueryValue(district)}"}, {column_id: "short_text66", operator: contains_text, compare_value: "${escQueryValue(school)}"}]`;
+        const columnIds = `["text_mm5w13st","dropdown_mm8b6syk","short_text66"]`;
         const buildQuery = (cursor: string | null) =>
           cursor
             ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { column_values(ids:${columnIds}) { id text } } } }`
@@ -232,7 +232,7 @@ export function participantRosterRepository(): ParticipantRosterRepository {
           const col = (id: string) =>
             item.column_values.find((c: any) => c.id === id);
           if (
-            normalize(col("coaching_partners")?.text) !== wantDistrict ||
+            normalize(col("dropdown_mm8b6syk")?.text) !== wantDistrict ||
             normalize(col("short_text66")?.text) !== wantSchool
           )
             return null;
