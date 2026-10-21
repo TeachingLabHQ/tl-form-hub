@@ -34,7 +34,8 @@ const SHEETS_READONLY_SCOPE =
   "https://www.googleapis.com/auth/spreadsheets.readonly";
 
 // Coachee/teacher roster board: "IN DEV: SY26-27 Participant Roster". Keeps the
-// legacy column IDs (verified on this board): coaching_partners = Site/District,
+// legacy column IDs (verified on this board), except Site/District, which moved
+// from the coaching_partners status column to the dropdown_mm8b6syk dropdown;
 // short_text66 = School, text_mkvxqh6c = Updated Participant Name (falls back to
 // text_mktbkbvy = Participant Name).
 const COACHEE_ROSTER_BOARD_ID = 18416567790;
@@ -193,11 +194,12 @@ export function coachLogRepository(): CoachLogRepository {
     },
 
     // Mirrors the legacy roster lookup: filter the roster board by district
-    // (coaching_partners) and, when a single school is chosen, by school
+    // (dropdown_mm8b6syk) and, when a single school is chosen, by school
     // (short_text66); the coachee display name comes from the "updated name"
     // column, falling back to the "original name" column. Confirmed these
     // filter columns/values still match with district & school sourced from
-    // board 18415001327.
+    // board 18415001327. The dropdown filter is a substring match ("NY_D1"
+    // also matches "NY_D11"), so the district is re-checked exactly in JS.
     fetchCoachees: async (district: string, school: string) => {
       try {
         const districtFilter = normalize(district);
@@ -207,13 +209,13 @@ export function coachLogRepository(): CoachLogRepository {
         const esc = (v: string) =>
           v.trim().replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 
-        let rules = `[{column_id: "coaching_partners", operator: contains_terms, compare_value: ["${esc(districtFilter)}"]}`;
+        let rules = `[{column_id: "dropdown_mm8b6syk", operator: contains_terms, compare_value: ["${esc(districtFilter)}"]}`;
         if (schoolFilter && schoolFilter !== "all schools") {
           rules += `, {column_id: "short_text66", operator: contains_text, compare_value: ["${esc(schoolFilter)}"]}`;
         }
         rules += `]`;
 
-        const columnIds = `["text_mktbkbvy","text_mkvxqh6c","coaching_partners","short_text66"]`;
+        const columnIds = `["text_mktbkbvy","text_mkvxqh6c","dropdown_mm8b6syk","short_text66"]`;
         const buildQuery = (cursor: string | null) =>
           cursor
             ? `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { column_values(ids:${columnIds}) { text column { id } } } } }`
@@ -234,6 +236,8 @@ export function coachLogRepository(): CoachLogRepository {
           .map((item: any) => {
             const get = (id: string) =>
               item.column_values.find((c: any) => c.column.id === id)?.text;
+            if (normalize(get("dropdown_mm8b6syk")) !== districtFilter)
+              return null;
             const updated = get("text_mkvxqh6c");
             const original = get("text_mktbkbvy");
             return updated && updated.trim() !== "" ? updated : original;
