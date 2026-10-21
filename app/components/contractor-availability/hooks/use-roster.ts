@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Contractor } from "~/domains/contractor-availability/model";
-import { postJson } from "../constants";
+import { postJson } from "../utils";
 
 /** Every active contractor, for the staffing view (loaded only when enabled). */
 export function useRoster(enabled: boolean) {

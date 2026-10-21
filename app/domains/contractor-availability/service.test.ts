@@ -37,7 +37,9 @@ const saved = (email: string, bookoutIds: string[] = []): SavedProfile => ({
 const repo = (overrides: Partial<ContractorAvailabilityRepository> = {}) =>
   ({
     fetchContractors: vi.fn().mockResolvedValue({ data: [intake("a@tl.org", "Ann")], error: null }),
+    fetchContractorByEmail: vi.fn().mockResolvedValue({ data: intake("a@tl.org", "Ann"), error: null }),
     fetchSavedProfiles: vi.fn().mockResolvedValue({ data: [], error: null }),
+    fetchSavedProfileByEmail: vi.fn().mockResolvedValue({ data: null, error: null }),
     createProfile: vi.fn().mockResolvedValue({ data: "new-item", error: null }),
     updateProfile: vi.fn().mockResolvedValue({ data: "item-a@tl.org", error: null }),
     createBookout: vi.fn().mockResolvedValue({ data: "sub-1", error: null }),
@@ -89,6 +91,22 @@ describe("validateBookout", () => {
 });
 
 describe("contractor availability service", () => {
+  it("looks one contractor up by email without reading the whole roster", async () => {
+    const r = repo({
+      fetchSavedProfileByEmail: vi.fn().mockResolvedValue({ data: saved("a@tl.org", ["sub-1"]), error: null }),
+    });
+    const { data } = await contractorAvailabilityService(r).fetchContractor("a@tl.org");
+    expect(data).toMatchObject({ email: "a@tl.org", profileSource: "saved", profileItemId: "item-a@tl.org" });
+    expect(data?.bookouts.map((b) => b.id)).toEqual(["sub-1"]);
+    expect(r.fetchContractors).not.toHaveBeenCalled();
+    expect(r.fetchSavedProfiles).not.toHaveBeenCalled();
+  });
+
+  it("returns null for someone who isn't an active contractor", async () => {
+    const r = repo({ fetchContractorByEmail: vi.fn().mockResolvedValue({ data: null, error: null }) });
+    expect((await contractorAvailabilityService(r).fetchContractor("x@tl.org")).data).toBeNull();
+  });
+
   it("creates the CBS item on first save, stamped with today's date", async () => {
     const r = repo();
     const result = await contractorAvailabilityService(r).saveProfile("A@TL.org", saved("a@tl.org").profile);
@@ -110,11 +128,11 @@ describe("contractor availability service", () => {
     expect(r.createBookout).toHaveBeenCalledWith("new-item", "Non-TL bookout · Nov 10–12", expect.anything());
   });
 
-  // The route has no server-side auth, so this is what keeps a crafted
-  // request from deleting arbitrary Monday items
+  // Keeps a staff member's (or a crafted) request from deleting arbitrary
+  // Monday items by id
   it("only deletes a bookout that belongs to the contractor", async () => {
     const r = repo({
-      fetchSavedProfiles: vi.fn().mockResolvedValue({ data: [saved("a@tl.org", ["sub-1"])], error: null }),
+      fetchSavedProfileByEmail: vi.fn().mockResolvedValue({ data: saved("a@tl.org", ["sub-1"]), error: null }),
     });
     const service = contractorAvailabilityService(r);
     expect((await service.removeBookout("a@tl.org", "someone-elses-item")).error?.message).toBe(

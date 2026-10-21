@@ -147,11 +147,53 @@ export function bookoutFromSubitem(sub: any): Bookout | null {
   };
 }
 
+const isContractorItem = (item: any) =>
+  CONTRACTOR_STATUSES.includes(text(item, "color_mm4b5hep").toLowerCase()) &&
+  Boolean(text(item, "text60"));
+
+function contractorFromItem(item: any): ContractorIntake {
+  const state = stateCodeFromName(text(item, "dropdown_mkw5q2x0"));
+  return {
+    detailsItemId: String(item.id),
+    name: String(item.name).trim(),
+    email: text(item, "text60").toLowerCase(),
+    // Location text is a full address; keep the first part (city)
+    city: (text(item, "location_mkt63brt").split(",")[0] ?? "").trim(),
+    state,
+    timeZone: text(item, "status877"),
+    contentAreas: list(item, "dropdown44"),
+    intakeProfile: profileFromIntake({
+      travel: text(item, "dropdown6__1"),
+      weekdays: text(item, "dropdown5__1"),
+      support: text(item, "status10__1"),
+      scheduleNotes: text(item, "long_text2__1"),
+      state,
+    }),
+  };
+}
+
+const savedProfileFromItem = (item: any): SavedProfile => ({
+  itemId: String(item.id),
+  email: text(item, "cbs_email").toLowerCase(),
+  profile: profileFromItem(item),
+  bookouts: (item.subitems ?? [])
+    .map(bookoutFromSubitem)
+    .filter((b: Bookout | null): b is Bookout => b !== null),
+});
+
+const DETAILS_FIELDS = `id name column_values(ids: ${JSON.stringify(DETAILS_COLUMNS)}) { id text }`;
+const PROFILE_FIELDS = `id name column_values(ids: ${JSON.stringify(PROFILE_COLUMNS)}) { id text }
+  subitems { id name column_values(ids: ${JSON.stringify(BOOKOUT_COLUMNS)}) { id text value } }`;
+
 export interface ContractorAvailabilityRepository {
   /** Active 1099 contractors from the Coach/Facilitator Details board. */
   fetchContractors(): Promise<Errorable<ContractorIntake[]>>;
+  /** One active contractor by email (null if they aren't one). */
+  fetchContractorByEmail(email: string): Promise<Errorable<ContractorIntake | null>>;
   /** Every saved profile on the CBS board, with its bookouts. */
   fetchSavedProfiles(): Promise<Errorable<SavedProfile[]>>;
+  /** One contractor's saved profile and bookouts by email (null if none yet). */
+  fetchSavedProfileByEmail(email: string): Promise<Errorable<SavedProfile | null>>;
   /** Creates the contractor's CBS item; returns its id. */
   createProfile(
     contractor: Pick<ContractorIntake, "name" | "email" | "detailsItemId" | "city" | "state">,
@@ -188,6 +230,23 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
     return items;
   };
 
+  // Items whose column equals the email. Monday's any_of matches text and
+  // email columns case-insensitively; the exact check guards the rest.
+  const fetchItemsByEmail = async (
+    boardId: number,
+    columnId: string,
+    email: string,
+    itemFields: string
+  ) => {
+    const want = email.trim().toLowerCase();
+    const res = await fetchMondayData(
+      `{ boards(ids: ${boardId}) { items_page(limit: 25, query_params: {rules: [{column_id: "${columnId}", compare_value: ${JSON.stringify([want])}, operator: any_of}]}) { items { ${itemFields} } } } }`
+    );
+    if (res?.errors) throw new Error(JSON.stringify(res.errors));
+    const items: any[] = res?.data?.boards?.[0]?.items_page?.items ?? [];
+    return items.filter((item) => text(item, columnId).toLowerCase() === want);
+  };
+
   const mutate = async (query: string, vars: Record<string, unknown>, field: string) => {
     const res = await insertMondayData(query, vars);
     const id = res?.data?.[field]?.id;
@@ -203,34 +262,9 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
       try {
         const items = await fetchAllItems(
           COACH_FACILITATOR_DETAILS_BOARD_ID,
-          `id name column_values(ids: ${JSON.stringify(DETAILS_COLUMNS)}) { id text }`
+          DETAILS_FIELDS
         );
-        const contractors = items
-          .filter(
-            (item) =>
-              CONTRACTOR_STATUSES.includes(text(item, "color_mm4b5hep").toLowerCase()) &&
-              text(item, "text60")
-          )
-          .map((item): ContractorIntake => {
-            const state = stateCodeFromName(text(item, "dropdown_mkw5q2x0"));
-            return {
-              detailsItemId: String(item.id),
-              name: String(item.name).trim(),
-              email: text(item, "text60").toLowerCase(),
-              // Location text is a full address; keep the first part (city)
-              city: (text(item, "location_mkt63brt").split(",")[0] ?? "").trim(),
-              state,
-              timeZone: text(item, "status877"),
-              contentAreas: list(item, "dropdown44"),
-              intakeProfile: profileFromIntake({
-                travel: text(item, "dropdown6__1"),
-                weekdays: text(item, "dropdown5__1"),
-                support: text(item, "status10__1"),
-                scheduleNotes: text(item, "long_text2__1"),
-                state,
-              }),
-            };
-          });
+        const contractors = items.filter(isContractorItem).map(contractorFromItem);
         return { data: contractors, error: null };
       } catch (e) {
         console.error(e);
@@ -238,29 +272,43 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
       }
     },
 
+    fetchContractorByEmail: async (email) => {
+      try {
+        const items = await fetchItemsByEmail(
+          COACH_FACILITATOR_DETAILS_BOARD_ID,
+          "text60",
+          email,
+          DETAILS_FIELDS
+        );
+        const item = items.find(isContractorItem);
+        return { data: item ? contractorFromItem(item) : null, error: null };
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("fetchContractorByEmail() went wrong") };
+      }
+    },
+
     fetchSavedProfiles: async () => {
       try {
         const items = await fetchAllItems(
           CBS_BOARD_ID,
-          `id name column_values(ids: ${JSON.stringify(PROFILE_COLUMNS)}) { id text }
-           subitems { id name column_values(ids: ${JSON.stringify(BOOKOUT_COLUMNS)}) { id text value } }`
+          PROFILE_FIELDS
         );
-        const profiles = items
-          .filter((item) => text(item, "cbs_email"))
-          .map(
-            (item): SavedProfile => ({
-              itemId: String(item.id),
-              email: text(item, "cbs_email").toLowerCase(),
-              profile: profileFromItem(item),
-              bookouts: (item.subitems ?? [])
-                .map(bookoutFromSubitem)
-                .filter((b: Bookout | null): b is Bookout => b !== null),
-            })
-          );
+        const profiles = items.filter((item) => text(item, "cbs_email")).map(savedProfileFromItem);
         return { data: profiles, error: null };
       } catch (e) {
         console.error(e);
         return { data: null, error: new Error("fetchSavedProfiles() went wrong") };
+      }
+    },
+
+    fetchSavedProfileByEmail: async (email) => {
+      try {
+        const items = await fetchItemsByEmail(CBS_BOARD_ID, "cbs_email", email, PROFILE_FIELDS);
+        return { data: items[0] ? savedProfileFromItem(items[0]) : null, error: null };
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("fetchSavedProfileByEmail() went wrong") };
       }
     },
 

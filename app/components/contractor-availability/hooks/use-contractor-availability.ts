@@ -4,7 +4,7 @@ import type {
   Contractor,
   NewBookout,
 } from "~/domains/contractor-availability/model";
-import { postJson } from "../constants";
+import { postJson } from "../utils";
 
 /**
  * One contractor's profile + bookouts, with the save/add/remove calls. Each

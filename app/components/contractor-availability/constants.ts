@@ -16,16 +16,3 @@ export const BOOKOUT_CHIP: Record<BookoutType, string> = {
   fac: "bg-blue-700 text-white",
   other: "bg-teal-700 text-white",
 };
-
-export async function postJson<T = any>(
-  url: string,
-  body: unknown = {}
-): Promise<{ ok: boolean; data: T & { error?: string } }> {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = await response.json().catch(() => ({}));
-  return { ok: response.ok, data };
-}

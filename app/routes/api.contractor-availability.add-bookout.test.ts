@@ -1,8 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { service } = vi.hoisted(() => ({
+const { authorizeContractorAccess, service } = vi.hoisted(() => ({
+  authorizeContractorAccess: vi.fn(),
   service: { addBookout: vi.fn() },
 }));
+
+vi.mock("~/domains/contractor-availability/access.server", () => ({ authorizeContractorAccess }));
 
 vi.mock("~/domains/contractor-availability/service", async (importOriginal) => ({
   ...(await importOriginal<typeof import("~/domains/contractor-availability/service")>()),
@@ -27,6 +30,11 @@ const post = (body: unknown, method = "POST") =>
 const bookout = { type: "nontl", start: "2026-11-10", end: "2026-11-12", portion: "Full day", note: "" };
 
 beforeEach(() => {
+  authorizeContractorAccess.mockImplementation(async (_request: Request, email?: string) => ({
+    response: null,
+    user: { email: "a@tl.org", headers: new Headers() },
+    email: email ?? "a@tl.org",
+  }));
   service.addBookout.mockResolvedValue({ data: "sub-1", error: null });
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -39,6 +47,27 @@ afterEach(() => {
 describe("contractor-availability add-bookout", () => {
   it("405s on a non-POST request", async () => {
     expect((await post(undefined, "GET")).status).toBe(405);
+  });
+
+  it("returns the access denial and writes nothing", async () => {
+    authorizeContractorAccess.mockResolvedValue({
+      response: new Response(null, { status: 403 }),
+      user: null,
+      email: null,
+    });
+    const response = await post({ email: "someone.else@tl.org", bookout });
+    expect(response.status).toBe(403);
+    expect(service.addBookout).not.toHaveBeenCalled();
+  });
+
+  it("saves for the email access resolved, not the raw body", async () => {
+    authorizeContractorAccess.mockResolvedValue({
+      response: null,
+      user: { email: "a@tl.org", headers: new Headers() },
+      email: "a@tl.org",
+    });
+    await post({ bookout });
+    expect(service.addBookout).toHaveBeenCalledWith("a@tl.org", bookout);
   });
 
   it("400s with the validation message and writes nothing", async () => {

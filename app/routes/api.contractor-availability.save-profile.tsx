@@ -1,4 +1,5 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
+import { authorizeContractorAccess } from "~/domains/contractor-availability/access.server";
 import type { AvailabilityProfile } from "~/domains/contractor-availability/model";
 import { contractorAvailabilityRepository } from "~/domains/contractor-availability/repository";
 import { contractorAvailabilityService } from "~/domains/contractor-availability/service";
@@ -10,20 +11,26 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     return json({ ok: false, error: "Method not allowed" }, { status: 405 });
   }
   try {
-    const { email, profile } = (await request.json()) as {
+    const body = (await request.json().catch(() => ({}))) as {
       email?: string;
       profile?: AvailabilityProfile;
     };
-    if (!email?.trim() || !profile || typeof profile !== "object") {
-      return json({ ok: false, error: "Missing email or profile" }, { status: 400 });
+    const access = await authorizeContractorAccess(request, body.email);
+    if (access.response) return access.response;
+    const { email } = access;
+    const { headers } = access.user;
+
+    const { profile } = body;
+    if (!profile || typeof profile !== "object") {
+      return json({ ok: false, error: "Missing profile" }, { status: 400, headers });
     }
     const service = contractorAvailabilityService(contractorAvailabilityRepository());
     const { data, error } = await service.saveProfile(email, profile);
     if (error) {
       console.error("Error saving availability profile:", error);
-      return json({ ok: false, error: "Failed to save your profile" }, { status: 500 });
+      return json({ ok: false, error: "Failed to save your profile" }, { status: 500, headers });
     }
-    return json({ ok: true, contractor: data });
+    return json({ ok: true, contractor: data }, { headers });
   } catch (error) {
     console.error("Error in contractor-availability save-profile API:", error);
     return json({ ok: false, error: "Failed to save your profile" }, { status: 500 });

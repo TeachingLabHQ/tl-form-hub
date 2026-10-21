@@ -114,11 +114,16 @@ export function contractorAvailabilityService(
     return { data: mergeRoster(intake.data, saved.data), error: null };
   };
 
+  // Two filtered reads instead of the whole roster
   const fetchContractor = async (email: string): Promise<Errorable<Contractor | null>> => {
-    const roster = await fetchRoster();
-    if (roster.error) return roster;
-    const want = email.trim().toLowerCase();
-    return { data: roster.data.find((c) => c.email === want) ?? null, error: null };
+    const [intake, saved] = await Promise.all([
+      repository.fetchContractorByEmail(email),
+      repository.fetchSavedProfileByEmail(email),
+    ]);
+    if (intake.error) return intake;
+    if (saved.error) return saved;
+    if (!intake.data) return { data: null, error: null };
+    return { data: mergeRoster([intake.data], saved.data ? [saved.data] : [])[0] ?? null, error: null };
   };
 
   // The contractor's CBS item, created from their current profile if needed
@@ -129,7 +134,9 @@ export function contractorAvailabilityService(
 
   return {
     fetchContractors: repository.fetchContractors,
+    fetchContractorByEmail: repository.fetchContractorByEmail,
     fetchSavedProfiles: repository.fetchSavedProfiles,
+    fetchSavedProfileByEmail: repository.fetchSavedProfileByEmail,
     createProfile: repository.createProfile,
     updateProfile: repository.updateProfile,
     createBookout: repository.createBookout,
