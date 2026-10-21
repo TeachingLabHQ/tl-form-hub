@@ -56,16 +56,17 @@ const Bars = ({
               "aria-pressed": !!b.active,
             })}
             className={cn(
-              "grid grid-cols-[minmax(0,190px)_minmax(0,1fr)_88px] items-center gap-3 rounded-md px-1.5 py-1 text-left text-sm",
+              // Phones: label and value on one line, the bar full width under them
+              "grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,190px)_minmax(0,1fr)_112px] items-center gap-x-3 gap-y-1 rounded-md px-1.5 py-1 text-left text-sm",
               onSelect && cn("hover:bg-white/10", FOCUS_RING),
               b.active && "bg-white/15"
             )}
           >
             <span className="truncate">{b.label}</span>
-            <span className="h-2.5 rounded-full bg-white/20 overflow-hidden">
+            <span className="h-2.5 rounded-full bg-white/20 overflow-hidden col-span-2 order-last sm:col-span-1 sm:order-none">
               <span className={cn("block h-full rounded-full", b.color)} style={{ width: `${pct}%` }} />
             </span>
-            <span className="text-right tabular-nums text-xs text-white/90">
+            <span className="text-right tabular-nums text-xs text-white/90 whitespace-nowrap">
               <span className="font-semibold text-white">{pct}%</span> · {unit(b.value)}
             </span>
           </Row>
@@ -198,8 +199,8 @@ export const StaffingView = ({
             value={tool}
             onChange={setTool}
             data={[
-              { value: "search", label: "Find available contractors" },
-              { value: "capacity", label: "Capacity, next 8 weeks" },
+              { value: "search", label: "Find contractors" },
+              { value: "capacity", label: "Capacity, 8 weeks" },
             ]}
             radius="xl"
             classNames={SEGMENTED_CLASSES}

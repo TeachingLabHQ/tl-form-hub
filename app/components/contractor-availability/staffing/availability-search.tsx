@@ -54,7 +54,7 @@ const ResultRow = ({
     >
       <div className="min-w-0">
         <div className="font-medium truncate">{c.name}</div>
-        <div className="text-xs text-white/90 truncate">
+        <div className="text-xs text-white truncate">
           {[c.city, c.state].filter(Boolean).join(", ")}
           {match.travelNote ? ` · ${match.travelNote}` : ""}
         </div>
@@ -67,9 +67,9 @@ const ResultRow = ({
               title={`${formatDateWithDay(day)}: ${status.reason}`}
               className={cn(
                 "rounded px-1.5 text-[11px] font-semibold tabular-nums leading-5",
-                status.state === "free" && "bg-emerald-600 text-white",
+                status.state === "free" && "bg-emerald-700 text-white",
                 status.state === "partial" && "bg-amber-400 text-black",
-                (status.state === "booked" || status.state === "off") && "bg-white/20 text-white/90 line-through"
+                (status.state === "booked" || status.state === "off") && "bg-white/10 text-white line-through"
               )}
             >
               {formatDate(day)}
@@ -77,7 +77,7 @@ const ResultRow = ({
           ))}
         </div>
         {conflicts.length > 0 && (
-          <div className="text-xs text-white/90 truncate mt-0.5">
+          <div className="text-xs text-white truncate mt-0.5">
             {conflicts.map((d) => `${formatDate(d.day)}: ${d.status.reason}`).join(" · ")}
           </div>
         )}
@@ -105,7 +105,7 @@ const ResultGroup = ({
   const shown = expanded ? matches : matches.slice(0, SHOWN);
   return (
     <div className="flex flex-col">
-      <h3 className="text-xs font-semibold uppercase tracking-wide text-white/90 px-3 pb-1">
+      <h3 className="text-xs font-semibold uppercase tracking-wide text-white px-3 pb-1">
         {title} · {matches.length}
       </h3>
       <div className="flex flex-col divide-y divide-white/15 rounded-xl bg-white/10">
@@ -222,7 +222,7 @@ export const AvailabilitySearch = ({ contractors, contentAreas, onOpen }: Props)
       </div>
 
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-sm text-white/90 mr-1">Dates needed:</span>
+        <span className="text-sm text-white mr-1">Dates needed:</span>
         {ranges.map(([a, b], i) => (
           <span
             key={`${a}-${b}-${i}`}
@@ -238,14 +238,14 @@ export const AvailabilitySearch = ({ contractors, contentAreas, onOpen }: Props)
             />
           </span>
         ))}
-        {ranges.length === 0 && <span className="text-sm text-white/90">none yet. Add a day or range above.</span>}
+        {ranges.length === 0 && <span className="text-sm text-white">none yet. Add a day or range above.</span>}
       </div>
 
       {days.length > 0 && (
         <>
           <p className="text-sm">
             <span className="text-lg font-semibold">{all.length}</span>{" "}
-            <span className="text-white/90">
+            <span className="text-white">
               can take all {days.length} weekdays · {some.length} can take some ·{" "}
               {format === "virtual" ? "virtual" : `in person, ${STATES[state]?.name}`} · {role.toLowerCase()}
             </span>
@@ -254,7 +254,7 @@ export const AvailabilitySearch = ({ contractors, contentAreas, onOpen }: Props)
           <ResultGroup title="Available some dates" matches={some} total={days.length} onOpen={onOpen} />
           {excluded.length > 0 && (
             <details>
-              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-white/90 px-3">
+              <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wide text-white px-3">
                 Not a match · {excluded.length}
               </summary>
               <ul className="mt-2 flex flex-col divide-y divide-white/15 rounded-xl bg-white/10 text-sm max-h-72 overflow-y-auto">
@@ -267,7 +267,7 @@ export const AvailabilitySearch = ({ contractors, contentAreas, onOpen }: Props)
                     >
                       {m.contractor.name}
                     </button>
-                    <span className="text-white/90">{m.reasons.join(" · ") || "Booked on every date"}</span>
+                    <span className="text-white">{m.reasons.join(" · ") || "Booked on every date"}</span>
                   </li>
                 ))}
               </ul>
