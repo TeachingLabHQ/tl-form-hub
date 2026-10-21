@@ -11,7 +11,7 @@ export const PANEL =
 
 // Segmented switches on the card (Admin/Contractor view, staffing tools)
 export const SEGMENTED_CLASSES = {
-  root: "bg-white/10 p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]",
+  root: "bg-white/10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.25)]",
   indicator: "bg-white shadow-sm",
   label: "text-white/90 data-[active]:text-[#0053B3] hover:text-white font-medium px-3",
   control: "before:hidden",

@@ -19,6 +19,7 @@ import "@mantine/core/styles/ActionIcon.css";
 import "@mantine/core/styles/CloseButton.css";
 import "@mantine/core/styles/Input.css";
 import "@mantine/core/styles/Flex.css";
+import "@mantine/core/styles/FloatingIndicator.css";
 import "@mantine/core/styles/Accordion.css";
 import "@mantine/core/styles/Alert.css";
 import "@mantine/core/styles/Badge.css";
