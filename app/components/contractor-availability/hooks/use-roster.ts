@@ -28,5 +28,18 @@ export function useRoster(enabled: boolean) {
     if (enabled) load();
   }, [enabled, load]);
 
-  return { contractors, loading, error, reload: load };
+  // Returns null on success or an error message to show
+  const saveStaffNotes = async (email: string, notes: string) => {
+    const { ok, data } = await postJson("/api/contractor-availability/save-staff-notes", {
+      email,
+      notes,
+    });
+    if (!ok) return data.error ?? "Failed to save the notes";
+    setContractors((list) =>
+      list.map((c) => (c.email === email ? { ...c, staffNotes: notes.trim() } : c))
+    );
+    return null;
+  };
+
+  return { contractors, loading, error, reload: load, saveStaffNotes };
 }

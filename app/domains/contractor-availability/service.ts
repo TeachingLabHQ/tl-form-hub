@@ -88,6 +88,7 @@ export function mergeRoster(intake: ContractorIntake[], saved: SavedProfile[]): 
         // An item created only to hold bookouts has never been confirmed
         profileSource: s?.profile.confirmedOn ? "saved" : "intake",
         bookouts: (s?.bookouts ?? []).sort((a, b) => a.start.localeCompare(b.start)),
+        staffNotes: s?.staffNotes ?? "",
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -99,6 +100,8 @@ export interface ContractorAvailabilityService extends ContractorAvailabilityRep
   saveProfile(email: string, profile: AvailabilityProfile): Promise<Errorable<Contractor>>;
   addBookout(email: string, bookout: NewBookout): Promise<Errorable<string>>;
   removeBookout(email: string, bookoutId: string): Promise<Errorable<string>>;
+  /** Saves internal staffing notes on the contractor's CBS item (staff only). */
+  saveStaffNotes(email: string, notes: string): Promise<Errorable<string>>;
 }
 
 export function contractorAvailabilityService(
@@ -141,6 +144,7 @@ export function contractorAvailabilityService(
     updateProfile: repository.updateProfile,
     createBookout: repository.createBookout,
     deleteBookout: repository.deleteBookout,
+    updateStaffNotes: repository.updateStaffNotes,
 
     fetchRoster,
     fetchContractor,
@@ -183,6 +187,15 @@ export function contractorAvailabilityService(
         return { data: null, error: new Error("Bookout not found") };
       }
       return repository.deleteBookout(bookoutId);
+    },
+
+    saveStaffNotes: async (email, notes) => {
+      const found = await fetchContractor(email);
+      if (found.error) return found;
+      if (!found.data) return { data: null, error: new Error("Contractor not found") };
+      const item = await ensureProfileItem(found.data);
+      if (item.error) return item;
+      return repository.updateStaffNotes(item.data, str(notes, 5000));
     },
   };
 }

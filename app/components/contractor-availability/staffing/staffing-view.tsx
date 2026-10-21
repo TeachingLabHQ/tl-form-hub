@@ -33,11 +33,13 @@ export const StaffingView = ({
   loading,
   error,
   onReload,
+  onSaveStaffNotes,
 }: {
   contractors: Contractor[];
   loading: boolean;
   error: string | null;
   onReload: () => void;
+  onSaveStaffNotes: (email: string, notes: string) => Promise<string | null>;
 }) => {
   const [openEmail, setOpenEmail] = useState<string | null>(null);
 
@@ -100,6 +102,7 @@ export const StaffingView = ({
       <ContractorDrawer
         contractor={contractors.find((c) => c.email === openEmail) ?? null}
         onClose={() => setOpenEmail(null)}
+        onSaveStaffNotes={onSaveStaffNotes}
       />
     </div>
   );

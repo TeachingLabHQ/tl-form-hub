@@ -176,6 +176,7 @@ const savedProfileFromItem = (item: any): SavedProfile => ({
   itemId: String(item.id),
   email: text(item, "cbs_email").toLowerCase(),
   profile: profileFromItem(item),
+  staffNotes: text(item, "cbs_staff_notes"),
   bookouts: (item.subitems ?? [])
     .map(bookoutFromSubitem)
     .filter((b: Bookout | null): b is Bookout => b !== null),
@@ -184,15 +185,21 @@ const savedProfileFromItem = (item: any): SavedProfile => ({
 const DETAILS_FIELDS = `id name column_values(ids: ${JSON.stringify(DETAILS_COLUMNS)}) { id text }`;
 const PROFILE_FIELDS = `id name column_values(ids: ${JSON.stringify(PROFILE_COLUMNS)}) { id text }
   subitems { id name column_values(ids: ${JSON.stringify(BOOKOUT_COLUMNS)}) { id text value } }`;
+// Staff notes are internal, so only the staff roster read selects them. The
+// by-email read backs the contractor's own routes and must leave them out.
+const STAFF_PROFILE_FIELDS = PROFILE_FIELDS.replace(
+  JSON.stringify(PROFILE_COLUMNS),
+  JSON.stringify([...PROFILE_COLUMNS, "cbs_staff_notes"])
+);
 
 export interface ContractorAvailabilityRepository {
   /** Active 1099 contractors from the Coach/Facilitator Details board. */
   fetchContractors(): Promise<Errorable<ContractorIntake[]>>;
   /** One active contractor by email (null if they aren't one). */
   fetchContractorByEmail(email: string): Promise<Errorable<ContractorIntake | null>>;
-  /** Every saved profile on the CBS board, with its bookouts. */
+  /** Every saved profile on the CBS board, with its bookouts and staff notes. */
   fetchSavedProfiles(): Promise<Errorable<SavedProfile[]>>;
-  /** One contractor's saved profile and bookouts by email (null if none yet). */
+  /** One contractor's saved profile and bookouts by email (null if none yet), without staff notes. */
   fetchSavedProfileByEmail(email: string): Promise<Errorable<SavedProfile | null>>;
   /** Creates the contractor's CBS item; returns its id. */
   createProfile(
@@ -207,6 +214,7 @@ export interface ContractorAvailabilityRepository {
     bookout: NewBookout
   ): Promise<Errorable<string>>;
   deleteBookout(bookoutId: string): Promise<Errorable<string>>;
+  updateStaffNotes(itemId: string, notes: string): Promise<Errorable<string>>;
 }
 
 export function contractorAvailabilityRepository(): ContractorAvailabilityRepository {
@@ -290,10 +298,7 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
 
     fetchSavedProfiles: async () => {
       try {
-        const items = await fetchAllItems(
-          CBS_BOARD_ID,
-          PROFILE_FIELDS
-        );
+        const items = await fetchAllItems(CBS_BOARD_ID, STAFF_PROFILE_FIELDS);
         const profiles = items.filter((item) => text(item, "cbs_email")).map(savedProfileFromItem);
         return { data: profiles, error: null };
       } catch (e) {
@@ -374,6 +379,19 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
       } catch (e) {
         console.error(e);
         return { data: null, error: new Error("deleteBookout() went wrong") };
+      }
+    },
+
+    updateStaffNotes: async (itemId, notes) => {
+      try {
+        return await mutate(
+          `mutation ($item: ID!, $cols: JSON!) { change_multiple_column_values (board_id: ${CBS_BOARD_ID}, item_id: $item, column_values: $cols) { id } }`,
+          { item: itemId, cols: JSON.stringify({ cbs_staff_notes: { text: notes } }) },
+          "change_multiple_column_values"
+        );
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("updateStaffNotes() went wrong") };
       }
     },
   };

@@ -1,4 +1,5 @@
-import { Badge, Drawer, Group, Text } from "@mantine/core";
+import { Badge, Button, Drawer, Group, Text, Textarea } from "@mantine/core";
+import { useEffect, useState } from "react";
 import {
   formatRange,
   monthlyTarget,
@@ -24,13 +25,69 @@ const Row = ({ label, children }: { label: string; children: React.ReactNode }) 
   </>
 );
 
-/** One contractor's full record for staffing: profile, monthly load, bookouts. */
+// Internal notes for staffing; the contractor never sees these
+const StaffNotes = ({
+  contractor,
+  onSave,
+}: {
+  contractor: Contractor;
+  onSave: (email: string, notes: string) => Promise<string | null>;
+}) => {
+  const [notes, setNotes] = useState(contractor.staffNotes);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ error: boolean; text: string } | null>(null);
+
+  useEffect(() => {
+    setNotes(contractor.staffNotes);
+    setMessage(null);
+  }, [contractor.email, contractor.staffNotes]);
+
+  const save = async () => {
+    setSaving(true);
+    const error = await onSave(contractor.email, notes);
+    setSaving(false);
+    setMessage(error ? { error: true, text: error } : { error: false, text: "Saved." });
+  };
+
+  return (
+    <section>
+      <h3 className="font-semibold mb-1">Internal staffing notes</h3>
+      <Text size="xs" c="dimmed" mb="xs">
+        Visible to Teaching Lab staff only, not to the contractor.
+      </Text>
+      <Textarea
+        autosize
+        minRows={3}
+        maxLength={5000}
+        value={notes}
+        onChange={(e) => {
+          setNotes(e.currentTarget.value);
+          setMessage(null);
+        }}
+      />
+      <Group gap="sm" mt="xs">
+        <Button size="xs" loading={saving} disabled={notes.trim() === contractor.staffNotes} onClick={save}>
+          Save notes
+        </Button>
+        {message && (
+          <Text size="xs" c={message.error ? "red" : "green"}>
+            {message.text}
+          </Text>
+        )}
+      </Group>
+    </section>
+  );
+};
+
+/** One contractor's full record for staffing: profile, monthly load, bookouts, notes. */
 export const ContractorDrawer = ({
   contractor,
   onClose,
+  onSaveStaffNotes,
 }: {
   contractor: Contractor | null;
   onClose: () => void;
+  onSaveStaffNotes: (email: string, notes: string) => Promise<string | null>;
 }) => {
   const c = contractor;
   const today = todayIso();
@@ -135,6 +192,8 @@ export const ContractorDrawer = ({
               </ul>
             )}
           </section>
+
+          <StaffNotes contractor={c} onSave={onSaveStaffNotes} />
         </div>
       )}
     </Drawer>

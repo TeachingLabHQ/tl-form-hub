@@ -1,10 +1,11 @@
 import { Badge, Select, Table, TextInput } from "@mantine/core";
 import { useMemo, useState } from "react";
 import {
+  CONTRACTOR_STATUS_LABELS,
+  type ContractorStatus,
+  contractorStatus,
   formatRange,
   monthlyTarget,
-  profileAgeDays,
-  STALE_PROFILE_DAYS,
   tlDaysInMonth,
   todayIso,
   TRAVEL_REACH_LABELS,
@@ -20,6 +21,12 @@ import { cn } from "~/utils/utils";
 import { ProfileAgeBadge } from "../profile-form";
 import { PANEL } from "../constants";
 
+const STATUS_COLORS: Record<ContractorStatus, string> = {
+  available: "green",
+  booked: "orange",
+  stale: "gray",
+};
+
 /** Filterable list of every contractor; a row opens their profile drawer. */
 export const ContractorTable = ({
   contractors,
@@ -31,7 +38,7 @@ export const ContractorTable = ({
   const [name, setName] = useState("");
   const [role, setRole] = useState<string | null>(null);
   const [reach, setReach] = useState<string | null>(null);
-  const [freshness, setFreshness] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const now = new Date();
   const loadMonth = { year: now.getFullYear(), month: now.getMonth() };
   const today = todayIso();
@@ -42,12 +49,10 @@ export const ContractorTable = ({
         if (name && !c.name.toLowerCase().includes(name.toLowerCase())) return false;
         if (role && !c.profile.support.includes(role)) return false;
         if (reach && travelReach(c.profile) !== reach) return false;
-        const age = profileAgeDays(c.profile);
-        if (freshness === "fresh" && (age === null || age > STALE_PROFILE_DAYS)) return false;
-        if (freshness === "stale" && age !== null && age <= STALE_PROFILE_DAYS) return false;
+        if (status && contractorStatus(c.profile, c.bookouts) !== status) return false;
         return true;
       }),
-    [contractors, name, role, reach, freshness]
+    [contractors, name, role, reach, status]
   );
 
   return (
@@ -69,13 +74,10 @@ export const ContractorTable = ({
           clearable
         />
         <Select
-          placeholder="Any profile status"
-          data={[
-            { value: "fresh", label: `Confirmed in last ${STALE_PROFILE_DAYS} days` },
-            { value: "stale", label: "Stale or never confirmed" },
-          ]}
-          value={freshness}
-          onChange={setFreshness}
+          placeholder="Any status"
+          data={Object.entries(CONTRACTOR_STATUS_LABELS).map(([value, label]) => ({ value, label }))}
+          value={status}
+          onChange={setStatus}
           clearable
         />
       </div>
@@ -91,6 +93,7 @@ export const ContractorTable = ({
               <Table.Th>{MONTH_LABELS[loadMonth.month]} TL load</Table.Th>
               <Table.Th>Next bookout</Table.Th>
               <Table.Th>Profile</Table.Th>
+              <Table.Th>Status</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
@@ -98,6 +101,7 @@ export const ContractorTable = ({
               const next = c.bookouts.find((b) => b.end >= today);
               const target = monthlyTarget(c.profile);
               const load = tlDaysInMonth(c.bookouts, loadMonth.year, loadMonth.month);
+              const rowStatus = contractorStatus(c.profile, c.bookouts, today);
               return (
                 <Table.Tr key={c.email} className="cursor-pointer" onClick={() => onOpen(c.email)}>
                   <Table.Td className="font-medium">{c.name}</Table.Td>
@@ -128,6 +132,11 @@ export const ContractorTable = ({
                     ) : (
                       <ProfileAgeBadge profile={c.profile} />
                     )}
+                  </Table.Td>
+                  <Table.Td>
+                    <Badge color={STATUS_COLORS[rowStatus]} variant="light">
+                      {CONTRACTOR_STATUS_LABELS[rowStatus]}
+                    </Badge>
                   </Table.Td>
                 </Table.Tr>
               );

@@ -228,6 +228,31 @@ export const STALE_PROFILE_DAYS = 90;
 export const profileAgeDays = (profile: AvailabilityProfile, today = todayIso()) =>
   profile.confirmedOn ? daysBetween(profile.confirmedOn, today) : null;
 
+export type ContractorStatus = "available" | "booked" | "stale";
+export const CONTRACTOR_STATUS_LABELS: Record<ContractorStatus, string> = {
+  available: "Available",
+  booked: "Mostly booked",
+  stale: "Stale GAP",
+};
+export const MOSTLY_BOOKED_SHARE = 0.8;
+
+/**
+ * Staffing status: a stale (over 90 days) or never-confirmed profile first,
+ * then mostly booked once this month's TL days reach 80% of the target.
+ */
+export function contractorStatus(
+  profile: AvailabilityProfile,
+  bookouts: Bookout[],
+  today = todayIso()
+): ContractorStatus {
+  const age = profileAgeDays(profile, today);
+  if (age === null || age > STALE_PROFILE_DAYS) return "stale";
+  const now = parseDate(today);
+  const target = monthlyTarget(profile);
+  const load = tlDaysInMonth(bookouts, now.getFullYear(), now.getMonth());
+  return target > 0 && load >= target * MOSTLY_BOOKED_SHARE ? "booked" : "available";
+}
+
 // ---------------------------------------------------------------------------
 // Intake answers (Coach/Facilitator Details board) -> starting profile.
 // The board's dropdown labels contain commas, so match on substrings rather

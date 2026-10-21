@@ -22,6 +22,7 @@ const intake = (email: string, name: string): ContractorIntake => ({
 
 const saved = (email: string, bookoutIds: string[] = []): SavedProfile => ({
   itemId: `item-${email}`,
+  staffNotes: "",
   email,
   profile: { ...intake(email, "").intakeProfile, confirmedOn: "2026-10-01", daysPerWeek: 3 },
   bookouts: bookoutIds.map((id) => ({
@@ -44,6 +45,7 @@ const repo = (overrides: Partial<ContractorAvailabilityRepository> = {}) =>
     updateProfile: vi.fn().mockResolvedValue({ data: "item-a@tl.org", error: null }),
     createBookout: vi.fn().mockResolvedValue({ data: "sub-1", error: null }),
     deleteBookout: vi.fn().mockResolvedValue({ data: "sub-1", error: null }),
+    updateStaffNotes: vi.fn().mockResolvedValue({ data: "item-a@tl.org", error: null }),
     ...overrides,
   }) as unknown as ContractorAvailabilityRepository;
 
@@ -91,6 +93,13 @@ describe("validateBookout", () => {
 });
 
 describe("contractor availability service", () => {
+  it("saves staff notes on the contractor's CBS item, creating it if needed", async () => {
+    const r = repo();
+    await contractorAvailabilityService(r).saveStaffNotes("a@tl.org", "  Strong on K-2  ");
+    expect(r.createProfile).toHaveBeenCalledOnce();
+    expect(r.updateStaffNotes).toHaveBeenCalledWith("new-item", "Strong on K-2");
+  });
+
   it("looks one contractor up by email without reading the whole roster", async () => {
     const r = repo({
       fetchSavedProfileByEmail: vi.fn().mockResolvedValue({ data: saved("a@tl.org", ["sub-1"]), error: null }),

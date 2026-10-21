@@ -64,6 +64,7 @@ export const ContractorAvailability = () => {
             loading={roster.loading}
             error={roster.error}
             onReload={roster.reload}
+            onSaveStaffNotes={roster.saveStaffNotes}
           />
         </Tabs.Panel>
 

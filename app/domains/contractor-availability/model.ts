@@ -57,6 +57,8 @@ export interface SavedProfile {
   email: string;
   profile: AvailabilityProfile;
   bookouts: Bookout[];
+  // Internal staffing notes; only the staff roster reads them
+  staffNotes: string;
 }
 
 export interface Contractor extends Omit<ContractorIntake, "intakeProfile"> {
@@ -65,6 +67,7 @@ export interface Contractor extends Omit<ContractorIntake, "intakeProfile"> {
   // "intake" until the contractor saves their own profile in CBS
   profileSource: "saved" | "intake";
   bookouts: Bookout[];
+  staffNotes: string;
 }
 
 export const TRAVEL_FORMATS: { value: TravelFormat; label: string }[] = [

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  contractorStatus,
   dayStatus,
   formatsFromIntake,
   profileFromIntake,
@@ -49,6 +50,7 @@ const contractor = (overrides: Partial<Contractor> = {}): Contractor => ({
   profile: profile(),
   profileSource: "saved",
   bookouts: [],
+  staffNotes: "",
   ...overrides,
 });
 
@@ -159,5 +161,28 @@ describe("intake parsing", () => {
       support: ["Coaching", "Facilitation"],
       confirmedOn: null,
     });
+  });
+});
+
+describe("contractorStatus", () => {
+  const today = "2026-11-01";
+
+  it("is a stale GAP when never confirmed or confirmed over 90 days ago", () => {
+    expect(contractorStatus(profile({ confirmedOn: null }), [], today)).toBe("stale");
+    expect(contractorStatus(profile({ confirmedOn: "2026-07-01" }), [], today)).toBe("stale");
+  });
+
+  // Target is min(3 d/wk × 4.3 ≈ 13, max 12) = 12, so 80% is 9.6 days
+  it("is mostly booked once this month's TL days reach 80% of the target", () => {
+    const tenDays = [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-13" })];
+    const nineDays = [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-12" })];
+    expect(contractorStatus(profile(), tenDays, today)).toBe("booked");
+    expect(contractorStatus(profile(), nineDays, today)).toBe("available");
+  });
+
+  it("ignores non-TL bookouts and profiles without a target", () => {
+    const nontl = [bookout({ type: "nontl", start: "2026-11-02", end: "2026-11-30" })];
+    expect(contractorStatus(profile(), nontl, today)).toBe("available");
+    expect(contractorStatus(profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }), [], today)).toBe("available");
   });
 });
