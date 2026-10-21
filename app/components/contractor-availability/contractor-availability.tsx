@@ -4,22 +4,23 @@ import { useSearchParams } from "@remix-run/react";
 import { useState } from "react";
 import { useSession } from "~/components/auth/hooks/useSession";
 import { cn } from "~/utils/utils";
-import { FIELD_CLASSES } from "./constants";
+import { CARD, FIELD_CLASSES, FOCUS_RING, SEGMENTED_CLASSES } from "./constants";
 import { useRoster } from "./hooks/use-roster";
 import { MyAvailability } from "./my-availability";
 import { StaffingView } from "./staffing/staffing-view";
 
 const COLUMN = "col-span-12 mx-4 md:mx-0 md:col-start-2 md:col-span-10 min-w-0";
 
+// The bubble sits above the card on phones and beside its top-right corner on
+// wider screens, in the grid's free last column.
 const Page = ({ bubble, children }: { bubble?: React.ReactNode; children: React.ReactNode }) => (
   <div className="w-full h-full grid grid-cols-12 gap-x-8 gap-y-3 py-8">
-    {bubble && <div className={cn(COLUMN, "flex justify-end")}>{bubble}</div>}
-    <div
-      className={cn(
-        COLUMN,
-        "h-fit p-4 md:p-8 rounded-[25px] bg-white/30 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] text-white"
-      )}
-    >
+    {bubble && (
+      <div className="col-span-12 mx-4 flex justify-end row-start-1 md:mx-0 md:col-start-12 md:col-span-1 md:justify-start md:sticky md:top-6 md:self-start">
+        {bubble}
+      </div>
+    )}
+    <div className={cn(COLUMN, CARD, "h-fit p-4 md:p-8", bubble && "row-start-2 md:row-start-1")}>
       {children}
     </div>
   </div>
@@ -37,7 +38,7 @@ const Header = ({
   <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
     <div className="min-w-0">
       <h1 className="text-2xl md:text-3xl font-semibold">{title}</h1>
-      <p className="text-sm text-white/85 mt-1">{subtitle}</p>
+      <p className="text-sm text-white/90 mt-1">{subtitle}</p>
     </div>
     {children}
   </div>
@@ -49,7 +50,7 @@ const timeAgo = (date: Date | null) => {
   return minutes < 1 ? "just now" : `${minutes} min ago`;
 };
 
-// Small glass pill outside the main card: reloads the roster from Monday
+// Round glass bubble beside the main card: reloads the roster from Monday
 const RefreshBubble = ({
   loading,
   loadedAt,
@@ -59,17 +60,29 @@ const RefreshBubble = ({
   loadedAt: Date | null;
   onReload: () => void;
 }) => (
-  <Tooltip label="Reload contractors and bookouts from Monday" withArrow>
-    <button
-      type="button"
-      onClick={onReload}
-      disabled={loading}
-      className="inline-flex items-center gap-1.5 rounded-full bg-white/30 px-3 py-1.5 text-xs font-medium text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.6)] backdrop-blur-sm hover:bg-white/40 disabled:opacity-70"
+  <div className="flex items-center gap-2 md:flex-col md:gap-1">
+    <Tooltip
+      label={`Refresh from Monday${loadedAt ? ` · loaded ${timeAgo(loadedAt)}` : ""}`}
+      withArrow
+      position="left"
     >
-      <IconRefresh size={14} className={cn(loading && "animate-spin")} />
-      {loading ? "Refreshing…" : `Refresh from Monday${loadedAt ? ` · ${timeAgo(loadedAt)}` : ""}`}
-    </button>
-  </Tooltip>
+      <button
+        type="button"
+        onClick={onReload}
+        disabled={loading}
+        aria-label="Refresh contractors and bookouts from Monday"
+        className={cn(
+          "grid place-items-center h-11 w-11 rounded-full bg-[#082040]/65 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)] backdrop-blur-sm hover:bg-[#082040]/80 disabled:opacity-80",
+          FOCUS_RING
+        )}
+      >
+        <IconRefresh size={20} className={cn(loading && "animate-spin")} />
+      </button>
+    </Tooltip>
+    <span className="rounded-full bg-[#082040]/65 px-2 py-0.5 text-[11px] font-medium text-white whitespace-nowrap backdrop-blur-sm">
+      {loading ? "Refreshing…" : loadedAt ? timeAgo(loadedAt) : ""}
+    </span>
+  </div>
 );
 
 /**
@@ -106,12 +119,8 @@ export const ContractorAvailability = () => {
         { value: "staffing", label: "Admin view" },
         { value: "contractor", label: "Contractor view" },
       ]}
-      radius="md"
-      classNames={{
-        root: "bg-white/20",
-        indicator: "bg-white",
-        label: "text-white data-[active]:text-[#0053B3] font-medium",
-      }}
+      radius="xl"
+      classNames={SEGMENTED_CLASSES}
     />
   );
 

@@ -14,7 +14,7 @@ import {
 import { type Contractor, BOOKOUT_TYPES, MONTH_LABELS } from "~/domains/contractor-availability/model";
 import { FormSkeleton } from "~/components/form-kit";
 import { cn } from "~/utils/utils";
-import { BOOKOUT_CHIP, PANEL } from "../constants";
+import { BOOKOUT_CHIP, FOCUS_RING, PANEL, SEGMENTED_CLASSES } from "../constants";
 import { Panel } from "../panel";
 import { AvailabilitySearch } from "./availability-search";
 import { CapacityGrid } from "./capacity-grid";
@@ -23,9 +23,9 @@ import { ContractorTable, STATUS_BAR } from "./contractor-table";
 
 const Stat = ({ label, value, sub }: { label: string; value: string; sub: string }) => (
   <div className={cn(PANEL, "p-4 md:p-4")}>
-    <div className="text-xs font-medium text-white/85">{label}</div>
+    <div className="text-xs font-medium text-white/90">{label}</div>
     <div className="text-2xl font-semibold tabular-nums leading-tight mt-1">{value}</div>
-    <div className="text-xs text-white/70 mt-0.5">{sub}</div>
+    <div className="text-xs text-white/90 mt-0.5">{sub}</div>
   </div>
 );
 
@@ -50,24 +50,28 @@ const Bars = ({
         return (
           <Row
             key={b.key}
-            {...(onSelect && { type: "button" as const, onClick: () => onSelect(b.key) })}
+            {...(onSelect && {
+              type: "button" as const,
+              onClick: () => onSelect(b.key),
+              "aria-pressed": !!b.active,
+            })}
             className={cn(
               "grid grid-cols-[minmax(0,190px)_minmax(0,1fr)_88px] items-center gap-3 rounded-md px-1.5 py-1 text-left text-sm",
-              onSelect && "hover:bg-white/15",
-              b.active && "bg-white/20"
+              onSelect && cn("hover:bg-white/10", FOCUS_RING),
+              b.active && "bg-white/15"
             )}
           >
             <span className="truncate">{b.label}</span>
             <span className="h-2.5 rounded-full bg-white/20 overflow-hidden">
               <span className={cn("block h-full rounded-full", b.color)} style={{ width: `${pct}%` }} />
             </span>
-            <span className="text-right tabular-nums text-xs text-white/85">
+            <span className="text-right tabular-nums text-xs text-white/90">
               <span className="font-semibold text-white">{pct}%</span> · {unit(b.value)}
             </span>
           </Row>
         );
       })}
-      {total === 0 && <p className="text-xs text-white/70 px-1.5">Nothing logged yet.</p>}
+      {total === 0 && <p className="text-xs text-white/90 px-1.5">Nothing logged yet.</p>}
     </div>
   );
 };
@@ -162,7 +166,7 @@ export const StaffingView = ({
         </Panel>
         <Panel
           title="Contractor status"
-          meta={<span className="text-xs text-white/75">Click to filter the table</span>}
+          meta={<span className="text-xs text-white/90">Click to filter the table</span>}
         >
           <Bars
             unit={(v) => String(v)}
@@ -197,11 +201,8 @@ export const StaffingView = ({
               { value: "search", label: "Find available contractors" },
               { value: "capacity", label: "Capacity, next 8 weeks" },
             ]}
-            classNames={{
-              root: "bg-white/20",
-              indicator: "bg-white",
-              label: "text-white data-[active]:text-[#0053B3] font-medium",
-            }}
+            radius="xl"
+            classNames={SEGMENTED_CLASSES}
           />
         }
       >

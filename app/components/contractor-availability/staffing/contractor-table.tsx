@@ -93,7 +93,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
     <Panel
       title="Contractor-level detail"
       meta={
-        <span className="text-xs text-white/75">
+        <span className="text-xs text-white/90">
           {rows.length === contractors.length ? contractors.length : `${rows.length} of ${contractors.length}`}
         </span>
       }
@@ -139,10 +139,16 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
             {visible.map(({ c, status: s, upcoming }) => (
               <Table.Tr
                 key={c.email}
-                className="cursor-pointer"
+                className="cursor-pointer outline-none focus-visible:bg-blue-50 focus-visible:shadow-[inset_3px_0_0_#0053B3]"
                 tabIndex={0}
+                aria-label={`Open ${c.name}'s profile`}
                 onClick={() => onOpen(c.email)}
-                onKeyDown={(e) => e.key === "Enter" && onOpen(c.email)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    onOpen(c.email);
+                  }
+                }}
               >
                 <Table.Td>
                   <div className="font-medium">{c.name}</div>
@@ -179,7 +185,13 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
                   )}
                 </Table.Td>
                 <Table.Td>
-                  <Badge tt="none" color={STATUS_COLORS[s]} variant="light" className="whitespace-nowrap">
+                  <Badge
+                    tt="none"
+                    color={STATUS_COLORS[s]}
+                    c={`${STATUS_COLORS[s]}.9`}
+                    variant="light"
+                    className="whitespace-nowrap"
+                  >
                     {CONTRACTOR_STATUS_LABELS[s]}
                   </Badge>
                 </Table.Td>
@@ -188,9 +200,9 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
           </Table.Tbody>
         </Table>
       </Table.ScrollContainer>
-      {rows.length === 0 && <p className="text-sm text-white/80">No contractors match these filters.</p>}
+      {rows.length === 0 && <p className="text-sm text-white/90">No contractors match these filters.</p>}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/80">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-white/90">
         <span>Click a row for the full profile, every bookout, and internal staffing notes.</span>
         {pages > 1 && (
           <Pagination
@@ -198,7 +210,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
             value={page}
             onChange={setPage}
             size="sm"
-            classNames={{ control: "border-white/40 bg-white/20 text-white data-[active]:bg-white data-[active]:text-[#0053B3]" }}
+            classNames={{ control: "border-white/40 bg-white/10 text-white data-[active]:bg-white data-[active]:text-[#0053B3]" }}
           />
         )}
       </div>

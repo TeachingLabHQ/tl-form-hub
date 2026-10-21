@@ -112,9 +112,9 @@ export const ContractorDrawer = ({
               ) : (
                 <ProfileAgeBadge profile={c.profile} />
               )}
-              <Badge tt="none" color="gray">{TRAVEL_REACH_LABELS[travelReach(c.profile)]}</Badge>
+              <Badge tt="none" color="gray.7">{TRAVEL_REACH_LABELS[travelReach(c.profile)]}</Badge>
               {c.profile.support.map((s) => (
-                <Badge tt="none" key={s} color="blue" variant="light">
+                <Badge tt="none" key={s} color="blue" c="blue.9" variant="light">
                   {s}
                 </Badge>
               ))}

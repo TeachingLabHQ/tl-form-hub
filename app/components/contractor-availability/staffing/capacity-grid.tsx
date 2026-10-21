@@ -43,7 +43,7 @@ export const CapacityGrid = ({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-white/85">Weekdays only. Hover a square for details; click a name for the profile.</p>
+        <p className="text-sm text-white/90">Weekdays only. Hover a square for details; click a name for the profile.</p>
         <TextInput
           placeholder="Filter by name"
           value={filter}
@@ -60,7 +60,7 @@ export const CapacityGrid = ({
                 <th
                   key={d}
                   className={cn(
-                    "font-normal text-[10px] text-white/85 w-4 leading-3 bg-[#3d6ea8]/60 backdrop-blur-sm",
+                    "font-normal text-[10px] text-white/90 w-4 leading-3 bg-[#3d6ea8]/60 backdrop-blur-sm",
                     i > 0 && parseDate(d).getDay() === 1 && "pl-1.5"
                   )}
                 >
@@ -103,7 +103,7 @@ export const CapacityGrid = ({
             ))}
           </tbody>
         </table>
-        {rows.length === 0 && <p className="text-sm text-white/80 py-2">No contractors match.</p>}
+        {rows.length === 0 && <p className="text-sm text-white/90 py-2">No contractors match.</p>}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/90">
         {LEGEND.map(([cls, label]) => (

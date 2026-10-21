@@ -13,7 +13,7 @@ import {
   BOOKOUT_TYPES,
 } from "~/domains/contractor-availability/model";
 import { cn } from "~/utils/utils";
-import { BOOKOUT_CHIP, PANEL } from "./constants";
+import { BOOKOUT_CHIP, FOCUS_RING, PANEL } from "./constants";
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -63,7 +63,7 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
       </div>
       <div className="grid grid-cols-7 gap-1">
         {DOW.map((d) => (
-          <div key={d} className="text-center text-xs font-semibold text-white/80 py-1">
+          <div key={d} className="text-center text-xs font-semibold text-white/90 py-1">
             {d}
           </div>
         ))}
@@ -81,9 +81,10 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
               aria-label={`${day}${items.length ? `, ${items.length} bookout${items.length > 1 ? "s" : ""}` : ""}`}
               className={cn(
                 "min-h-[48px] md:min-h-[64px] rounded-md p-1 text-left flex flex-col gap-0.5 min-w-0",
-                "bg-white/20 hover:bg-white/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white",
-                off && !items.length && "bg-black/10",
-                day < today && "opacity-60"
+                "bg-white/10 hover:bg-white/20",
+                FOCUS_RING,
+                off && !items.length && "bg-black/20",
+                day < today && "opacity-75"
               )}
             >
               <span
@@ -120,11 +121,11 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
             {t.label}
           </span>
         ))}
-        <span className="inline-flex items-center gap-1.5 text-white/75">
-          <span className="h-2.5 w-2.5 rounded-sm bg-black/15" />
+        <span className="inline-flex items-center gap-1.5 text-white/90">
+          <span className="h-2.5 w-2.5 rounded-sm bg-black/30" />
           Outside your usual days
         </span>
-        <span className="w-full text-white/70">Tap a day to start a bookout on it.</span>
+        <span className="w-full text-white/90">Tap a day to start a bookout on it.</span>
       </div>
     </div>
   );

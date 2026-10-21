@@ -34,10 +34,10 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
   return (
     <Panel
       title="Upcoming on your calendar"
-      meta={upcoming.length > 0 && <span className="text-xs text-white/75">{upcoming.length}</span>}
+      meta={upcoming.length > 0 && <span className="text-xs text-white/90">{upcoming.length}</span>}
     >
       {upcoming.length === 0 ? (
-        <p className="text-sm text-white/80">Nothing coming up. Submit a bookout for any day you can't take Teaching Lab work.</p>
+        <p className="text-sm text-white/90">Nothing coming up. Submit a bookout for any day you can't take Teaching Lab work.</p>
       ) : (
         <ul className="flex flex-col divide-y divide-white/25 -my-1">
           {upcoming.map((b) => (
@@ -45,7 +45,7 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
               <div className="flex-1 min-w-0">
                 <span className="font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
                 {(b.portion !== "Full day" || b.note) && (
-                  <span className="block truncate text-xs text-white/75">
+                  <span className="block truncate text-xs text-white/90">
                     {b.portion !== "Full day" ? `${b.portion} only` : ""}
                     {b.portion !== "Full day" && b.note ? " · " : ""}
                     {b.note}
