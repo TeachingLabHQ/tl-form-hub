@@ -5,6 +5,8 @@ import {
   monthlyTarget,
   tlDaysInMonth,
   todayIso,
+  SEASON_LABELS,
+  seasonOf,
   TRAVEL_REACH_LABELS,
   travelReach,
 } from "~/domains/contractor-availability/availability";
@@ -13,7 +15,6 @@ import {
   bookoutTypeLabel,
   MONTH_LABELS,
   STATES,
-  TRAVEL_FORMATS,
 } from "~/domains/contractor-availability/model";
 import { BOOKOUT_COLORS } from "../constants";
 import { ProfileAgeBadge } from "../profile-form";
@@ -123,27 +124,22 @@ export const ContractorDrawer = ({
           <section>
             <h3 className="font-semibold mb-2">Availability profile</h3>
             <dl className="grid grid-cols-[140px_minmax(0,1fr)] gap-x-3 gap-y-1.5">
-              <Row label="Formats">
-                {c.profile.formats.map((f) => TRAVEL_FORMATS.find((t) => t.value === f)?.label).join("; ") || "—"}
-              </Row>
-              <Row label="Travels to">
-                {c.profile.regions.join(", ") || "Home area only"}
-                {c.profile.longestTrip ? ` · longest ${c.profile.longestTrip.toLowerCase()}` : ""}
+              <Row label="Travel">
+                {TRAVEL_REACH_LABELS[travelReach(c.profile)]}
+                {travelReach(c.profile) === "regional" ? ` (${c.profile.regions.join(", ") || "no regions set"})` : ""}
+                {c.profile.longestTrip ? ` · ${c.profile.longestTrip.toLowerCase()}` : ""}
               </Row>
               <Row label="Usual days">{c.profile.weekdays.join(", ") || "Any weekday"}</Row>
               <Row label="Target">
                 {c.profile.daysPerWeek ? `${c.profile.daysPerWeek} days/week` : "Not set"}
                 {c.profile.maxDaysPerMonth ? `, max ${c.profile.maxDaysPerMonth}/month` : ""}
               </Row>
-              <Row label="Months">
-                {c.profile.months.length === 0 || c.profile.months.length === 12
-                  ? "Year-round"
-                  : c.profile.months.map((m) => MONTH_LABELS[m]).join(", ")}
+              <Row label="Times of year">
+                {seasonOf(c.profile.months) === "custom"
+                  ? c.profile.months.map((m) => MONTH_LABELS[m]).join(", ")
+                  : SEASON_LABELS[seasonOf(c.profile.months)]}
               </Row>
-              <Row label="Other work">
-                {c.profile.outsideWork || "Not set"}
-                {c.profile.outsideHours ? ` · ${c.profile.outsideHours} h/wk` : ""}
-              </Row>
+              <Row label="Outside workload">{c.profile.outsideWork || "Not set"}</Row>
               <Row label="Conflicts">{c.profile.conflicts || "None listed"}</Row>
               <Row label="Content areas">{c.contentAreas.join(", ") || "—"}</Row>
               <Row label="Notes">{c.profile.notes || "—"}</Row>
@@ -168,17 +164,20 @@ export const ContractorDrawer = ({
           </section>
 
           <section>
-            <h3 className="font-semibold mb-2">Upcoming bookouts</h3>
-            {c.bookouts.filter((b) => b.end >= today).length === 0 ? (
+            <h3 className="font-semibold mb-2">Every logged bookout</h3>
+            {c.bookouts.length === 0 ? (
               <Text size="sm" c="dimmed">
                 None logged.
               </Text>
             ) : (
-              <ul className="flex flex-col divide-y">
-                {c.bookouts
-                  .filter((b) => b.end >= today)
+              <ul className="flex flex-col divide-y max-h-72 overflow-y-auto">
+                {[...c.bookouts]
+                  .sort((a, b) => b.start.localeCompare(a.start))
                   .map((b) => (
-                    <li key={b.id} className="flex flex-wrap items-center gap-2 py-1.5">
+                    <li
+                      key={b.id}
+                      className={`flex flex-wrap items-center gap-2 py-1.5 ${b.end < today ? "opacity-55" : ""}`}
+                    >
                       <span className="min-w-[110px] font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
                       <Badge size="sm" color={BOOKOUT_COLORS[b.type]}>
                         {bookoutTypeLabel(b.type)}

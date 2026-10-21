@@ -1,10 +1,11 @@
-import { Badge, Button } from "@mantine/core";
+import { ActionIcon, Badge, Button, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatRange, todayIso } from "~/domains/contractor-availability/availability";
 import { type Bookout, bookoutTypeLabel } from "~/domains/contractor-availability/model";
-import { cn } from "~/utils/utils";
-import { BOOKOUT_COLORS, PANEL } from "./constants";
+import { BOOKOUT_COLORS } from "./constants";
+import { Panel } from "./panel";
 
 type Props = {
   bookouts: Bookout[];
@@ -19,10 +20,6 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
   const [removing, setRemoving] = useState<string | null>(null);
 
   const remove = async (id: string) => {
-    if (confirming !== id) {
-      setConfirming(id);
-      return;
-    }
     setRemoving(id);
     const error = await onRemove(id);
     setRemoving(null);
@@ -35,41 +32,57 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
   };
 
   return (
-    <div className={cn(PANEL, "flex flex-col gap-2")}>
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">Coming up</h2>
-        <span className="text-sm text-white/80">{upcoming.length} logged</span>
-      </div>
+    <Panel
+      title="Upcoming on your calendar"
+      meta={upcoming.length > 0 && <span className="text-xs text-white/75">{upcoming.length}</span>}
+    >
       {upcoming.length === 0 ? (
-        <p className="text-sm text-white/80">
-          Nothing logged yet. Use “Log a bookout” for any day you can't take Teaching Lab work.
-        </p>
+        <p className="text-sm text-white/80">Nothing coming up. Submit a bookout for any day you can't take Teaching Lab work.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-white/25">
+        <ul className="flex flex-col divide-y divide-white/25 -my-1">
           {upcoming.map((b) => (
-            <li key={b.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
-              <span className="min-w-[110px] font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
-              <Badge color={BOOKOUT_COLORS[b.type]} variant="filled">
+            <li key={b.id} className="flex items-center gap-3 py-1.5 text-sm min-h-[40px]">
+              <div className="flex-1 min-w-0">
+                <span className="font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
+                {(b.portion !== "Full day" || b.note) && (
+                  <span className="block truncate text-xs text-white/75">
+                    {b.portion !== "Full day" ? `${b.portion} only` : ""}
+                    {b.portion !== "Full day" && b.note ? " · " : ""}
+                    {b.note}
+                  </span>
+                )}
+              </div>
+              <Badge color={BOOKOUT_COLORS[b.type]} variant="filled" size="sm" className="shrink-0">
                 {bookoutTypeLabel(b.type)}
               </Badge>
-              <span className="flex-1 min-w-[120px] text-white/85">
-                {b.portion !== "Full day" ? `${b.portion} · ` : ""}
-                {b.note}
-              </span>
-              <Button
-                size="xs"
-                variant={confirming === b.id ? "filled" : "subtle"}
-                color={confirming === b.id ? "red" : "white"}
-                loading={removing === b.id}
-                onClick={() => remove(b.id)}
-                onBlur={() => setConfirming((c) => (c === b.id && removing !== b.id ? null : c))}
-              >
-                {confirming === b.id ? "Confirm remove" : "Remove"}
-              </Button>
+              {confirming === b.id ? (
+                <Button
+                  size="compact-xs"
+                  color="red"
+                  loading={removing === b.id}
+                  onClick={() => remove(b.id)}
+                  onBlur={() => setConfirming((c) => (c === b.id && removing !== b.id ? null : c))}
+                  autoFocus
+                >
+                  Remove
+                </Button>
+              ) : (
+                <Tooltip label="Remove bookout" withArrow>
+                  <ActionIcon
+                    variant="subtle"
+                    color="white"
+                    size="sm"
+                    aria-label={`Remove ${formatRange(b.start, b.end)}`}
+                    onClick={() => setConfirming(b.id)}
+                  >
+                    <IconTrash size={15} />
+                  </ActionIcon>
+                </Tooltip>
+              )}
             </li>
           ))}
         </ul>
       )}
-    </div>
+    </Panel>
   );
 };

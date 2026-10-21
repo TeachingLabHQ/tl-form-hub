@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyTravelReach,
+  bookoutDaysByType,
+  confirmedThisQuarter,
   contractorStatus,
+  seasonOf,
+  monthsFor,
+  travelReach,
   dayStatus,
   formatsFromIntake,
   profileFromIntake,
@@ -14,7 +20,7 @@ import type { AvailabilityProfile, Bookout, Contractor } from "./model";
 const profile = (overrides: Partial<AvailabilityProfile> = {}): AvailabilityProfile => ({
   formats: ["virtual", "local", "short", "any"],
   regions: ["Anywhere"],
-  longestTrip: "4+ nights",
+  longestTrip: "Multi-day OK",
   outsideWork: "None",
   outsideHours: 0,
   conflicts: "",
@@ -184,5 +190,52 @@ describe("contractorStatus", () => {
     const nontl = [bookout({ type: "nontl", start: "2026-11-02", end: "2026-11-30" })];
     expect(contractorStatus(profile(), nontl, today)).toBe("available");
     expect(contractorStatus(profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }), [], today)).toBe("available");
+  });
+});
+
+describe("travel preference", () => {
+  it("round-trips each single answer through formats and regions", () => {
+    for (const reach of ["any", "regional", "local", "virtual"] as const) {
+      const p = profile({ ...applyTravelReach(profile({ regions: ["West"] }), reach) });
+      expect(travelReach(p)).toBe(reach === "regional" ? "regional" : reach);
+    }
+  });
+
+  it("keeps picked regions when switching to regional", () => {
+    expect(applyTravelReach(profile({ regions: ["Anywhere", "West"] }), "regional").regions).toEqual(["West"]);
+  });
+});
+
+describe("times of year", () => {
+  it("recognizes the presets and falls back to specific months", () => {
+    expect(seasonOf([])).toBe("year");
+    expect(seasonOf(monthsFor("school", []))).toBe("school");
+    expect(seasonOf([7, 5, 6])).toBe("summer");
+    expect(seasonOf([2, 3])).toBe("custom");
+    expect(monthsFor("custom", [2, 3])).toEqual([2, 3]);
+  });
+});
+
+describe("admin roll-ups", () => {
+  it("counts weekday bookout days by type within the month only", () => {
+    const totals = bookoutDaysByType(
+      [
+        contractor({
+          bookouts: [
+            bookout({ type: "fac", start: "2026-10-29", end: "2026-11-03" }), // Nov 2-3
+            bookout({ type: "nontl", start: "2026-11-09", end: "2026-11-09", portion: "AM" }),
+          ],
+        }),
+      ],
+      2026,
+      10
+    );
+    expect(totals).toEqual({ fac: 2, nontl: 0.5, other: 0 });
+  });
+
+  it("counts a GAP confirmed since the quarter began", () => {
+    expect(confirmedThisQuarter(profile({ confirmedOn: "2026-10-01" }), "2026-11-15")).toBe(true);
+    expect(confirmedThisQuarter(profile({ confirmedOn: "2026-09-30" }), "2026-11-15")).toBe(false);
+    expect(confirmedThisQuarter(profile({ confirmedOn: null }), "2026-11-15")).toBe(false);
   });
 });

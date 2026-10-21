@@ -11,7 +11,7 @@ import { useContractorAvailability } from "./hooks/use-contractor-availability";
 import { ProfileForm } from "./profile-form";
 import { UpcomingBookouts } from "./upcoming-bookouts";
 
-/** A contractor's own page: availability profile, bookout calendar, upcoming list. */
+/** A contractor's own page: GAP and upcoming list on the left, bookout calendar on the right. */
 export const MyAvailability = ({ email }: { email: string }) => {
   const { contractor, loading, loadError, saveProfile, addBookout, removeBookout } =
     useContractorAvailability(email);
@@ -47,20 +47,20 @@ export const MyAvailability = ({ email }: { email: string }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-6 items-start">
-      {/* Remount on contractor change so the form picks up their saved values */}
-      <ProfileForm key={contractor.email} contractor={contractor} onSave={saveProfile} />
-      <div className="flex flex-col gap-6 min-w-0">
-        <BookoutCalendar
-          profile={contractor.profile}
-          bookouts={contractor.bookouts}
-          onAdd={(day) => {
-            setModalDay(day);
-            setModalOpen(true);
-          }}
-        />
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-5 items-start">
+      <div className="flex flex-col gap-5 min-w-0">
+        {/* Remount on contractor change so the form picks up their saved values */}
+        <ProfileForm key={contractor.email} contractor={contractor} onSave={saveProfile} />
         <UpcomingBookouts bookouts={contractor.bookouts} onRemove={removeBookout} />
       </div>
+      <BookoutCalendar
+        profile={contractor.profile}
+        bookouts={contractor.bookouts}
+        onAdd={(day) => {
+          setModalDay(day);
+          setModalOpen(true);
+        }}
+      />
       <BookoutModal
         opened={modalOpen}
         startDay={modalDay}

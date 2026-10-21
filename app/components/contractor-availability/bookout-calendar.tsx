@@ -46,11 +46,11 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
   return (
     <div className={cn(PANEL, "flex flex-col gap-3")}>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <ActionIcon variant="subtle" color="white" onClick={() => move(-1)} aria-label="Previous month">
             <IconChevronLeft size={18} />
           </ActionIcon>
-          <h2 className="text-xl font-semibold min-w-[170px] text-center">
+          <h2 className="text-base font-semibold min-w-[140px] text-center">
             {MONTHS[cursor.month]} {cursor.year}
           </h2>
           <ActionIcon variant="subtle" color="white" onClick={() => move(1)} aria-label="Next month">
@@ -58,12 +58,9 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
           </ActionIcon>
         </div>
         <Button leftSection={<IconPlus size={16} />} onClick={() => onAdd(null)}>
-          Log a bookout
+          Submit a bookout
         </Button>
       </div>
-      <p className="text-sm text-white/80">
-        Tap a day to log a bookout starting that day. Shaded days are outside your usual working days.
-      </p>
       <div className="grid grid-cols-7 gap-1">
         {DOW.map((d) => (
           <div key={d} className="text-center text-xs font-semibold text-white/80 py-1">
@@ -83,7 +80,7 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
               onClick={() => onAdd(day)}
               aria-label={`${day}${items.length ? `, ${items.length} bookout${items.length > 1 ? "s" : ""}` : ""}`}
               className={cn(
-                "min-h-[52px] md:min-h-[76px] rounded-lg p-1 text-left flex flex-col gap-0.5 min-w-0",
+                "min-h-[48px] md:min-h-[64px] rounded-md p-1 text-left flex flex-col gap-0.5 min-w-0",
                 "bg-white/20 hover:bg-white/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white",
                 off && !items.length && "bg-black/10",
                 day < today && "opacity-60"
@@ -116,13 +113,18 @@ export const BookoutCalendar = ({ profile, bookouts, onAdd }: Props) => {
           );
         })}
       </div>
-      <div className="flex flex-wrap gap-4 text-xs text-white/90">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-white/90">
         {BOOKOUT_TYPES.map((t) => (
           <span key={t.value} className="inline-flex items-center gap-1.5">
             <span className={cn("h-2.5 w-2.5 rounded-sm", BOOKOUT_CHIP[t.value])} />
             {t.label}
           </span>
         ))}
+        <span className="inline-flex items-center gap-1.5 text-white/75">
+          <span className="h-2.5 w-2.5 rounded-sm bg-black/15" />
+          Outside your usual days
+        </span>
+        <span className="ml-auto text-white/75">Tap a day to start a bookout there</span>
       </div>
     </div>
   );

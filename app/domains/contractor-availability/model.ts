@@ -77,13 +77,8 @@ export const TRAVEL_FORMATS: { value: TravelFormat; label: string }[] = [
   { value: "any", label: "In person - no limits" },
 ];
 export const REGIONS = ["Anywhere", "Northeast", "Southeast", "Midwest", "Southwest", "West"];
-export const LONGEST_TRIP_OPTIONS = ["Day trips only", "1 night", "2-3 nights", "4+ nights"];
-export const OUTSIDE_WORK_OPTIONS = [
-  "None",
-  "Part-time job elsewhere",
-  "Full-time job elsewhere",
-  "Contracting with other orgs",
-];
+export const LONGEST_TRIP_OPTIONS = ["Day trips only", "Overnight OK", "Multi-day OK"];
+export const OUTSIDE_WORK_OPTIONS = ["None", "Part-time elsewhere", "Full-time elsewhere"];
 export const SUPPORT_OPTIONS = ["Coaching", "Facilitation", "Content development"];
 export const WEEKDAYS: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri"];
 export const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

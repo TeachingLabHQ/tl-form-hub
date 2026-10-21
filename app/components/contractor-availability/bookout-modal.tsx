@@ -1,20 +1,16 @@
 import { Button, Group, Modal, Select, Text, Textarea } from "@mantine/core";
-import { DatePickerInput, type DatesRangeValue } from "@mantine/dates";
+import { DateInput } from "@mantine/dates";
 import { useEffect, useState } from "react";
-import {
-  parseDate,
-  toIsoDate,
-} from "~/domains/contractor-availability/availability";
+import { parseDate, toIsoDate } from "~/domains/contractor-availability/availability";
 import {
   type BookoutType,
   type DayPortion,
   type NewBookout,
-  DAY_PORTIONS,
 } from "~/domains/contractor-availability/model";
 
 type Props = {
   opened: boolean;
-  // Pre-filled start date (YYYY-MM-DD), or null for an empty range
+  // Pre-filled start date (YYYY-MM-DD), or null for empty dates
   startDay: string | null;
   onClose: () => void;
   onSubmit: (bookout: NewBookout) => Promise<string | null>;
@@ -22,13 +18,20 @@ type Props = {
 
 const TYPE_OPTIONS = [
   { value: "nontl", label: "Non-TL bookout (outside conflict)" },
-  { value: "other", label: "Other TL commitment (travel, meeting, admin, content dev)" },
-  { value: "fac", label: "TL facilitation or coaching date" },
+  { value: "fac", label: "TL facilitation date" },
+  { value: "other", label: "TL other commitment (travel, meeting, admin, content dev)" },
+];
+
+const PORTION_OPTIONS = [
+  { value: "Full day", label: "Full day" },
+  { value: "AM", label: "AM only" },
+  { value: "PM", label: "PM only" },
 ];
 
 export const BookoutModal = ({ opened, startDay, onClose, onSubmit }: Props) => {
   const [type, setType] = useState<BookoutType>("nontl");
-  const [range, setRange] = useState<DatesRangeValue>([null, null]);
+  const [start, setStart] = useState<Date | null>(null);
+  const [end, setEnd] = useState<Date | null>(null);
   const [portion, setPortion] = useState<DayPortion>("Full day");
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -37,25 +40,29 @@ export const BookoutModal = ({ opened, startDay, onClose, onSubmit }: Props) => 
   // Fresh form each time it opens
   useEffect(() => {
     if (!opened) return;
-    const start = startDay ? parseDate(startDay) : null;
+    const day = startDay ? parseDate(startDay) : null;
     setType("nontl");
-    setRange([start, start]);
+    setStart(day);
+    setEnd(day);
     setPortion("Full day");
     setNote("");
     setError(null);
   }, [opened, startDay]);
 
   const submit = async () => {
-    const [from, to] = range;
-    if (!from) {
-      setError("Pick the dates you're booked.");
+    if (!start || !end) {
+      setError("Start and end dates are required.");
+      return;
+    }
+    if (end < start) {
+      setError("The end date is before the start date.");
       return;
     }
     setSaving(true);
     const message = await onSubmit({
       type,
-      start: toIsoDate(from),
-      end: toIsoDate(to ?? from),
+      start: toIsoDate(start),
+      end: toIsoDate(end),
       portion,
       note: note.trim(),
     });
@@ -65,34 +72,44 @@ export const BookoutModal = ({ opened, startDay, onClose, onSubmit }: Props) => 
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="Log a bookout" centered>
-      <div className="flex flex-col gap-4">
+    <Modal opened={opened} onClose={onClose} title="Submit a bookout" centered>
+      <div className="flex flex-col gap-3">
         <Select
-          label="What is it?"
+          label="Type"
           data={TYPE_OPTIONS}
           value={type}
           allowDeselect={false}
           onChange={(v) => v && setType(v as BookoutType)}
         />
-        <DatePickerInput
-          type="range"
-          allowSingleDateInRange
-          label="Dates"
-          description="Pick one day, or a start and end day"
-          placeholder="Pick dates"
-          value={range}
-          onChange={setRange}
-        />
+        <Group grow align="flex-start">
+          <DateInput
+            label="Start date"
+            placeholder="Pick a date"
+            value={start}
+            onChange={(d) => {
+              setStart(d);
+              // Keep the range valid: a one-day bookout by default
+              if (d && (!end || end < d)) setEnd(d);
+            }}
+          />
+          <DateInput
+            label="End date"
+            placeholder="Pick a date"
+            value={end}
+            minDate={start ?? undefined}
+            onChange={setEnd}
+          />
+        </Group>
         <Select
           label="Day portion"
-          data={DAY_PORTIONS}
+          data={PORTION_OPTIONS}
           value={portion}
           allowDeselect={false}
           onChange={(v) => v && setPortion(v as DayPortion)}
         />
         <Textarea
-          label="Note (optional)"
-          placeholder="e.g. Family travel. Staffing sees this."
+          label="Notes (optional)"
+          placeholder="e.g. Family travel, out of town"
           autosize
           minRows={2}
           value={note}
@@ -103,16 +120,15 @@ export const BookoutModal = ({ opened, startDay, onClose, onSubmit }: Props) => 
             {error}
           </Text>
         )}
-        <Group justify="flex-end">
+        <Group grow mt="xs">
           <Button variant="default" onClick={onClose}>
             Cancel
           </Button>
           <Button loading={saving} onClick={submit}>
-            Save bookout
+            Submit
           </Button>
         </Group>
       </div>
     </Modal>
   );
 };
-

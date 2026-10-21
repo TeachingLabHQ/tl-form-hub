@@ -11,7 +11,7 @@ import {
 } from "~/domains/contractor-availability/availability";
 import type { Contractor } from "~/domains/contractor-availability/model";
 import { cn } from "~/utils/utils";
-import { BOOKOUT_CHIP, PANEL } from "../constants";
+import { BOOKOUT_CHIP } from "../constants";
 
 const WEEKS = 8;
 
@@ -41,12 +41,9 @@ export const CapacityGrid = ({
   const rows = contractors.filter((c) => c.name.toLowerCase().includes(filter.toLowerCase()));
 
   return (
-    <div className={cn(PANEL, "flex flex-col gap-3")}>
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-semibold">Team capacity, next {WEEKS} weeks</h2>
-          <p className="text-sm text-white/80">Weekdays only. Click a name to open the profile.</p>
-        </div>
+        <p className="text-sm text-white/85">Weekdays only. Hover a square for details; click a name for the profile.</p>
         <TextInput
           placeholder="Filter by name"
           value={filter}
@@ -54,7 +51,7 @@ export const CapacityGrid = ({
           className="w-full sm:w-56"
         />
       </div>
-      <div className="overflow-auto max-h-[520px]">
+      <div className="overflow-auto max-h-[440px] rounded-lg">
         <table className="border-separate border-spacing-[2px] text-xs">
           <thead className="sticky top-0 z-10">
             <tr>
@@ -108,7 +105,7 @@ export const CapacityGrid = ({
         </table>
         {rows.length === 0 && <p className="text-sm text-white/80 py-2">No contractors match.</p>}
       </div>
-      <div className="flex flex-wrap gap-4 text-xs text-white/90">
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/90">
         {LEGEND.map(([cls, label]) => (
           <span key={label} className="inline-flex items-center gap-1.5">
             <span className={cn("h-2.5 w-2.5 rounded-sm", cls)} />

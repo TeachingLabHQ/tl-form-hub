@@ -7,6 +7,7 @@ export function useRoster(enabled: boolean) {
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
+  const [loadedAt, setLoadedAt] = useState<Date | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -15,7 +16,10 @@ export function useRoster(enabled: boolean) {
       const { ok, data } = await postJson<{ contractors: Contractor[] }>(
         "/api/contractor-availability/roster"
       );
-      if (ok) setContractors(data.contractors);
+      if (ok) {
+        setContractors(data.contractors);
+        setLoadedAt(new Date());
+      }
       else setError(data.error ?? "Failed to load contractors");
     } catch {
       setError("Failed to load contractors");
@@ -41,5 +45,5 @@ export function useRoster(enabled: boolean) {
     return null;
   };
 
-  return { contractors, loading, error, reload: load, saveStaffNotes };
+  return { contractors, loading, error, loadedAt, reload: load, saveStaffNotes };
 }

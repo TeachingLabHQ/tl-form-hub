@@ -1,6 +1,7 @@
 import {
   type AvailabilityProfile,
   type Bookout,
+  type BookoutType,
   type Contractor,
   type TravelFormat,
   type Weekday,
@@ -107,11 +108,64 @@ export function dayStatus(
 
 export type TravelReach = "any" | "regional" | "local" | "virtual";
 export const TRAVEL_REACH_LABELS: Record<TravelReach, string> = {
-  any: "Anywhere",
-  regional: "Regional",
-  local: "Local only",
+  any: "Anywhere in the country",
+  regional: "Regional only",
+  local: "Local only (no overnight travel)",
   virtual: "Virtual only",
 };
+
+/**
+ * The profile's formats and regions for a single travel-preference answer.
+ * Every in-person reach includes virtual work; regional keeps the regions
+ * already picked (minus "Anywhere").
+ */
+export function applyTravelReach(
+  profile: Pick<AvailabilityProfile, "formats" | "regions">,
+  reach: TravelReach
+): Pick<AvailabilityProfile, "formats" | "regions"> {
+  switch (reach) {
+    case "any":
+      return { formats: ["virtual", "local", "short", "any"], regions: ["Anywhere"] };
+    case "regional":
+      return {
+        formats: ["virtual", "local", "short"],
+        regions: profile.regions.filter((r) => r !== "Anywhere"),
+      };
+    case "local":
+      return { formats: ["virtual", "local"], regions: [] };
+    case "virtual":
+      return { formats: ["virtual"], regions: [] };
+  }
+}
+
+// Times of year, as presets over the month list (0-11)
+export type Season = "year" | "school" | "summer" | "custom";
+export const SEASON_LABELS: Record<Season, string> = {
+  year: "Year-round",
+  school: "School year only (Sep–May)",
+  summer: "Summers only (Jun–Aug)",
+  custom: "Specific months",
+};
+export const SUMMER_MONTHS = [5, 6, 7];
+export const SCHOOL_YEAR_MONTHS = [0, 1, 2, 3, 4, 8, 9, 10, 11];
+const sameMonths = (a: number[], b: number[]) =>
+  a.length === b.length && [...a].sort((x, y) => x - y).every((m, i) => m === b[i]);
+
+export function seasonOf(months: number[]): Season {
+  if (months.length === 0 || months.length === 12) return "year";
+  if (sameMonths(months, SCHOOL_YEAR_MONTHS)) return "school";
+  if (sameMonths(months, SUMMER_MONTHS)) return "summer";
+  return "custom";
+}
+
+export const monthsFor = (season: Season, current: number[]): number[] =>
+  season === "year"
+    ? []
+    : season === "school"
+      ? SCHOOL_YEAR_MONTHS
+      : season === "summer"
+        ? SUMMER_MONTHS
+        : current;
 
 export function travelReach(profile: AvailabilityProfile): TravelReach {
   const f = profile.formats;
@@ -228,6 +282,46 @@ export const STALE_PROFILE_DAYS = 90;
 export const profileAgeDays = (profile: AvailabilityProfile, today = todayIso()) =>
   profile.confirmedOn ? daysBetween(profile.confirmedOn, today) : null;
 
+// ---------------------------------------------------------------------------
+// Admin roll-ups
+
+/** Weekday bookout days by type in a calendar month (a half day counts 0.5). */
+export function bookoutDaysByType(contractors: Contractor[], year: number, month: number) {
+  const start = `${year}-${pad(month + 1)}-01`;
+  const end = toIsoDate(new Date(year, month + 1, 0));
+  const totals: Record<BookoutType, number> = { nontl: 0, fac: 0, other: 0 };
+  for (const c of contractors) {
+    for (const b of c.bookouts) {
+      if (b.end < start || b.start > end) continue;
+      const from = b.start < start ? start : b.start;
+      const to = b.end > end ? end : b.end;
+      const weekdays = dateRange(from, to).filter(isWeekday).length;
+      totals[b.type] += weekdays * (b.portion === "Full day" ? 1 : 0.5);
+    }
+  }
+  return totals;
+}
+
+/** Contractor-days still open (free, full day) from today to the month's end. */
+export function openDaysLeftInMonth(contractors: Contractor[], today = todayIso()) {
+  const now = parseDate(today);
+  const end = toIsoDate(new Date(now.getFullYear(), now.getMonth() + 1, 0));
+  const days = dateRange(today, end).filter(isWeekday);
+  let open = 0;
+  for (const c of contractors) {
+    for (const d of days) if (dayStatus(c.profile, c.bookouts, d, true).state === "free") open++;
+  }
+  return open;
+}
+
+/** Whether the profile was confirmed in the current calendar quarter. */
+export function confirmedThisQuarter(profile: AvailabilityProfile, today = todayIso()) {
+  if (!profile.confirmedOn) return false;
+  const now = parseDate(today);
+  const quarterStart = toIsoDate(new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1));
+  return profile.confirmedOn >= quarterStart && profile.confirmedOn <= today;
+}
+
 export type ContractorStatus = "available" | "booked" | "stale";
 export const CONTRACTOR_STATUS_LABELS: Record<ContractorStatus, string> = {
   available: "Available",
@@ -305,11 +399,7 @@ export function profileFromIntake(answers: {
       : formats.includes("short") && region
         ? [region]
         : [],
-    longestTrip: formats.includes("any")
-      ? "4+ nights"
-      : formats.includes("short")
-        ? "2-3 nights"
-        : "Day trips only",
+    longestTrip: formats.includes("any") || formats.includes("short") ? "Multi-day OK" : "Day trips only",
     outsideWork: "",
     outsideHours: 0,
     conflicts: "",
