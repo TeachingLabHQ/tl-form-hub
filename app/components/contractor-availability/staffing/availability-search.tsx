@@ -1,5 +1,6 @@
-import { Badge, Button, CloseButton, Select } from "@mantine/core";
-import { DatePickerInput, type DatesRangeValue } from "@mantine/dates";
+import { Badge, Button, CloseButton, Popover, Select } from "@mantine/core";
+import { DatePicker, DatePickerInput, type DatesRangeValue } from "@mantine/dates";
+import { IconCalendarEvent } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import {
   type AvailabilityMatch,
@@ -20,7 +21,7 @@ import {
   SUPPORT_OPTIONS,
 } from "~/domains/contractor-availability/model";
 import { cn } from "~/utils/utils";
-import { FIELD_CLASSES } from "../constants";
+import { FIELD_CLASSES, FOCUS_RING } from "../constants";
 
 const STATE_OPTIONS = Object.entries(STATES)
   .map(([value, s]) => ({ value, label: s.name }))
@@ -121,6 +122,62 @@ const ResultGroup = ({
     </div>
   );
 };
+// A "Dates needed" chip: click it to pick a new day or range in a calendar
+const RangeChip = ({
+  range: [start, end],
+  onChange,
+  onRemove,
+}: {
+  range: [string, string];
+  onChange: (range: [string, string]) => void;
+  onRemove: () => void;
+}) => {
+  const [opened, setOpened] = useState(false);
+  const [value, setValue] = useState<DatesRangeValue>([parseDate(start), parseDate(end)]);
+  const label = formatRange(start, end);
+
+  const pick = (next: DatesRangeValue) => {
+    setValue(next);
+    const [from, to] = next;
+    if (from && to) {
+      onChange([toIsoDate(from), toIsoDate(to)]);
+      setOpened(false);
+    }
+  };
+
+  return (
+    <Popover opened={opened} onChange={setOpened} position="bottom-start" withArrow shadow="md" trapFocus>
+      <Popover.Target>
+        <span className="inline-flex items-center rounded-full bg-white/25 pl-1 pr-1 text-sm">
+          <button
+            type="button"
+            aria-label={`Change ${label}`}
+            aria-expanded={opened}
+            onClick={() => {
+              setValue([parseDate(start), parseDate(end)]);
+              setOpened((o) => !o);
+            }}
+            className={cn("inline-flex items-center gap-1 rounded-full px-2 hover:bg-white/15", FOCUS_RING)}
+          >
+            <IconCalendarEvent size={14} aria-hidden />
+            {label}
+          </button>
+          <CloseButton size="xs" variant="transparent" c="white" aria-label={`Remove ${label}`} onClick={onRemove} />
+        </span>
+      </Popover.Target>
+      <Popover.Dropdown>
+        <DatePicker
+          type="range"
+          allowSingleDateInRange
+          value={value}
+          onChange={pick}
+          defaultDate={parseDate(start)}
+        />
+      </Popover.Dropdown>
+    </Popover>
+  );
+};
+
 /** "Who can take these dates?" — the staffing query from the planning doc. */
 export const AvailabilitySearch = ({ contractors, contentAreas, onOpen }: Props) => {
   const [ranges, setRanges] = useState<[string, string][]>(() => {
@@ -223,20 +280,13 @@ export const AvailabilitySearch = ({ contractors, contentAreas, onOpen }: Props)
 
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-sm text-white mr-1">Dates needed:</span>
-        {ranges.map(([a, b], i) => (
-          <span
-            key={`${a}-${b}-${i}`}
-            className="inline-flex items-center gap-1 rounded-full bg-white/25 pl-3 pr-1 text-sm"
-          >
-            {formatRange(a, b)}
-            <CloseButton
-              size="xs"
-              variant="transparent"
-              c="white"
-              aria-label={`Remove ${formatRange(a, b)}`}
-              onClick={() => setRanges((r) => r.filter((_, j) => j !== i))}
-            />
-          </span>
+        {ranges.map((range, i) => (
+          <RangeChip
+            key={`${range[0]}-${range[1]}-${i}`}
+            range={range}
+            onChange={(next) => setRanges((r) => r.map((x, j) => (j === i ? next : x)))}
+            onRemove={() => setRanges((r) => r.filter((_, j) => j !== i))}
+          />
         ))}
         {ranges.length === 0 && <span className="text-sm text-white">none yet. Add a day or range above.</span>}
       </div>

@@ -1,4 +1,4 @@
-import { Badge, Button, Drawer, Group, Text, Textarea } from "@mantine/core";
+import { Badge, Button, Drawer, Group, Textarea } from "@mantine/core";
 import { useEffect, useState } from "react";
 import {
   formatRange,
@@ -16,12 +16,12 @@ import {
   MONTH_LABELS,
   STATES,
 } from "~/domains/contractor-availability/model";
-import { BOOKOUT_COLORS } from "../constants";
+import { BOOKOUT_COLORS, FIELD_CLASSES } from "../constants";
 import { ProfileAgeBadge } from "../profile-form";
 
 const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <>
-    <dt className="text-gray-500">{label}</dt>
+    <dt className="text-white/80">{label}</dt>
     <dd className="m-0">{children}</dd>
   </>
 );
@@ -53,10 +53,10 @@ const StaffNotes = ({
   return (
     <section>
       <h3 className="font-semibold mb-1">Internal staffing notes</h3>
-      <Text size="xs" c="dimmed" mb="xs">
-        Visible to Teaching Lab staff only, not to the contractor.
-      </Text>
+      <p className="text-xs text-white/90 mb-2">Visible to Teaching Lab staff only, not to the contractor.</p>
       <Textarea
+        aria-label="Internal staffing notes"
+        classNames={FIELD_CLASSES}
         autosize
         minRows={3}
         maxLength={5000}
@@ -67,13 +67,19 @@ const StaffNotes = ({
         }}
       />
       <Group gap="sm" mt="xs">
-        <Button size="xs" loading={saving} disabled={notes.trim() === contractor.staffNotes} onClick={save}>
+        <Button
+          size="xs"
+          color="white"
+          c="#082040"
+          loading={saving}
+          disabled={notes.trim() === contractor.staffNotes}
+          onClick={save}
+          className="disabled:bg-white/20 disabled:text-white/80"
+        >
           Save notes
         </Button>
         {message && (
-          <Text size="xs" c={message.error ? "red" : "green"}>
-            {message.text}
-          </Text>
+          <span className={message.error ? "text-xs text-red-300" : "text-xs text-emerald-300"}>{message.text}</span>
         )}
       </Group>
     </section>
@@ -99,22 +105,35 @@ export const ContractorDrawer = ({
   });
 
   return (
-    <Drawer opened={!!c} onClose={onClose} position="right" size="lg" title={c?.name}>
+    // Navy like the page card, so the drawer reads as part of the same page
+    <Drawer
+      opened={!!c}
+      onClose={onClose}
+      position="right"
+      size="lg"
+      title={c?.name}
+      classNames={{
+        content: "bg-[#082040] text-white shadow-[inset_1px_0_0_rgba(255,255,255,0.25)]",
+        header: "bg-[#082040] text-white border-b border-white/15",
+        title: "text-xl font-semibold",
+        close: "text-white hover:bg-white/15",
+      }}
+    >
       {c && (
         <div className="flex flex-col gap-5 text-sm">
           <div>
-            <Text size="sm" c="dimmed">
+            <p className="text-sm text-white/90 pt-3">
               {[c.city, STATES[c.state]?.name, c.timeZone].filter(Boolean).join(" · ")} · {c.email}
-            </Text>
+            </p>
             <Group gap="xs" mt="xs">
               {c.profileSource === "intake" ? (
-                <Badge tt="none" color="yellow">Onboarding answers only</Badge>
+                <Badge tt="none" color="yellow.4" autoContrast>Onboarding answers only</Badge>
               ) : (
                 <ProfileAgeBadge profile={c.profile} />
               )}
-              <Badge tt="none" color="gray.7">{TRAVEL_REACH_LABELS[travelReach(c.profile)]}</Badge>
+              <Badge tt="none" color="white" c="#082040">{TRAVEL_REACH_LABELS[travelReach(c.profile)]}</Badge>
               {c.profile.support.map((s) => (
-                <Badge tt="none" key={s} color="blue" c="blue.9" variant="light">
+                <Badge tt="none" key={s} color="blue.8">
                   {s}
                 </Badge>
               ))}
@@ -166,11 +185,9 @@ export const ContractorDrawer = ({
           <section>
             <h3 className="font-semibold mb-2">Every logged bookout</h3>
             {c.bookouts.length === 0 ? (
-              <Text size="sm" c="dimmed">
-                None logged.
-              </Text>
+              <p className="text-white/90">None logged.</p>
             ) : (
-              <ul className="flex flex-col divide-y max-h-72 overflow-y-auto">
+              <ul className="flex flex-col divide-y divide-white/15 max-h-72 overflow-y-auto">
                 {[...c.bookouts]
                   .sort((a, b) => b.start.localeCompare(a.start))
                   .map((b) => (
@@ -182,7 +199,7 @@ export const ContractorDrawer = ({
                       <Badge tt="none" size="sm" color={BOOKOUT_COLORS[b.type]}>
                         {bookoutTypeLabel(b.type)}
                       </Badge>
-                      <span className="text-gray-600">
+                      <span className="text-white/90">
                         {b.portion !== "Full day" ? `${b.portion} · ` : ""}
                         {b.note}
                       </span>
