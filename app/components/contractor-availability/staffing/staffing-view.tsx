@@ -16,6 +16,7 @@ import { FormSkeleton } from "~/components/form-kit";
 import { cn } from "~/utils/utils";
 import { BOOKOUT_CHIP, FOCUS_RING, PANEL, SEGMENTED_CLASSES } from "../constants";
 import { Panel } from "../panel";
+import { AskAiBubble } from "./ask-ai-bubble";
 import { AvailabilitySearch } from "./availability-search";
 import { CapacityGrid } from "./capacity-grid";
 import { ContractorDrawer } from "./contractor-drawer";
@@ -219,6 +220,8 @@ export const StaffingView = ({
         onClose={() => setOpenEmail(null)}
         onSaveStaffNotes={onSaveStaffNotes}
       />
+
+      <AskAiBubble contractors={contractors} onOpen={setOpenEmail} />
     </div>
   );
 };

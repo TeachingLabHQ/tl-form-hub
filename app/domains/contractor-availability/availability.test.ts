@@ -214,6 +214,13 @@ describe("times of year", () => {
     expect(seasonOf([2, 3])).toBe("custom");
     expect(monthsFor("custom", [2, 3])).toEqual([2, 3]);
   });
+
+  it("counts June and August as school year, leaving only July off", () => {
+    const school = profile({ months: monthsFor("school", []) });
+    expect(dayStatus(school, [], "2027-06-15", true).state).toBe("free");
+    expect(dayStatus(school, [], "2027-08-16", true).state).toBe("free");
+    expect(dayStatus(school, [], "2027-07-14", true).state).toBe("off");
+  });
 });
 
 describe("admin roll-ups", () => {

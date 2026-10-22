@@ -142,12 +142,13 @@ export function applyTravelReach(
 export type Season = "year" | "school" | "summer" | "custom";
 export const SEASON_LABELS: Record<Season, string> = {
   year: "Year-round",
-  school: "School year only (Sep–May)",
+  school: "School year only (Aug–Jun)",
   summer: "Summers only (Jun–Aug)",
   custom: "Specific months",
 };
+// TL works in June and August, so both seasons include them
 export const SUMMER_MONTHS = [5, 6, 7];
-export const SCHOOL_YEAR_MONTHS = [0, 1, 2, 3, 4, 8, 9, 10, 11];
+export const SCHOOL_YEAR_MONTHS = [0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11];
 const sameMonths = (a: number[], b: number[]) =>
   a.length === b.length && [...a].sort((x, y) => x - y).every((m, i) => m === b[i]);
 
