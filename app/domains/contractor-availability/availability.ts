@@ -31,6 +31,10 @@ export const toIsoDate = (d: Date) =>
 
 export const todayIso = () => toIsoDate(new Date());
 
+// Teaching Lab runs on Eastern time; "en-CA" formats as YYYY-MM-DD
+export const todayIsoEastern = (now = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(now);
+
 export const addDays = (s: string, n: number) => {
   const d = parseDate(s);
   d.setDate(d.getDate() + n);
@@ -66,6 +70,12 @@ export const formatRange = (start: string, end: string) => {
   return a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()
     ? `${formatDate(start)}–${b.getDate()}`
     : `${formatDate(start)} – ${formatDate(end)}`;
+};
+
+/** Next week's Monday to Friday; on a Monday, that's the following week. */
+export const nextWorkWeek = (today: string): [string, string] => {
+  const monday = addDays(today, 8 - (parseDate(today).getDay() || 7));
+  return [monday, addDays(monday, 4)];
 };
 
 export type DayState = "free" | "partial" | "booked" | "off";

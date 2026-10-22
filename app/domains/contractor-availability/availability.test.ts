@@ -6,6 +6,8 @@ import {
   contractorStatus,
   seasonOf,
   monthsFor,
+  nextWorkWeek,
+  todayIsoEastern,
   travelReach,
   dayStatus,
   formatsFromIntake,
@@ -220,6 +222,20 @@ describe("times of year", () => {
     expect(dayStatus(school, [], "2027-06-15", true).state).toBe("free");
     expect(dayStatus(school, [], "2027-08-16", true).state).toBe("free");
     expect(dayStatus(school, [], "2027-07-14", true).state).toBe("off");
+  });
+});
+
+describe("nextWorkWeek", () => {
+  it("is next week's Mon-Fri, moving on once Monday starts", () => {
+    expect(nextWorkWeek("2026-10-21")).toEqual(["2026-10-26", "2026-10-30"]); // Wed
+    expect(nextWorkWeek("2026-10-25")).toEqual(["2026-10-26", "2026-10-30"]); // Sun
+    expect(nextWorkWeek("2026-10-26")).toEqual(["2026-11-02", "2026-11-06"]); // Mon
+  });
+
+  it("uses Eastern time for today", () => {
+    // 12:30am Monday in New York is still Sunday evening on the West Coast
+    expect(todayIsoEastern(new Date("2026-10-26T04:30:00Z"))).toBe("2026-10-26");
+    expect(todayIsoEastern(new Date("2026-10-26T03:59:00Z"))).toBe("2026-10-25");
   });
 });
 

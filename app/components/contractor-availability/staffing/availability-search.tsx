@@ -4,15 +4,15 @@ import { IconCalendarEvent } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import {
   type AvailabilityMatch,
-  addDays,
   dateRange,
   formatDate,
   formatDateWithDay,
   formatRange,
   isWeekday,
+  nextWorkWeek,
   parseDate,
   searchAvailability,
-  todayIso,
+  todayIsoEastern,
   toIsoDate,
 } from "~/domains/contractor-availability/availability";
 import {
@@ -180,12 +180,8 @@ const RangeChip = ({
 
 /** "Who can take these dates?" — the staffing query from the planning doc. */
 export const AvailabilitySearch = ({ contractors, contentAreas, onOpen }: Props) => {
-  const [ranges, setRanges] = useState<[string, string][]>(() => {
-    // Start with the next full work week as an example query
-    let monday = addDays(todayIso(), 7);
-    while (parseDate(monday).getDay() !== 1) monday = addDays(monday, 1);
-    return [[monday, addDays(monday, 4)]];
-  });
+  // Next week by default, rolling over at the start of Monday, Eastern time
+  const [ranges, setRanges] = useState<[string, string][]>(() => [nextWorkWeek(todayIsoEastern())]);
   const [picker, setPicker] = useState<DatesRangeValue>([null, null]);
   const [role, setRole] = useState("Facilitation");
   const [format, setFormat] = useState<"inperson" | "virtual">("inperson");
