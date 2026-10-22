@@ -151,4 +151,12 @@ describe("contractor availability service", () => {
     await service.removeBookout("a@tl.org", "sub-1");
     expect(r.deleteBookout).toHaveBeenCalledWith("sub-1");
   });
+
+  it("says the contractor wasn't found rather than the bookout", async () => {
+    const r = repo({ fetchContractorByEmail: vi.fn().mockResolvedValue({ data: null, error: null }) });
+    expect((await contractorAvailabilityService(r).removeBookout("x@tl.org", "sub-1")).error?.message).toBe(
+      "Contractor not found"
+    );
+    expect(r.deleteBookout).not.toHaveBeenCalled();
+  });
 });

@@ -32,6 +32,8 @@ export interface StaffingAssistantRepository {
   streamAnswer(request: AnswerRequest): Promise<Errorable<Response>>;
   /** Records one question in staffing_assistant_questions. */
   logQuestion(entry: QuestionLogEntry): Promise<Errorable<null>>;
+  /** How many questions this user has logged since the given ISO timestamp. */
+  countQuestionsSince(userEmail: string, since: string): Promise<Errorable<number>>;
 }
 
 export function staffingAssistantRepository(
@@ -96,5 +98,14 @@ export function staffingAssistantRepository(
     return error ? { data: null, error: new Error(error.message) } : { data: null, error: null };
   };
 
-  return { streamAnswer, logQuestion };
+  const countQuestionsSince = async (userEmail: string, since: string): Promise<Errorable<number>> => {
+    const { count, error } = await supabase
+      .from("staffing_assistant_questions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_email", userEmail)
+      .gte("created_at", since);
+    return error ? { data: null, error: new Error(error.message) } : { data: count ?? 0, error: null };
+  };
+
+  return { streamAnswer, logQuestion, countQuestionsSince };
 }

@@ -228,8 +228,9 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
     const items: any[] = [...(page?.items ?? [])];
     let cursor: string | null = page?.cursor ?? null;
     while (cursor) {
+      // JSON string escaping is valid GraphQL, so an odd cursor can't break the query
       const next = await fetchMondayData(
-        `{ next_items_page(limit: 500, cursor: "${cursor}") { cursor items { ${itemFields} } } }`
+        `{ next_items_page(limit: 500, cursor: ${JSON.stringify(cursor)}) { cursor items { ${itemFields} } } }`
       );
       if (next?.errors) throw new Error(JSON.stringify(next.errors));
       items.push(...(next?.data?.next_items_page?.items ?? []));

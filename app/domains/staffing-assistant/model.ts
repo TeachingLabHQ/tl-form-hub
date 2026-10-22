@@ -8,6 +8,8 @@ export const MAX_QUESTION_CHARS = 1000;
 export const MAX_CHAT_MESSAGES = 20;
 // Longest stretch of days a single availability search expands to
 export const MAX_SEARCH_DAYS = 70;
+// Questions per staff member per rolling 24 hours, as a cost backstop
+export const DAILY_QUESTION_LIMIT = 50;
 
 // One row of staffing_assistant_questions
 export interface QuestionLogEntry {

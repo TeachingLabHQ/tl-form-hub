@@ -6,7 +6,11 @@ import { contractorAvailabilityRepository } from "~/domains/contractor-availabil
 import { contractorAvailabilityService } from "~/domains/contractor-availability/service";
 import { staffingAssistantRepository } from "~/domains/staffing-assistant/repository";
 import { MAX_QUESTION_CHARS } from "~/domains/staffing-assistant/model";
-import { latestQuestion, staffingAssistantService } from "~/domains/staffing-assistant/service";
+import {
+  latestQuestion,
+  QuestionLimitError,
+  staffingAssistantService,
+} from "~/domains/staffing-assistant/service";
 import { createSupabaseServerClient } from "../../supabase/supabase.server";
 
 // The admin page's "Ask AI" bubble: streams Claude's answer to a staff
@@ -47,6 +51,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     headers,
     today: todayIso(),
   });
+  if (error instanceof QuestionLimitError) {
+    return json({ ok: false, error: error.message }, { status: 429, headers });
+  }
   if (error) {
     console.error("Error asking the staffing assistant:", error);
     return json({ ok: false, error: "The assistant isn't available right now" }, { status: 500, headers });

@@ -1,8 +1,14 @@
 import type { UIMessage } from "ai";
 import { describe, expect, it, vi } from "vitest";
-import { MAX_CHAT_MESSAGES, MAX_QUESTION_CHARS } from "./model";
+import { DAILY_QUESTION_LIMIT, MAX_CHAT_MESSAGES, MAX_QUESTION_CHARS } from "./model";
 import type { AnswerRequest, StaffingAssistantRepository } from "./repository";
-import { assistantInstructions, latestQuestion, recentMessages, staffingAssistantService } from "./service";
+import {
+  assistantInstructions,
+  latestQuestion,
+  QuestionLimitError,
+  recentMessages,
+  staffingAssistantService,
+} from "./service";
 
 const message = (role: "user" | "assistant", text: string, id = text): UIMessage => ({
   id,
@@ -14,6 +20,7 @@ const repository = () => {
   const repo = {
     streamAnswer: vi.fn(async (_: AnswerRequest) => ({ data: new Response("stream"), error: null })),
     logQuestion: vi.fn(async () => ({ data: null, error: null })),
+    countQuestionsSince: vi.fn(async (_email: string, _since: string) => ({ data: 0, error: null })),
   } satisfies StaffingAssistantRepository;
   return repo;
 };
@@ -110,6 +117,26 @@ describe("staffingAssistantService.ask", () => {
       repo.streamAnswer.mock.calls[0]![0].onEnd({ toolsUsed: [], inputTokens: 1, outputTokens: 1, finishReason: "stop" })
     ).resolves.toBeUndefined();
     expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it("stops at the daily limit without calling Claude", async () => {
+    const repo = repository();
+    repo.countQuestionsSince.mockResolvedValue({ data: DAILY_QUESTION_LIMIT, error: null } as never);
+    const result = await staffingAssistantService(repo).ask(input([message("user", "Q")]));
+    expect(result.error).toBeInstanceOf(QuestionLimitError);
+    expect(repo.streamAnswer).not.toHaveBeenCalled();
+    const [email, since] = repo.countQuestionsSince.mock.calls[0]!;
+    expect(email).toBe("staff@teachinglab.org");
+    expect(Date.now() - Date.parse(since)).toBeCloseTo(24 * 60 * 60 * 1000, -4);
+  });
+
+  it("still answers when the question count can't be read", async () => {
+    const repo = repository();
+    repo.countQuestionsSince.mockResolvedValue({ data: null, error: new Error("no table") } as never);
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    expect((await staffingAssistantService(repo).ask(input([message("user", "Q")]))).error).toBeNull();
+    expect(repo.streamAnswer).toHaveBeenCalled();
     spy.mockRestore();
   });
 });

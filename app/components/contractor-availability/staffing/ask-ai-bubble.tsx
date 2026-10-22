@@ -11,10 +11,10 @@ import {
   IconSparkles,
   IconX,
 } from "@tabler/icons-react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { APICallError, DefaultChatTransport, type UIMessage } from "ai";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { Contractor } from "~/domains/contractor-availability/model";
-import { MAX_QUESTION_CHARS } from "~/domains/staffing-assistant/model";
+import { DAILY_QUESTION_LIMIT, MAX_QUESTION_CHARS } from "~/domains/staffing-assistant/model";
 import { cn } from "~/utils/utils";
 import { FOCUS_RING } from "../constants";
 
@@ -297,7 +297,9 @@ export const AskAiBubble = ({
                     )}
                     {error && (
                       <p role="alert" className="rounded-xl bg-red-900/60 px-3 py-2">
-                        Something went wrong getting an answer. Please try again.
+                        {APICallError.isInstance(error) && error.statusCode === 429
+                          ? `You've asked ${DAILY_QUESTION_LIMIT} questions in the last 24 hours. Please try again later.`
+                          : "Something went wrong getting an answer. Please try again."}
                       </p>
                     )}
                   </div>

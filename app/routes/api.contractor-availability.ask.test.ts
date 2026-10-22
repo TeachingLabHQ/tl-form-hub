@@ -84,6 +84,14 @@ describe("contractor-availability ask", () => {
     );
   });
 
+  it("returns 429 with the message once the daily limit is reached", async () => {
+    const { QuestionLimitError } = await import("~/domains/staffing-assistant/service");
+    assistant.ask.mockResolvedValueOnce({ data: null, error: new QuestionLimitError() });
+    const response = await post(question("Q"));
+    expect(response.status).toBe(429);
+    expect((await response.json()).error).toMatch(/50 questions/);
+  });
+
   it("returns a plain 500 when the roster or Claude fails", async () => {
     rosterService.fetchRoster.mockResolvedValueOnce({ data: null, error: new Error("Monday down") });
     expect((await post(question("Q"))).status).toBe(500);

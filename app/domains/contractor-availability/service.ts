@@ -129,7 +129,9 @@ export function contractorAvailabilityService(
     return { data: mergeRoster([intake.data], saved.data ? [saved.data] : [])[0] ?? null, error: null };
   };
 
-  // The contractor's CBS item, created from their current profile if needed
+  // The contractor's CBS item, created from their current profile if needed.
+  // Not atomic: two first-ever writes at once (Monday has no create-if-absent)
+  // can each create an item, and reads then use only the first one Monday returns.
   const ensureProfileItem = async (contractor: Contractor): Promise<Errorable<string>> =>
     contractor.profileItemId
       ? { data: contractor.profileItemId, error: null }
@@ -183,7 +185,8 @@ export function contractorAvailabilityService(
     removeBookout: async (email, bookoutId) => {
       const found = await fetchContractor(email);
       if (found.error) return found;
-      if (!found.data?.bookouts.some((b) => b.id === bookoutId)) {
+      if (!found.data) return { data: null, error: new Error("Contractor not found") };
+      if (!found.data.bookouts.some((b) => b.id === bookoutId)) {
         return { data: null, error: new Error("Bookout not found") };
       }
       return repository.deleteBookout(bookoutId);

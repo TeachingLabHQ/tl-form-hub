@@ -20,8 +20,8 @@ ON staffing_assistant_questions (user_email, created_at DESC);
 COMMENT ON TABLE staffing_assistant_questions IS 'Questions asked of the CBS staffing assistant, with token usage';
 
 -- The route writes with the signed-in staff member's session, so they can
--- only log rows as themselves. Nobody reads through the API; review the log
--- in the Supabase dashboard.
+-- only log rows as themselves, and reads only their own rows to enforce the
+-- daily question limit. Review the full log in the Supabase dashboard.
 ALTER TABLE staffing_assistant_questions ENABLE ROW LEVEL SECURITY;
 
 -- Safe to re-run if it was applied by hand before the deploy pipeline ran it
@@ -31,3 +31,10 @@ CREATE POLICY "Users can log their own questions"
 ON staffing_assistant_questions
 FOR INSERT
 WITH CHECK (auth.email() = user_email);
+
+DROP POLICY IF EXISTS "Users can read their own questions" ON staffing_assistant_questions;
+
+CREATE POLICY "Users can read their own questions"
+ON staffing_assistant_questions
+FOR SELECT
+USING (auth.email() = user_email);

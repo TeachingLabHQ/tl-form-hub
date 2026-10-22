@@ -8,7 +8,7 @@ import {
 } from "~/domains/contractor-availability/availability";
 import { type Contractor, BOOKOUT_TYPES } from "~/domains/contractor-availability/model";
 import { Errorable } from "~/utils/errorable";
-import { MAX_CHAT_MESSAGES, MAX_QUESTION_CHARS } from "./model";
+import { DAILY_QUESTION_LIMIT, MAX_CHAT_MESSAGES, MAX_QUESTION_CHARS } from "./model";
 import { StaffingAssistantRepository } from "./repository";
 import { staffingTools } from "./tools";
 
@@ -62,6 +62,13 @@ export function recentMessages(messages: UIMessage[]): UIMessage[] {
   return firstUser === -1 ? [] : recent.slice(firstUser);
 }
 
+/** Returned by ask when the user has used up their questions for the day. */
+export class QuestionLimitError extends Error {
+  constructor() {
+    super(`You've asked ${DAILY_QUESTION_LIMIT} questions in the last 24 hours. Please try again later.`);
+  }
+}
+
 export interface AskInput {
   messages: UIMessage[];
   contractors: Contractor[];
@@ -81,6 +88,7 @@ export function staffingAssistantService(
   return {
     streamAnswer: repository.streamAnswer,
     logQuestion: repository.logQuestion,
+    countQuestionsSince: repository.countQuestionsSince,
 
     ask: async ({ messages, contractors, userEmail, headers, today }) => {
       const question = latestQuestion(messages);
@@ -90,6 +98,12 @@ export function staffingAssistantService(
           error: new Error(`Ask a question of up to ${MAX_QUESTION_CHARS} characters.`),
         };
       }
+      // Counted from the question log; if it can't be read, answer anyway
+      // rather than lock staff out over a logging problem
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+      const asked = await repository.countQuestionsSince(userEmail, since);
+      if (asked.error) console.error("Failed to count staffing assistant questions:", asked.error);
+      else if (asked.data >= DAILY_QUESTION_LIMIT) return { data: null, error: new QuestionLimitError() };
       const started = Date.now();
       // A failed log write is reported but never breaks the answer
       const log = async (fields: Omit<Parameters<typeof repository.logQuestion>[0], "userEmail" | "question" | "durationMs">) => {
