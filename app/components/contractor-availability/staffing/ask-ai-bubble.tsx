@@ -1,6 +1,16 @@
 import { useChat } from "@ai-sdk/react";
 import { Affix, Loader, Textarea, Tooltip, Transition } from "@mantine/core";
-import { IconArrowUp, IconMessagePlus, IconPlayerStopFilled, IconSparkles, IconX } from "@tabler/icons-react";
+import {
+  IconArrowsMaximize,
+  IconArrowsMinimize,
+  IconArrowUp,
+  IconChevronUp,
+  IconMessagePlus,
+  IconMinus,
+  IconPlayerStopFilled,
+  IconSparkles,
+  IconX,
+} from "@tabler/icons-react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { Contractor } from "~/domains/contractor-availability/model";
@@ -15,6 +25,17 @@ const TOOL_STATUS: Record<string, string> = {
   listContractors: "Reading profiles…",
   monthSummary: "Adding up the month…",
 };
+
+// Panel size: "min" keeps only the header bar, "full" fills the window
+type PanelSize = "normal" | "min" | "full";
+
+const PANEL_SIZE: Record<PanelSize, string> = {
+  normal: "absolute bottom-16 right-0 w-[min(420px,calc(100vw-32px))] h-[min(600px,calc(100vh-120px))]",
+  min: "absolute bottom-16 right-0 w-[min(340px,calc(100vw-32px))]",
+  full: "fixed inset-3 md:inset-6",
+};
+
+const HEADER_BUTTON = cn("grid place-items-center h-8 w-8 rounded-full hover:bg-white/15", FOCUS_RING);
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -35,7 +56,10 @@ const useNameLinker = (contractors: Contractor[], onOpen: (email: string) => voi
             key={i}
             type="button"
             onClick={() => onOpen(email)}
-            className={cn("font-semibold underline decoration-white/50 underline-offset-2 hover:decoration-white", FOCUS_RING)}
+            className={cn(
+              "font-semibold underline decoration-white/50 underline-offset-2 hover:decoration-white",
+              FOCUS_RING
+            )}
           >
             {piece}
           </button>
@@ -73,13 +97,7 @@ const Answer = ({ text, link }: { text: string; link: (t: string) => React.React
   );
 };
 
-const Message = ({
-  message,
-  link,
-}: {
-  message: UIMessage;
-  link: (t: string) => React.ReactNode;
-}) => {
+const Message = ({ message, link }: { message: UIMessage; link: (t: string) => React.ReactNode }) => {
   if (message.role === "user") {
     const text = message.parts.map((p) => (p.type === "text" ? p.text : "")).join("");
     return (
@@ -119,6 +137,7 @@ export const AskAiBubble = ({
   onOpen: (email: string) => void;
 }) => {
   const [open, setOpen] = useState(false);
+  const [size, setSize] = useState<PanelSize>("normal");
   const [input, setInput] = useState("");
   const transport = useMemo(() => new DefaultChatTransport({ api: "/api/contractor-availability/ask" }), []);
   const { messages, sendMessage, status, stop, error, setMessages, clearError } = useChat({ transport });
@@ -143,8 +162,8 @@ export const AskAiBubble = ({
   }, [messages, status]);
 
   useEffect(() => {
-    if (open) inputRef.current?.focus();
-  }, [open]);
+    if (open && size !== "min") inputRef.current?.focus();
+  }, [open, size]);
 
   const ask = (text: string) => {
     const question = text.trim();
@@ -170,131 +189,194 @@ export const AskAiBubble = ({
             style={styles}
             role="dialog"
             aria-label="Ask AI about contractor availability"
-            onKeyDown={(e) => e.key === "Escape" && setOpen(false)}
-            className="absolute bottom-16 right-0 flex flex-col w-[min(420px,calc(100vw-32px))] h-[min(600px,calc(100vh-120px))] rounded-[25px] bg-[#082040]/95 text-white text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35),0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md"
+            // Escape steps down from full screen first, then closes
+            onKeyDown={(e) => e.key === "Escape" && (size === "full" ? setSize("normal") : setOpen(false))}
+            className={cn(
+              "flex flex-col rounded-[25px] bg-[#082040]/95 text-white text-sm shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35),0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md",
+              PANEL_SIZE[size]
+            )}
           >
-            <header className="flex items-start justify-between gap-3 px-5 pt-4 pb-3 border-b border-white/15">
+            <header
+              className={cn(
+                "flex items-start justify-between gap-3 px-5 pt-4 pb-3",
+                size === "min" ? "pb-4" : "border-b border-white/15"
+              )}
+            >
               <div className="min-w-0">
                 <h2 className="text-base font-semibold flex items-center gap-1.5">
                   <IconSparkles size={18} aria-hidden /> Ask AI
                 </h2>
-                <p className="text-xs text-white/90 mt-0.5">Answers from the contractor data in Monday. Read-only.</p>
+                <p className="text-xs text-white/90 mt-0.5 truncate">
+                  {size !== "min"
+                    ? "Answers from the contractor data in Monday. Read-only."
+                    : busy
+                    ? "Answering…"
+                    : messages.length
+                    ? "Conversation kept. Expand to continue."
+                    : "Read-only answers from Monday data."}
+                </p>
               </div>
               <div className="flex gap-1 shrink-0">
-                <Tooltip label="New chat" withArrow>
+                {size !== "min" && (
+                  <Tooltip label="New chat" withArrow>
+                    <button type="button" onClick={newChat} aria-label="New chat" className={HEADER_BUTTON}>
+                      <IconMessagePlus size={18} />
+                    </button>
+                  </Tooltip>
+                )}
+                {size === "min" ? (
+                  <Tooltip label="Expand" withArrow>
+                    <button
+                      type="button"
+                      onClick={() => setSize("normal")}
+                      aria-label="Expand"
+                      className={HEADER_BUTTON}
+                    >
+                      <IconChevronUp size={18} />
+                    </button>
+                  </Tooltip>
+                ) : (
+                  <Tooltip label="Minimize" withArrow>
+                    <button
+                      type="button"
+                      onClick={() => setSize("min")}
+                      aria-label="Minimize"
+                      className={HEADER_BUTTON}
+                    >
+                      <IconMinus size={18} />
+                    </button>
+                  </Tooltip>
+                )}
+                <Tooltip label={size === "full" ? "Exit full screen" : "Full screen"} withArrow>
                   <button
                     type="button"
-                    onClick={newChat}
-                    aria-label="New chat"
-                    className={cn("grid place-items-center h-8 w-8 rounded-full hover:bg-white/15", FOCUS_RING)}
+                    onClick={() => setSize(size === "full" ? "normal" : "full")}
+                    aria-label={size === "full" ? "Exit full screen" : "Full screen"}
+                    className={HEADER_BUTTON}
                   >
-                    <IconMessagePlus size={18} />
+                    {size === "full" ? <IconArrowsMinimize size={18} /> : <IconArrowsMaximize size={18} />}
                   </button>
                 </Tooltip>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  aria-label="Close"
-                  className={cn("grid place-items-center h-8 w-8 rounded-full hover:bg-white/15", FOCUS_RING)}
-                >
-                  <IconX size={18} />
-                </button>
+                <Tooltip label="Close" withArrow>
+                  <button type="button" onClick={() => setOpen(false)} aria-label="Close" className={HEADER_BUTTON}>
+                    <IconX size={18} />
+                  </button>
+                </Tooltip>
               </div>
             </header>
 
-            <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4" aria-live="polite">
-              {messages.length === 0 && (
-                <div className="flex flex-col gap-2">
-                  <p className="text-xs font-medium text-white/90">Try asking</p>
-                  {examples.map((q) => (
+            {size !== "min" && (
+              <>
+                <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4" aria-live="polite">
+                  <div className={cn("flex flex-col gap-4", size === "full" && "mx-auto max-w-3xl")}>
+                    {messages.length === 0 && (
+                      <div className="flex flex-col gap-2">
+                        <p className="text-xs font-medium text-white/90">Try asking</p>
+                        {examples.map((q) => (
+                          <button
+                            key={q}
+                            type="button"
+                            onClick={() => ask(q)}
+                            className={cn(
+                              "text-left rounded-2xl bg-white/[0.06] px-3 py-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] hover:bg-white/15",
+                              FOCUS_RING
+                            )}
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {messages.map((m) => (
+                      <Message key={m.id} message={m} link={link} />
+                    ))}
+                    {status === "submitted" && (
+                      <div className="flex items-center gap-2 text-xs text-white/90">
+                        <Loader size={12} color="white" /> Thinking…
+                      </div>
+                    )}
+                    {error && (
+                      <p role="alert" className="rounded-xl bg-red-900/60 px-3 py-2">
+                        Something went wrong getting an answer. Please try again.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <form
+                  className={cn("flex items-end gap-2 px-4 pb-4 pt-2 w-full", size === "full" && "mx-auto max-w-3xl")}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    ask(input);
+                  }}
+                >
+                  <Textarea
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.currentTarget.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        ask(input);
+                      }
+                    }}
+                    placeholder="Ask about availability, schedules or bookouts"
+                    aria-label="Your question"
+                    maxLength={MAX_QUESTION_CHARS}
+                    autosize
+                    minRows={1}
+                    maxRows={4}
+                    radius="lg"
+                    className="flex-1"
+                  />
+                  {busy ? (
                     <button
-                      key={q}
                       type="button"
-                      onClick={() => ask(q)}
+                      onClick={stop}
+                      aria-label="Stop"
                       className={cn(
-                        "text-left rounded-2xl bg-white/[0.06] px-3 py-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.22)] hover:bg-white/15",
+                        "grid place-items-center h-9 w-9 shrink-0 rounded-full bg-white text-[#082040]",
                         FOCUS_RING
                       )}
                     >
-                      {q}
+                      <IconPlayerStopFilled size={16} />
                     </button>
-                  ))}
-                </div>
-              )}
-              {messages.map((m) => (
-                <Message key={m.id} message={m} link={link} />
-              ))}
-              {status === "submitted" && (
-                <div className="flex items-center gap-2 text-xs text-white/90">
-                  <Loader size={12} color="white" /> Thinking…
-                </div>
-              )}
-              {error && (
-                <p role="alert" className="rounded-xl bg-red-900/60 px-3 py-2">
-                  Something went wrong getting an answer. Please try again.
-                </p>
-              )}
-            </div>
-
-            <form
-              className="flex items-end gap-2 px-4 pb-4 pt-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                ask(input);
-              }}
-            >
-              <Textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.currentTarget.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    ask(input);
-                  }
-                }}
-                placeholder="Ask about availability, schedules or bookouts"
-                aria-label="Your question"
-                maxLength={MAX_QUESTION_CHARS}
-                autosize
-                minRows={1}
-                maxRows={4}
-                radius="lg"
-                className="flex-1"
-              />
-              {busy ? (
-                <button
-                  type="button"
-                  onClick={stop}
-                  aria-label="Stop"
-                  className={cn("grid place-items-center h-9 w-9 shrink-0 rounded-full bg-white text-[#082040]", FOCUS_RING)}
-                >
-                  <IconPlayerStopFilled size={16} />
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={!input.trim()}
-                  aria-label="Ask"
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={!input.trim()}
+                      aria-label="Ask"
+                      className={cn(
+                        "grid place-items-center h-9 w-9 shrink-0 rounded-full bg-white text-[#082040] disabled:opacity-60",
+                        FOCUS_RING
+                      )}
+                    >
+                      <IconArrowUp size={18} />
+                    </button>
+                  )}
+                </form>
+                <p
                   className={cn(
-                    "grid place-items-center h-9 w-9 shrink-0 rounded-full bg-white text-[#082040] disabled:opacity-60",
-                    FOCUS_RING
+                    "px-5 pb-3 -mt-1 text-[11px] text-white/90 w-full",
+                    size === "full" && "mx-auto max-w-3xl"
                   )}
                 >
-                  <IconArrowUp size={18} />
-                </button>
-              )}
-            </form>
-            <p className="px-5 pb-3 -mt-1 text-[11px] text-white/90">
-              AI can make mistakes. Check the profile before booking anyone.
-            </p>
+                  AI can make mistakes. Check the profile before booking anyone.
+                </p>
+              </>
+            )}
           </section>
         )}
       </Transition>
 
+      {/* Hidden in full screen, where it would sit on top of the Ask button */}
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        hidden={open && size === "full"}
+        onClick={() => {
+          setSize("normal");
+          setOpen((o) => !o);
+        }}
         aria-expanded={open}
         aria-label={open ? "Close Ask AI" : "Ask AI about contractor availability"}
         className={cn(
