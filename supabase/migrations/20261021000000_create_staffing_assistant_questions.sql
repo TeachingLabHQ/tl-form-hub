@@ -24,6 +24,9 @@ COMMENT ON TABLE staffing_assistant_questions IS 'Questions asked of the CBS sta
 -- in the Supabase dashboard.
 ALTER TABLE staffing_assistant_questions ENABLE ROW LEVEL SECURITY;
 
+-- Safe to re-run if it was applied by hand before the deploy pipeline ran it
+DROP POLICY IF EXISTS "Users can log their own questions" ON staffing_assistant_questions;
+
 CREATE POLICY "Users can log their own questions"
 ON staffing_assistant_questions
 FOR INSERT
