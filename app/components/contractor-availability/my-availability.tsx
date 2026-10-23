@@ -11,7 +11,11 @@ import { useContractorAvailability } from "./hooks/use-contractor-availability";
 import { ProfileForm } from "./profile-form";
 import { UpcomingBookouts } from "./upcoming-bookouts";
 
-/** A contractor's own page: GAP and upcoming list on the left, bookout calendar on the right. */
+/**
+ * A contractor's own page. What's coming up and booking out are the frequent
+ * jobs, so the calendar and upcoming list lead; the GAP, confirmed about once a
+ * quarter, sits beside them (and after them on phones).
+ */
 export const MyAvailability = ({ email }: { email: string }) => {
   const { contractor, loading, loadError, saveProfile, addBookout, removeBookout } =
     useContractorAvailability(email);
@@ -47,20 +51,20 @@ export const MyAvailability = ({ email }: { email: string }) => {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] gap-5 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-5 items-start">
       <div className="flex flex-col gap-5 min-w-0">
-        {/* Remount on contractor change so the form picks up their saved values */}
-        <ProfileForm key={contractor.email} contractor={contractor} onSave={saveProfile} />
+        <BookoutCalendar
+          profile={contractor.profile}
+          bookouts={contractor.bookouts}
+          onAdd={(day) => {
+            setModalDay(day);
+            setModalOpen(true);
+          }}
+        />
         <UpcomingBookouts bookouts={contractor.bookouts} onRemove={removeBookout} />
       </div>
-      <BookoutCalendar
-        profile={contractor.profile}
-        bookouts={contractor.bookouts}
-        onAdd={(day) => {
-          setModalDay(day);
-          setModalOpen(true);
-        }}
-      />
+      {/* Remount on contractor change so the form picks up their saved values */}
+      <ProfileForm key={contractor.email} contractor={contractor} onSave={saveProfile} />
       <BookoutModal
         opened={modalOpen}
         startDay={modalDay}

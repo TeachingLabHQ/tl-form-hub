@@ -212,8 +212,8 @@ describe("GAP history", () => {
       "Usual days: any weekday → Mon",
       "Notes edited",
     ]);
-    expect(gapHistoryText(before, before, false, "a@tl.org")).toBe("GAP confirmed with no changes by a@tl.org.");
-    expect(gapHistoryText(before, before, true, "a@tl.org")).toBe("GAP saved for the first time by a@tl.org.");
+    expect(gapHistoryText(before, before, false, "jo.ann_lee@tl.org")).toBe("GAP confirmed with no changes by Jo Ann Lee.");
+    expect(gapHistoryText(before, before, true, "a@tl.org")).toBe("GAP saved for the first time by A.");
   });
 
   it("adds an entry naming who saved, without failing the save if the post fails", async () => {
@@ -230,12 +230,12 @@ describe("GAP history", () => {
     expect(result.error).toBeNull();
     expect(r.createItemUpdate).toHaveBeenCalledWith(
       "item-a@tl.org",
-      "GAP updated by staff@tl.org. Days per week: 3 → 2."
+      "GAP updated by Staff. Days per week: 3 → 2."
     );
     spy.mockRestore();
   });
 
-  it("reads back only GAP entries, newest first", async () => {
+  it("reads back only GAP entries, newest first, with emails shown as names", async () => {
     const r = repo({
       fetchSavedProfileByEmail: vi.fn().mockResolvedValue({ data: saved("a@tl.org"), error: null }),
       fetchItemUpdates: vi.fn().mockResolvedValue({
@@ -249,6 +249,7 @@ describe("GAP history", () => {
     });
     const { data } = await contractorAvailabilityService(r).fetchGapHistory("a@tl.org");
     expect(data!.map((h) => h.at)).toEqual(["2026-10-20T10:00:00Z", "2026-10-01T10:00:00Z"]);
+    expect(data![1]!.text).toBe("GAP saved for the first time by A.");
   });
 });
 

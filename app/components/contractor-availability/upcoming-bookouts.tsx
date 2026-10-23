@@ -1,4 +1,4 @@
-import { ActionIcon, Badge, Button, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
@@ -10,7 +10,8 @@ import {
   type SessionWeek,
   sessionWeeks,
 } from "~/domains/contractor-availability/sessions";
-import { BOOKOUT_COLORS } from "./constants";
+import { cn } from "~/utils/utils";
+import { BOOKOUT_CHIP } from "./constants";
 import { Panel } from "./panel";
 
 type Props = {
@@ -20,6 +21,11 @@ type Props = {
 
 // Rows shown before "Show all"
 const VISIBLE_ROWS = 6;
+
+// The calendar legend's swatch, so rows read without a badge on each
+const Swatch = ({ type }: { type: Bookout["type"] }) => (
+  <span aria-hidden className={cn("h-2.5 w-2.5 shrink-0 rounded-sm", BOOKOUT_CHIP[type])} />
+);
 
 type Row = { start: string; bookout: Bookout; week?: never } | { start: string; week: SessionWeek; bookout?: never };
 
@@ -64,30 +70,23 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
           {shown.map(({ bookout: b, week }) =>
             week ? (
               <li key={week.id} className="flex items-center gap-3 py-1.5 text-sm min-h-[40px]">
+                <Swatch type="fac" />
                 <div className="flex-1 min-w-0">
                   <span className="font-medium tabular-nums">{formatRange(week.start, week.end)}</span>
                   <span className="block truncate text-xs text-white/90">{describeSessionWeek(week)}</span>
                 </div>
-                <Badge tt="none" color={BOOKOUT_COLORS.fac} variant="filled" size="sm" className="shrink-0">
-                  {bookoutTypeLabel("fac")}
-                </Badge>
-                <span className="shrink-0 text-xs text-white/90">From logistics board</span>
               </li>
             ) : (
               <li key={b.id} className="flex items-center gap-3 py-1.5 text-sm min-h-[40px]">
+                <Swatch type={b.type} />
                 <div className="flex-1 min-w-0">
                   <span className="font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
-                  {(b.portion !== "Full day" || b.note) && (
-                    <span className="block truncate text-xs text-white/90">
-                      {b.portion !== "Full day" ? `${b.portion} only` : ""}
-                      {b.portion !== "Full day" && b.note ? " · " : ""}
-                      {b.note}
-                    </span>
-                  )}
+                  <span className="block truncate text-xs text-white/90">
+                    {[bookoutTypeLabel(b.type), b.portion !== "Full day" && `${b.portion} only`, b.note]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
                 </div>
-                <Badge tt="none" color={BOOKOUT_COLORS[b.type]} variant="filled" size="sm" className="shrink-0">
-                  {bookoutTypeLabel(b.type)}
-                </Badge>
                 {confirming === b.id ? (
                   <Button
                     size="compact-xs"

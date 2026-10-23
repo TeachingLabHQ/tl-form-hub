@@ -1,13 +1,12 @@
 import { Errorable } from "~/utils/errorable";
 import {
+  EMAIL_PATTERN,
   formatRange,
+  GAP_FIELDS,
   isIsoDate,
-  SEASON_LABELS,
-  seasonOf,
+  nameFromEmail,
   todayIso,
   todayIsoEastern,
-  TRAVEL_REACH_LABELS,
-  travelReach,
 } from "./availability";
 import {
   type AvailabilityProfile,
@@ -22,7 +21,6 @@ import {
   BOOKOUT_TYPES,
   DAY_PORTIONS,
   LONGEST_TRIP_OPTIONS,
-  MONTH_LABELS,
   OUTSIDE_WORK_OPTIONS,
   REGIONS,
   SUPPORT_OPTIONS,
@@ -121,30 +119,6 @@ export function withSessions(contractors: Contractor[], sessions: Map<string, Bo
 // GAP history entries are the CBS item's updates that start with this
 export const GAP_HISTORY_PREFIX = "GAP ";
 
-// How each GAP field reads in the history; free text only says it changed
-const GAP_FIELDS: { label: string; show: (p: AvailabilityProfile) => string; freeText?: boolean }[] = [
-  {
-    label: "Travel",
-    show: (p) =>
-      TRAVEL_REACH_LABELS[travelReach(p)] + (travelReach(p) === "regional" ? ` (${p.regions.join(", ")})` : ""),
-  },
-  { label: "Max trip length", show: (p) => p.longestTrip || "not set" },
-  { label: "Days per week", show: (p) => (p.daysPerWeek ? String(p.daysPerWeek) : "not set") },
-  { label: "Max days per month", show: (p) => (p.maxDaysPerMonth ? String(p.maxDaysPerMonth) : "not set") },
-  { label: "Outside workload", show: (p) => p.outsideWork || "not set" },
-  {
-    label: "Times of year",
-    show: (p) =>
-      seasonOf(p.months) === "custom"
-        ? p.months.map((m) => MONTH_LABELS[m]).join(", ")
-        : SEASON_LABELS[seasonOf(p.months)],
-  },
-  { label: "Project types", show: (p) => p.support.join(", ") || "none" },
-  { label: "Usual days", show: (p) => p.weekdays.join(", ") || "any weekday" },
-  { label: "Conflicts of interest", show: (p) => p.conflicts, freeText: true },
-  { label: "Notes", show: (p) => p.notes, freeText: true },
-];
-
 /** What changed between two versions of a GAP, one readable line per field. */
 export function gapChanges(before: AvailabilityProfile, after: AvailabilityProfile): string[] {
   return GAP_FIELDS.filter((f) => f.show(before) !== f.show(after)).map((f) =>
@@ -159,11 +133,12 @@ export function gapHistoryText(
   firstSave: boolean,
   savedBy: string
 ): string {
-  if (firstSave) return `${GAP_HISTORY_PREFIX}saved for the first time by ${savedBy}.`;
+  const by = nameFromEmail(savedBy);
+  if (firstSave) return `${GAP_HISTORY_PREFIX}saved for the first time by ${by}.`;
   const changes = gapChanges(before, after);
   return changes.length
-    ? `${GAP_HISTORY_PREFIX}updated by ${savedBy}. ${changes.join("; ")}.`
-    : `${GAP_HISTORY_PREFIX}confirmed with no changes by ${savedBy}.`;
+    ? `${GAP_HISTORY_PREFIX}updated by ${by}. ${changes.join("; ")}.`
+    : `${GAP_HISTORY_PREFIX}confirmed with no changes by ${by}.`;
 }
 
 export interface ContractorAvailabilityService extends ContractorAvailabilityRepository {
@@ -309,6 +284,8 @@ export function contractorAvailabilityService(
       return {
         data: updates.data
           .filter((u) => u.text.startsWith(GAP_HISTORY_PREFIX))
+          // Entries saved before names were used say who by email
+          .map((u) => ({ ...u, text: u.text.replace(EMAIL_PATTERN, nameFromEmail) }))
           .sort((a, b) => b.at.localeCompare(a.at)),
         error: null,
       };

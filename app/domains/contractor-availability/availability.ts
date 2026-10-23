@@ -6,6 +6,7 @@ import {
   type TravelFormat,
   type Weekday,
   bookoutTypeLabel,
+  MONTH_LABELS,
   STATES,
   WEEKDAYS,
 } from "./model";
@@ -423,3 +424,38 @@ export function profileFromIntake(answers: {
     confirmedOn: null,
   };
 }
+
+export const EMAIL_PATTERN = /[\w.+-]+@[\w-]+(\.[\w-]+)+/g;
+
+/** "duncan.gates@teachinglab.org" -> "Duncan Gates"; TL emails are first.last. */
+export const nameFromEmail = (email: string) =>
+  email
+    .split("@")[0]!
+    .split(/[._]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+
+// How each GAP field reads in its summary and history; free text only says it changed
+export const GAP_FIELDS: { label: string; show: (p: AvailabilityProfile) => string; freeText?: boolean }[] = [
+  {
+    label: "Travel",
+    show: (p) =>
+      TRAVEL_REACH_LABELS[travelReach(p)] + (travelReach(p) === "regional" ? ` (${p.regions.join(", ")})` : ""),
+  },
+  { label: "Max trip length", show: (p) => p.longestTrip || "not set" },
+  { label: "Days per week", show: (p) => (p.daysPerWeek ? String(p.daysPerWeek) : "not set") },
+  { label: "Max days per month", show: (p) => (p.maxDaysPerMonth ? String(p.maxDaysPerMonth) : "not set") },
+  { label: "Outside workload", show: (p) => p.outsideWork || "not set" },
+  {
+    label: "Times of year",
+    show: (p) =>
+      seasonOf(p.months) === "custom"
+        ? p.months.map((m) => MONTH_LABELS[m]).join(", ")
+        : SEASON_LABELS[seasonOf(p.months)],
+  },
+  { label: "Project types", show: (p) => p.support.join(", ") || "none" },
+  { label: "Usual days", show: (p) => p.weekdays.join(", ") || "any weekday" },
+  { label: "Conflicts of interest", show: (p) => p.conflicts, freeText: true },
+  { label: "Notes", show: (p) => p.notes, freeText: true },
+];
