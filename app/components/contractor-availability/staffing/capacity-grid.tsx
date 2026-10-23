@@ -1,8 +1,11 @@
 import { memo, useCallback, useMemo, useState } from "react";
-import { Portal, TextInput } from "@mantine/core";
+import { Portal, SegmentedControl, TextInput } from "@mantine/core";
 import {
+  type CapacitySort,
   type DayStatus,
   addDays,
+  CAPACITY_SORT_LABELS,
+  capacityBands,
   dayStatus,
   formatDate,
   formatDateWithDay,
@@ -12,7 +15,7 @@ import {
 } from "~/domains/contractor-availability/availability";
 import { type Contractor, bookoutTypeLabel, MONTH_LABELS } from "~/domains/contractor-availability/model";
 import { cn } from "~/utils/utils";
-import { BOOKOUT_CHIP } from "../constants";
+import { BOOKOUT_CHIP, SEGMENTED_CLASSES } from "../constants";
 
 const WEEKS = 8;
 
@@ -55,10 +58,21 @@ const withWeekGaps = (days: string[], weekStarts: boolean[], cell: (i: number) =
 // The hovered cell, with where to draw the readout (viewport coordinates)
 type Hover = { row: number; col: number; x: number; y: number };
 
+// A full-width label above each band, its text pinned to the left edge
+const BandLabel = ({ cols, divider, children }: { cols: number; divider?: boolean; children: React.ReactNode }) => (
+  <tr>
+    <td colSpan={cols} className={cn("pb-0.5 pt-2", divider && "border-t border-white/30")}>
+      <span className="sticky left-0 text-[11px] font-semibold text-white/90">{children}</span>
+    </td>
+  </tr>
+);
+
 // The ~5k squares, kept out of hover renders: hovering only rewrites the
-// highlight <style> below, keyed off each square's data-r/data-c
+// highlight <style> below, keyed off each square's data-r/data-c. Rows from
+// `staleFrom` on are the stale-GAP band, dimmed.
 const GridBody = memo(function GridBody({
   rows,
+  staleFrom,
   statuses,
   days,
   weekStarts,
@@ -66,21 +80,34 @@ const GridBody = memo(function GridBody({
   onHover,
 }: {
   rows: Contractor[];
+  staleFrom: number;
   statuses: DayStatus[][];
   days: string[];
   weekStarts: boolean[];
   onOpen: (email: string) => void;
   onHover: (e: React.MouseEvent | null) => void;
 }) {
+  const cols = 1 + days.length + weekStarts.filter(Boolean).length;
   return (
     <tbody onMouseOver={onHover} onMouseLeave={() => onHover(null)}>
-      {rows.map((c, r) => (
+      {rows.flatMap((c, r) => [
+        r === 0 && staleFrom > 0 ? (
+          <BandLabel key="band-current" cols={cols}>
+            GAP current · {staleFrom}
+          </BandLabel>
+        ) : null,
+        r === staleFrom ? (
+          <BandLabel key="band-stale" cols={cols} divider={r > 0}>
+            Stale or never-confirmed GAP · {rows.length - staleFrom}{" "}
+            <span className="font-normal text-white/70">— their open days may not be real</span>
+          </BandLabel>
+        ) : null,
         <tr key={c.email}>
           <th data-name={r} className="sticky left-0 z-10 bg-[#1c3355] pr-3 text-left font-medium whitespace-nowrap">
             <button
               type="button"
               title={c.name}
-              className="block max-w-full truncate hover:underline"
+              className={cn("block max-w-full truncate hover:underline", r >= staleFrom && "text-white/60")}
               onClick={() => onOpen(c.email)}
             >
               {c.name}
@@ -90,20 +117,22 @@ const GridBody = memo(function GridBody({
             days,
             weekStarts,
             (i) => (
-              <td key={days[i]}>
+              <td key={days[i]} className={r >= staleFrom ? "opacity-40" : undefined}>
                 <div data-r={r} data-c={i} className={cn("h-5 w-full rounded-[3px]", cellClass(statuses[r]![i]!))} />
               </td>
             ),
             ""
           )}
-        </tr>
-      ))}
+        </tr>,
+      ])}
     </tbody>
   );
 });
 
 /**
- * Contractor × weekday grid for the next 8 weeks. Hovering a square
+ * Contractor × weekday grid for the next 8 weeks, current GAPs above stale
+ * ones, busiest first by default so busy rows group and crunch weeks show as
+ * columns. Hovering a square
  * highlights its row and day and shows what's booked plus how many of the
  * listed contractors are open that day; the bottom row totals each day.
  */
@@ -115,16 +144,23 @@ export const CapacityGrid = ({
   onOpen: (email: string) => void;
 }) => {
   const [filter, setFilter] = useState("");
+  const [sort, setSort] = useState<CapacitySort>("busiest");
   const [hover, setHover] = useState<Hover | null>(null);
   const days = useMemo(() => {
     const out: string[] = [];
     for (let d = todayIso(); out.length < WEEKS * 5; d = addDays(d, 1)) if (isWeekday(d)) out.push(d);
     return out;
   }, []);
-  const rows = useMemo(
-    () => contractors.filter((c) => c.name.toLowerCase().includes(filter.toLowerCase())),
-    [contractors, filter]
+  const bands = useMemo(
+    () =>
+      capacityBands(
+        contractors.filter((c) => c.name.toLowerCase().includes(filter.toLowerCase())),
+        days,
+        sort
+      ),
+    [contractors, filter, days, sort]
   );
+  const rows = useMemo(() => [...bands.current, ...bands.stale], [bands]);
   const statuses = useMemo(
     () => rows.map((c) => days.map((d) => dayStatus(c.profile, c.bookouts, d, false))),
     [rows, days]
@@ -156,14 +192,26 @@ export const CapacityGrid = ({
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-white/90">
-          Weekdays only. Hover a square for details; click a name for the profile.
+          Weekdays only. Busiest sorts by TL days in these 8 weeks. Hover a square for details; click a name for the
+          profile.
         </p>
-        <TextInput
-          placeholder="Filter by name"
-          value={filter}
-          onChange={(e) => setFilter(e.currentTarget.value)}
-          className="w-full sm:w-56"
-        />
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <SegmentedControl
+            size="xs"
+            radius="xl"
+            classNames={SEGMENTED_CLASSES}
+            aria-label="Sort rows"
+            value={sort}
+            onChange={(v) => setSort(v as CapacitySort)}
+            data={Object.entries(CAPACITY_SORT_LABELS).map(([value, label]) => ({ value, label }))}
+          />
+          <TextInput
+            placeholder="Filter by name"
+            value={filter}
+            onChange={(e) => setFilter(e.currentTarget.value)}
+            className="w-full sm:w-56"
+          />
+        </div>
       </div>
       <div className="overflow-auto max-h-[480px] rounded-lg" onScroll={() => setHover(null)}>
         {hover && (
@@ -221,6 +269,7 @@ export const CapacityGrid = ({
           </thead>
           <GridBody
             rows={rows}
+            staleFrom={bands.current.length}
             statuses={statuses}
             days={days}
             weekStarts={weekStarts}

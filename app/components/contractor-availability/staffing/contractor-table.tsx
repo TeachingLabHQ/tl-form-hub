@@ -1,5 +1,5 @@
 import { Badge, Pagination, Select, Table, TextInput } from "@mantine/core";
-import { IconSearch } from "@tabler/icons-react";
+import { IconArrowDown, IconArrowUp, IconSearch, IconSelector } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
   type GapStatus,
@@ -13,6 +13,7 @@ import {
   LOAD_STATUS_LABELS,
   matchesFilter,
   staffingFlags,
+  staffingOrder,
   todayIso,
   travelReach,
 } from "~/domains/contractor-availability/availability";
@@ -44,12 +45,15 @@ export const GAP_BAR: Record<GapStatus, string> = {
 };
 
 // Load is the badge; an out-of-date GAP and double bookings ride beside it,
-// so a stale profile never hides how booked someone is
+// so a stale profile never hides how booked someone is. With no target there's
+// no load to show, and the GAP badge says why, so it stands alone.
 const StatusBadges = ({ flags }: { flags: StaffingFlags }) => (
   <div className="flex flex-wrap items-center gap-1 shrink-0">
-    <Badge tt="none" color={LOAD_COLORS[flags.load]} autoContrast className="whitespace-nowrap">
-      {LOAD_STATUS_LABELS[flags.load]}
-    </Badge>
+    {(flags.load !== "unset" || flags.gap === "current") && (
+      <Badge tt="none" color={LOAD_COLORS[flags.load]} autoContrast className="whitespace-nowrap">
+        {LOAD_STATUS_LABELS[flags.load]}
+      </Badge>
+    )}
     {flags.gap !== "current" && (
       <Badge tt="none" variant="outline" color="gray.3" className="whitespace-nowrap text-white">
         {flags.gap === "stale" ? "Stale GAP" : "No GAP"}
@@ -91,6 +95,56 @@ const STATUS_FILTERS = [
   { group: "GAP", items: options(GAP_STATUS_LABELS, "gap:") },
 ];
 
+type Row = { c: Contractor; flags: StaffingFlags; upcoming: Contractor["bookouts"] };
+type SortKey = "status" | "name" | "reach" | "days" | "pref" | "gap" | "upcoming";
+type Sort = { key: SortKey; reversed: boolean };
+
+const REACH_ORDER = Object.keys(REACH_SHORT);
+// Each column's first-click order; a second click reverses it. Status is the
+// staffing order (rank by email), the default.
+const SORTS: Record<
+  SortKey,
+  { label: string; natural: "ascending" | "descending"; compare: (a: Row, b: Row, rank: Map<string, number>) => number }
+> = {
+  name: { label: "Name", natural: "ascending", compare: (a, b) => a.c.name.localeCompare(b.c.name) },
+  reach: {
+    label: "Travel radius",
+    natural: "ascending",
+    compare: (a, b) =>
+      REACH_ORDER.indexOf(travelReach(a.c.profile)) - REACH_ORDER.indexOf(travelReach(b.c.profile)),
+  },
+  days: {
+    label: "Days/wk",
+    natural: "descending",
+    compare: (a, b) => b.c.profile.daysPerWeek - a.c.profile.daysPerWeek,
+  },
+  pref: {
+    label: "Project pref.",
+    natural: "ascending",
+    compare: (a, b) => a.c.profile.support.join(" + ").localeCompare(b.c.profile.support.join(" + ")),
+  },
+  // Most recent first; never confirmed sorts last
+  gap: {
+    label: "GAP updated",
+    natural: "descending",
+    compare: (a, b) => (b.c.profile.confirmedOn ?? "").localeCompare(a.c.profile.confirmedOn ?? ""),
+  },
+  // Soonest next bookout first; none logged sorts last
+  upcoming: {
+    label: "Upcoming bookouts",
+    natural: "ascending",
+    compare: (a, b) => (a.upcoming[0]?.start ?? "9999").localeCompare(b.upcoming[0]?.start ?? "9999"),
+  },
+  status: {
+    label: "Status",
+    natural: "ascending",
+    compare: (a, b, rank) => rank.get(a.c.email)! - rank.get(b.c.email)!,
+  },
+};
+const DEFAULT_SORT: Sort = { key: "status", reversed: false };
+const STATUS_ORDER_HINT =
+  "Needs attention, then current GAP with room (most open days first), then mostly booked, then no target or stale GAP";
+
 type Props = {
   contractors: Contractor[];
   contentAreas: string[];
@@ -106,8 +160,14 @@ export const ContractorTable = ({ contractors, contentAreas, filter, onFilterCha
   const [reach, setReach] = useState<string | null>(null);
   const [range, setRange] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<Sort>(DEFAULT_SORT);
   const today = todayIso();
   const until = range ? addDays(today, Number(range)) : null;
+
+  const rank = useMemo(
+    () => new Map(staffingOrder(contractors, today).map((c, i) => [c.email, i])),
+    [contractors, today]
+  );
 
   const rows = useMemo(
     () =>
@@ -125,12 +185,45 @@ export const ContractorTable = ({ contractors, contentAreas, filter, onFilterCha
           // A date range shows who has something booked in it
           if (until && upcoming.length === 0) return false;
           return true;
-        }),
-    [contractors, name, area, reach, filter, today, until]
+        })
+        .sort(
+          (a, b) =>
+            (sort.reversed ? -1 : 1) * SORTS[sort.key].compare(a, b, rank) || a.c.name.localeCompare(b.c.name)
+        ),
+    [contractors, name, area, reach, filter, today, until, sort, rank]
   );
 
-  // Back to the first page whenever the filters change
-  useEffect(() => setPage(1), [name, area, reach, filter, range]);
+  // Back to the first page whenever the filters or order change
+  useEffect(() => setPage(1), [name, area, reach, filter, range, sort]);
+
+  const toggleSort = (key: SortKey) =>
+    setSort((s) => (s.key === key ? { key, reversed: !s.reversed } : { key, reversed: false }));
+
+  // A header that sorts by its column; the arrow shows the current direction.
+  // A plain function, not a component, so a click doesn't remount the button and drop focus.
+  const sortTh = (col: SortKey) => {
+    const { label, natural } = SORTS[col];
+    const active = sort.key === col;
+    const dir = active && sort.reversed ? (natural === "ascending" ? "descending" : "ascending") : natural;
+    const Icon = !active ? IconSelector : dir === "ascending" ? IconArrowUp : IconArrowDown;
+    return (
+      <Table.Th key={col} aria-sort={active ? dir : undefined}>
+        <button
+          type="button"
+          onClick={() => toggleSort(col)}
+          title={col === "status" ? STATUS_ORDER_HINT : `Sort by ${label.toLowerCase()}`}
+          className={cn(
+            "inline-flex items-center gap-1 whitespace-nowrap rounded hover:text-white",
+            active && "text-white font-semibold",
+            FOCUS_RING
+          )}
+        >
+          {label}
+          <Icon size={12} className={active ? "" : "opacity-60"} aria-hidden />
+        </button>
+      </Table.Th>
+    );
+  };
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const visible = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -160,6 +253,18 @@ export const ContractorTable = ({ contractors, contentAreas, filter, onFilterCha
           value={filter}
           onChange={onFilterChange}
           clearable
+        />
+        {/* Phones get no column headers, so the order is a dropdown there */}
+        <Select
+          className="col-span-2 sm:hidden"
+          aria-label="Sort by"
+          data={(Object.keys(SORTS) as SortKey[]).map((k) => ({
+            value: k,
+            label: k === "status" ? "Staffing order" : SORTS[k].label,
+          }))}
+          value={sort.key}
+          onChange={(k) => setSort(k ? { key: k as SortKey, reversed: false } : DEFAULT_SORT)}
+          allowDeselect={false}
         />
       </div>
 
@@ -203,13 +308,7 @@ export const ContractorTable = ({ contractors, contentAreas, filter, onFilterCha
         >
           <Table.Thead className="bg-white/10 text-xs text-white/90">
             <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Travel radius</Table.Th>
-              <Table.Th>Days/wk</Table.Th>
-              <Table.Th>Project pref.</Table.Th>
-              <Table.Th>GAP updated</Table.Th>
-              <Table.Th>Upcoming bookouts</Table.Th>
-              <Table.Th>Status</Table.Th>
+              {(["name", "reach", "days", "pref", "gap", "upcoming", "status"] as const).map(sortTh)}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>

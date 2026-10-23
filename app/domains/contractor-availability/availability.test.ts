@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   applyTravelReach,
   bookoutDaysByType,
+  bookoutsByRelevance,
+  capacityBands,
+  staffingOrder,
   doubleBookedDays,
   gapStatus,
   loadStatus,
@@ -119,20 +122,92 @@ describe("searchAvailability", () => {
     const open = contractor({ name: "Open", email: "a@x" });
     const half = contractor({ name: "Half", email: "b@x", bookouts: [bookout({})] });
     const coachOnly = contractor({ name: "Coach", email: "c@x", profile: profile({ support: ["Coaching"] }) });
-    const results = searchAvailability([half, coachOnly, open], {
-      days,
-      role: "Facilitation",
-      format: "inperson",
-      state: "NY",
-      fullDay: true,
-      contentArea: "",
-    });
+    const results = searchAvailability(
+      [half, coachOnly, open],
+      { days, role: "Facilitation", format: "inperson", state: "NY", fullDay: true, contentArea: "" },
+      "2026-11-02"
+    );
     expect(results.map((r) => [r.contractor.name, r.openDays, r.eligible])).toEqual([
       ["Coach", 2, false],
       ["Open", 2, true],
       ["Half", 1, true],
     ]);
     expect(results[0]!.reasons).toEqual(["Doesn't do facilitation"]);
+  });
+});
+
+describe("searchAvailability order", () => {
+  const query = {
+    days: ["2026-11-30"],
+    role: "",
+    format: "virtual" as const,
+    state: "",
+    fullDay: true,
+    contentArea: "",
+  };
+  const fac = (end: string) => [bookout({ type: "fac", start: "2026-11-02", end })];
+
+  it("puts a current GAP first, then the lightest load against target, then most open days", () => {
+    const stale = contractor({ name: "Stale", email: "a@x", profile: profile({ confirmedOn: null }) });
+    const light = contractor({ name: "Light", email: "b@x", bookouts: fac("2026-11-03") });
+    const heavy = contractor({ name: "Heavy", email: "c@x", bookouts: fac("2026-11-11") });
+    const untargeted = contractor({
+      name: "Untargeted",
+      email: "d@x",
+      profile: profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }),
+    });
+    const results = searchAvailability([untargeted, stale, heavy, light], query, "2026-11-02");
+    expect(results.map((r) => r.contractor.name)).toEqual(["Light", "Heavy", "Untargeted", "Stale"]);
+  });
+});
+
+describe("staffingOrder", () => {
+  const today = "2026-11-02";
+  const fac = (end: string) => [bookout({ type: "fac", start: "2026-11-02", end })];
+
+  it("ranks attention, then room by open days, then mostly booked, then no target or stale GAP", () => {
+    const roster = [
+      contractor({ name: "Abe", email: "abe@x", profile: profile({ confirmedOn: null }) }),
+      contractor({ name: "Ann", email: "ann@x", profile: profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }) }),
+      contractor({ name: "Amy", email: "amy@x", bookouts: [bookout({ start: "2026-11-02", end: "2026-11-06" })] }),
+      contractor({ name: "Bob", email: "bob@x" }),
+      contractor({ name: "Cat", email: "cat@x", bookouts: fac("2026-11-13") }),
+      contractor({ name: "Zed", email: "zed@x", bookouts: fac("2026-11-27") }),
+    ];
+    expect(staffingOrder(roster, today).map((c) => c.name)).toEqual(["Zed", "Bob", "Amy", "Cat", "Abe", "Ann"]);
+  });
+});
+
+describe("bookoutsByRelevance", () => {
+  it("lists upcoming soonest first, then past latest first", () => {
+    const b = (id: string, start: string) => bookout({ id, start, end: start });
+    const order = bookoutsByRelevance(
+      [b("past-old", "2026-09-01"), b("far", "2026-12-01"), b("past-new", "2026-10-01"), b("next", "2026-11-05")],
+      "2026-11-02"
+    );
+    expect(order.map((x) => x.id)).toEqual(["next", "far", "past-new", "past-old"]);
+  });
+});
+
+describe("capacityBands", () => {
+  const days = ["2026-11-02", "2026-11-03", "2026-11-04"];
+  const roster = [
+    contractor({ name: "Idle", email: "a@x" }),
+    contractor({ name: "Busy", email: "b@x", bookouts: [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-03" })] }),
+    contractor({ name: "Some", email: "c@x", bookouts: [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-02" })] }),
+    contractor({
+      name: "Old",
+      email: "d@x",
+      profile: profile({ confirmedOn: "2026-01-01" }),
+      bookouts: [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-04" })],
+    }),
+  ];
+  const names = (b: { current: Contractor[]; stale: Contractor[] }) => [b.current, b.stale].map((r) => r.map((c) => c.name));
+
+  it("bands current GAPs above stale ones, each sorted", () => {
+    expect(names(capacityBands(roster, days, "busiest", "2026-11-02"))).toEqual([["Busy", "Some", "Idle"], ["Old"]]);
+    expect(names(capacityBands(roster, days, "open", "2026-11-02"))).toEqual([["Idle", "Some", "Busy"], ["Old"]]);
+    expect(names(capacityBands(roster, days, "name", "2026-11-02"))).toEqual([["Busy", "Idle", "Some"], ["Old"]]);
   });
 });
 

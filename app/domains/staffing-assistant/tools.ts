@@ -19,6 +19,7 @@ import {
   staffingFlags,
   staffingSnapshot,
   tlDaysInMonth,
+  todayIso,
   toIsoDate,
   TRAVEL_REACH_LABELS,
   travelReach,
@@ -97,7 +98,7 @@ export interface SearchInput {
 }
 
 /** Who can take a set of days: the admin page's "Find contractors" search. */
-export function findAvailable(contractors: Contractor[], input: SearchInput) {
+export function findAvailable(contractors: Contractor[], input: SearchInput, today = todayIso()) {
   const days = expandDays(input.dates, input.ranges);
   if (!days.length) return { error: "No weekdays in those dates." };
   const state = (input.state ?? "").toUpperCase();
@@ -111,7 +112,7 @@ export function findAvailable(contractors: Contractor[], input: SearchInput) {
     state,
     fullDay: input.fullDay ?? true,
     contentArea: input.contentArea ?? "",
-  });
+  }, today);
   const eligible = matches.filter((m) => m.eligible && m.openDays > 0);
   const ruledOut: Record<string, number> = {};
   matches
@@ -268,7 +269,7 @@ export function staffingTools(contractors: Contractor[], today: string) {
         fullDay: z.boolean().optional().describe("Whole day needed (default true); false accepts a free half day"),
         contentArea: z.string().optional(),
       }),
-      execute: async (input) => findAvailable(contractors, input),
+      execute: async (input) => findAvailable(contractors, input, today),
     }),
     contractorSchedules: tool({
       description:

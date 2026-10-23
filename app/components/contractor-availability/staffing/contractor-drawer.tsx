@@ -1,6 +1,7 @@
 import { Badge, Button, Drawer, Group, Textarea } from "@mantine/core";
 import { useEffect, useState } from "react";
 import {
+  bookoutsByRelevance,
   formatRange,
   monthlyTarget,
   tlDaysInMonth,
@@ -202,26 +203,24 @@ export const ContractorDrawer = ({
               <p className="text-white/90">None logged.</p>
             ) : (
               <ul className="flex flex-col divide-y divide-white/15 max-h-72 overflow-y-auto">
-                {[...c.bookouts]
-                  .sort((a, b) => b.start.localeCompare(a.start))
-                  .map((b) => (
-                    <li
-                      key={b.id}
-                      className={`flex flex-wrap items-center gap-2 py-1.5 ${b.end < today ? "opacity-55" : ""}`}
-                    >
-                      <span className="min-w-[110px] font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
-                      <Badge tt="none" size="sm" color={BOOKOUT_COLORS[b.type]}>
-                        {bookoutTypeLabel(b.type)}
-                      </Badge>
-                      <span className="text-white/90">
-                        {b.portion !== "Full day" ? `${b.portion} · ` : ""}
-                        {b.note}
-                      </span>
-                      {b.source === "logistics" && (
-                        <span className="text-xs text-white/90">From logistics board</span>
-                      )}
-                    </li>
-                  ))}
+                {bookoutsByRelevance(c.bookouts, today).map((b) => (
+                  <li
+                    key={b.id}
+                    className={`flex flex-wrap items-center gap-2 py-1.5 ${b.end < today ? "opacity-55" : ""}`}
+                  >
+                    <span className="min-w-[110px] font-medium tabular-nums">{formatRange(b.start, b.end)}</span>
+                    <Badge tt="none" size="sm" color={BOOKOUT_COLORS[b.type]}>
+                      {bookoutTypeLabel(b.type)}
+                    </Badge>
+                    <span className="text-white/90">
+                      {b.portion !== "Full day" ? `${b.portion} · ` : ""}
+                      {b.note}
+                    </span>
+                    {b.source === "logistics" && (
+                      <span className="text-xs text-white/90">From logistics board</span>
+                    )}
+                  </li>
+                ))}
               </ul>
             )}
             {c.bookouts.some((b) => b.source === "logistics") && (

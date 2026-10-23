@@ -234,10 +234,15 @@ export interface AvailabilityMatch {
   openDays: number;
 }
 
-/** Who can take a set of dates. Sorted most-open first. */
+/**
+ * Who can take a set of dates. A current GAP first, then the lightest load
+ * against target (so work spreads to people under target, not whoever has
+ * the emptiest calendar), then most open days.
+ */
 export function searchAvailability(
   contractors: Contractor[],
-  query: AvailabilityQuery
+  query: AvailabilityQuery,
+  today = todayIso()
 ): AvailabilityMatch[] {
   return contractors
     .map((c) => {
@@ -266,7 +271,20 @@ export function searchAvailability(
         openDays,
       };
     })
-    .sort((a, b) => b.openDays - a.openDays || a.contractor.name.localeCompare(b.contractor.name));
+    .map((m) => ({
+      m,
+      stale: gapStatus(m.contractor.profile, today) !== "current",
+      // No target sorts after every share, since there's nothing to measure it by
+      share: loadShare(m.contractor.profile, m.contractor.bookouts, today) ?? Infinity,
+    }))
+    .sort(
+      (a, b) =>
+        Number(a.stale) - Number(b.stale) ||
+        a.share - b.share ||
+        b.m.openDays - a.m.openDays ||
+        a.m.contractor.name.localeCompare(b.m.contractor.name)
+    )
+    .map(({ m }) => m);
 }
 
 // A half day counts 0.5 in every total
@@ -368,14 +386,20 @@ export const GAP_STATUS_LABELS: Record<GapStatus, string> = {
   never: "GAP never confirmed",
 };
 
+/** TL days in the next four weeks as a share of the target over them (null with no target). */
+export function loadShare(profile: AvailabilityProfile, bookouts: Bookout[], today = todayIso()) {
+  const target = windowTarget(profile);
+  if (!target) return null;
+  const days = weekdaysAhead(today);
+  return tlDaysBetween(bookouts, days[0]!, days[days.length - 1]!) / target;
+}
+
 /** Over target past 100% of the next four weeks' target, mostly booked from 80%. */
 export function loadStatus(profile: AvailabilityProfile, bookouts: Bookout[], today = todayIso()): LoadStatus {
-  const target = windowTarget(profile);
-  if (!target) return "unset";
-  const days = weekdaysAhead(today);
-  const load = tlDaysBetween(bookouts, days[0]!, days[days.length - 1]!);
-  if (load > target) return "over";
-  return load >= target * MOSTLY_BOOKED_SHARE ? "booked" : "room";
+  const share = loadShare(profile, bookouts, today);
+  if (share === null) return "unset";
+  if (share > 1) return "over";
+  return share >= MOSTLY_BOOKED_SHARE ? "booked" : "room";
 }
 
 /** Current when confirmed in the last 90 days. */
@@ -425,6 +449,76 @@ export function matchesFilter(f: StaffingFlags, filter: string) {
   return kind === "load" ? f.load === value : kind === "gap" ? f.gap === value : true;
 }
 
+/** Full days free of any bookout among `days`. */
+export const openDaysIn = (c: Contractor, days: string[]) =>
+  days.filter((d) => dayStatus(c.profile, c.bookouts, d, true).state === "free").length;
+
+/**
+ * The roster's default order, for deciding who to call: needs attention,
+ * then a current GAP with room (most open days in the next four weeks
+ * first), then mostly booked, then no target or a GAP we can't trust.
+ * Ties go A–Z.
+ */
+export function staffingOrder(contractors: Contractor[], today = todayIso()): Contractor[] {
+  const days = weekdaysAhead(today);
+  const keyed = contractors.map((c) => {
+    const f = staffingFlags(c, today);
+    const tier = needsAttention(f)
+      ? 0
+      : f.gap !== "current" || f.load === "unset"
+      ? 3
+      : f.load === "room"
+      ? 1
+      : 2;
+    return { c, tier, open: tier === 1 ? openDaysIn(c, days) : 0 };
+  });
+  return keyed
+    .sort((a, b) => a.tier - b.tier || b.open - a.open || a.c.name.localeCompare(b.c.name))
+    .map(({ c }) => c);
+}
+
+/** Bookouts for a profile: upcoming soonest first, then past ones latest first. */
+export function bookoutsByRelevance(bookouts: Bookout[], today = todayIso()): Bookout[] {
+  const upcoming = bookouts.filter((b) => b.end >= today).sort((a, b) => a.start.localeCompare(b.start));
+  const past = bookouts.filter((b) => b.end < today).sort((a, b) => b.start.localeCompare(a.start));
+  return [...upcoming, ...past];
+}
+
+export type CapacitySort = "busiest" | "open" | "name";
+export const CAPACITY_SORT_LABELS: Record<CapacitySort, string> = {
+  busiest: "Busiest",
+  open: "Most open",
+  name: "A–Z",
+};
+
+/**
+ * The capacity grid's rows in two bands: current GAPs, then stale or
+ * never-confirmed ones (whose "open" days may not be real), each sorted by
+ * TL days over `days` (busiest), open days (a half day counts half) or name.
+ */
+export function capacityBands(contractors: Contractor[], days: string[], sort: CapacitySort, today = todayIso()) {
+  const start = days[0] ?? today;
+  const end = days[days.length - 1] ?? today;
+  const keyed = contractors.map((c) => ({
+    c,
+    current: gapStatus(c.profile, today) === "current",
+    value:
+      sort === "busiest"
+        ? tlDaysBetween(c.bookouts, start, end)
+        : sort === "open"
+        ? days.reduce((n, d) => {
+            const st = dayStatus(c.profile, c.bookouts, d, false).state;
+            return n + (st === "free" ? 1 : st === "partial" ? 0.5 : 0);
+          }, 0)
+        : 0,
+  }));
+  keyed.sort((a, b) => b.value - a.value || a.c.name.localeCompare(b.c.name));
+  return {
+    current: keyed.filter((k) => k.current).map((k) => k.c),
+    stale: keyed.filter((k) => !k.current).map((k) => k.c),
+  };
+}
+
 /** The admin page's headline numbers, all over the next four weeks. */
 export function staffingSnapshot(contractors: Contractor[], today = todayIso()) {
   const days = weekdaysAhead(today);
@@ -455,7 +549,7 @@ export function staffingSnapshot(contractors: Contractor[], today = todayIso()) 
     if (needsAttention(f)) attention++;
     // Room we can count on: a current GAP, under target, and an open day
     if (matchesFilter(f, "room")) {
-      const open = days.filter((d) => dayStatus(c.profile, c.bookouts, d, true).state === "free").length;
+      const open = openDaysIn(c, days);
       if (open) {
         withRoom++;
         openDaysWithRoom += open;
