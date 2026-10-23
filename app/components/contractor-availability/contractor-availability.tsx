@@ -141,6 +141,7 @@ export const ContractorAvailability = () => {
             loading={roster.loading}
             error={roster.error}
             onSaveStaffNotes={roster.saveStaffNotes}
+            onViewed={roster.markViewed}
           />
         </>
       ) : (

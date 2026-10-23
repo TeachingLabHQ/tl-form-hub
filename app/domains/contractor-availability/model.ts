@@ -7,6 +7,7 @@ export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri";
 export type BookoutType = "nontl" | "fac" | "other";
 // "Half day" is only used for sessions synced from the logistics boards
 export type DayPortion = "Full day" | "AM" | "PM" | "Half day";
+export type SessionKind = "facilitation" | "coaching";
 
 export interface AvailabilityProfile {
   formats: TravelFormat[];
@@ -37,6 +38,8 @@ export interface Bookout {
   note: string;
   // "logistics" = synced from the session calendar; read-only in CBS
   source?: "logistics";
+  // Synced sessions only: what kind of day it is and for which projects
+  session?: { kind: SessionKind; projects: string[] };
 }
 
 export type NewBookout = Omit<Bookout, "id">;
@@ -62,6 +65,8 @@ export interface SavedProfile {
   bookouts: Bookout[];
   // Internal staffing notes; only the staff roster reads them
   staffNotes: string;
+  // YYYY-MM-DD staff last opened this contractor in the admin drawer
+  staffViewedOn: string | null;
 }
 
 export interface Contractor extends Omit<ContractorIntake, "intakeProfile"> {
@@ -71,6 +76,13 @@ export interface Contractor extends Omit<ContractorIntake, "intakeProfile"> {
   profileSource: "saved" | "intake";
   bookouts: Bookout[];
   staffNotes: string;
+  staffViewedOn: string | null;
+}
+
+// One save or confirm of a contractor's GAP, kept as a Monday item update
+export interface GapHistoryEntry {
+  at: string; // ISO timestamp
+  text: string;
 }
 
 export const TRAVEL_FORMATS: { value: TravelFormat; label: string }[] = [

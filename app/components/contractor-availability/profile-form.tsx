@@ -6,6 +6,7 @@ import {
   type Season,
   type TravelReach,
   applyTravelReach,
+  formatDate,
   monthsFor,
   profileAgeDays,
   SEASON_LABELS,
@@ -27,6 +28,7 @@ import {
   WEEKDAYS,
 } from "~/domains/contractor-availability/model";
 import { FIELD_CLASSES } from "./constants";
+import { GapHistory } from "./gap-history";
 import { Panel } from "./panel";
 
 const DAYS_PER_WEEK = [
@@ -66,6 +68,8 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
   // Kept apart from months so "Specific months" stays picked while empty
   const [season, setSeason] = useState<Season>(() => seasonOf(contractor.profile.months));
   const [saving, setSaving] = useState<"save" | "confirm" | null>(null);
+  // Bumped after each save so an open history shows the new entry
+  const [saves, setSaves] = useState(0);
   const values = form.values;
   const reach = travelReach(values);
   const travels = reach === "any" || reach === "regional";
@@ -79,6 +83,7 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
       return;
     }
     form.resetDirty();
+    setSaves((n) => n + 1);
     notifications.show({
       color: "teal",
       title: kind === "confirm" ? "Profile confirmed" : "Profile saved",
@@ -105,6 +110,11 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
         {home && (
           <p className="text-xs text-white/90 -mt-1">Home base: {home} (from your contractor record)</p>
         )}
+        <p className="text-xs text-white/90 -mt-2">
+          {contractor.staffViewedOn
+            ? `Staffing last viewed your availability on ${formatDate(contractor.staffViewedOn)}.`
+            : "Staffing hasn't opened your availability yet."}
+        </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
           <Select
             label="Travel preference"
@@ -235,6 +245,7 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
             </Button>
           )}
         </div>
+        <GapHistory email={contractor.email} version={saves} />
       </form>
     </Panel>
   );

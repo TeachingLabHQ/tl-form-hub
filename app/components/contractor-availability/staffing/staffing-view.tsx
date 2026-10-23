@@ -86,11 +86,13 @@ export const StaffingView = ({
   loading,
   error,
   onSaveStaffNotes,
+  onViewed,
 }: {
   contractors: Contractor[];
   loading: boolean;
   error: string | null;
   onSaveStaffNotes: (email: string, notes: string) => Promise<string | null>;
+  onViewed: (email: string) => void;
 }) => {
   const [openEmail, setOpenEmail] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -219,6 +221,7 @@ export const StaffingView = ({
         contractor={contractors.find((c) => c.email === openEmail) ?? null}
         onClose={() => setOpenEmail(null)}
         onSaveStaffNotes={onSaveStaffNotes}
+        onViewed={onViewed}
       />
 
       <AskAiBubble contractors={contractors} onOpen={setOpenEmail} />

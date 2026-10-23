@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { tlDaysInMonth } from "./availability";
-import { type SessionRow, SESSION_DAY_PORTION, sessionBookouts } from "./sessions";
+import {
+  type SessionRow,
+  describeSessionWeek,
+  SESSION_DAY_PORTION,
+  sessionBookouts,
+  sessionWeeks,
+} from "./sessions";
 
 const row = (overrides: Partial<SessionRow>): SessionRow => ({
   date: "2026-11-10",
@@ -26,6 +32,7 @@ describe("sessionBookouts", () => {
         portion: "Half day",
         note: "Coaching · District A Coaching",
         source: "logistics",
+        session: { kind: "coaching", projects: ["District A Coaching"] },
       },
     ]);
   });
@@ -64,5 +71,32 @@ describe("sessionBookouts", () => {
       "2026-11-01"
     ).get("ann@tl.org")!;
     expect(result.map((b) => b.start)).toEqual(["2026-11-01", "2026-11-02", "2026-11-20"]);
+  });
+});
+
+describe("sessionWeeks", () => {
+  it("rolls synced days up to one line per Monday-to-Sunday week", () => {
+    const bookouts = sessionBookouts(
+      [
+        row({ date: "2026-11-09", endDate: "2026-11-09" }), // Mon
+        row({ project: "District B" }),
+        row({ date: "2026-11-12", endDate: "2026-11-12", kind: "facilitation", project: "PL Site" }),
+        row({ date: "2026-11-16", endDate: "2026-11-16" }), // next Mon
+      ],
+      users,
+      "2026-11-01"
+    ).get("ann@tl.org")!;
+    const weeks = sessionWeeks([
+      ...bookouts,
+      { id: "own", type: "nontl", start: "2026-11-11", end: "2026-11-11", portion: "Full day", note: "" },
+    ]);
+    expect(weeks.map((w) => [w.start, w.end])).toEqual([
+      ["2026-11-09", "2026-11-12"],
+      ["2026-11-16", "2026-11-16"],
+    ]);
+    expect(describeSessionWeek(weeks[0]!)).toBe(
+      "1 facilitation day, 2 coaching half days · District A Coaching +2 more"
+    );
+    expect(describeSessionWeek(weeks[1]!)).toBe("1 coaching half day · District A Coaching");
   });
 });

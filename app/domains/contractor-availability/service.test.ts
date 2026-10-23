@@ -3,6 +3,8 @@ import type { ContractorIntake, SavedProfile } from "./model";
 import type { ContractorAvailabilityRepository } from "./repository";
 import {
   contractorAvailabilityService,
+  gapChanges,
+  gapHistoryText,
   mergeRoster,
   sanitizeProfile,
   validateBookout,
@@ -23,6 +25,7 @@ const intake = (email: string, name: string): ContractorIntake => ({
 const saved = (email: string, bookoutIds: string[] = []): SavedProfile => ({
   itemId: `item-${email}`,
   staffNotes: "",
+  staffViewedOn: null,
   email,
   profile: { ...intake(email, "").intakeProfile, confirmedOn: "2026-10-01", daysPerWeek: 3 },
   bookouts: bookoutIds.map((id) => ({
@@ -48,6 +51,9 @@ const repo = (overrides: Partial<ContractorAvailabilityRepository> = {}) =>
     updateStaffNotes: vi.fn().mockResolvedValue({ data: "item-a@tl.org", error: null }),
     fetchSessionCalendar: vi.fn().mockResolvedValue({ data: [], error: null }),
     fetchMondayUsers: vi.fn().mockResolvedValue({ data: [], error: null }),
+    updateStaffViewed: vi.fn().mockResolvedValue({ data: "item-a@tl.org", error: null }),
+    createItemUpdate: vi.fn().mockResolvedValue({ data: "update-1", error: null }),
+    fetchItemUpdates: vi.fn().mockResolvedValue({ data: [], error: null }),
     ...overrides,
   }) as unknown as ContractorAvailabilityRepository;
 
@@ -153,7 +159,7 @@ describe("contractor availability service", () => {
 
   it("creates the CBS item on first save, stamped with today's date", async () => {
     const r = repo();
-    const result = await contractorAvailabilityService(r).saveProfile("A@TL.org", saved("a@tl.org").profile);
+    const result = await contractorAvailabilityService(r).saveProfile("A@TL.org", saved("a@tl.org").profile, "a@tl.org");
     expect(r.createProfile).toHaveBeenCalledOnce();
     expect(r.updateProfile).not.toHaveBeenCalled();
     expect(result.data?.profileSource).toBe("saved");
@@ -193,5 +199,81 @@ describe("contractor availability service", () => {
       "Contractor not found"
     );
     expect(r.deleteBookout).not.toHaveBeenCalled();
+  });
+});
+
+describe("GAP history", () => {
+  const before = saved("a@tl.org").profile;
+
+  it("describes each changed field and only says free text was edited", () => {
+    const after = { ...before, daysPerWeek: 2, weekdays: ["Mon" as const], notes: "Out in March" };
+    expect(gapChanges(before, after)).toEqual([
+      "Days per week: 3 → 2",
+      "Usual days: any weekday → Mon",
+      "Notes edited",
+    ]);
+    expect(gapHistoryText(before, before, false, "a@tl.org")).toBe("GAP confirmed with no changes by a@tl.org.");
+    expect(gapHistoryText(before, before, true, "a@tl.org")).toBe("GAP saved for the first time by a@tl.org.");
+  });
+
+  it("adds an entry naming who saved, without failing the save if the post fails", async () => {
+    const r = repo({
+      fetchSavedProfileByEmail: vi.fn().mockResolvedValue({ data: saved("a@tl.org"), error: null }),
+      createItemUpdate: vi.fn().mockResolvedValue({ data: null, error: new Error("down") }),
+    });
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const result = await contractorAvailabilityService(r).saveProfile(
+      "a@tl.org",
+      { ...before, daysPerWeek: 2 },
+      "staff@tl.org"
+    );
+    expect(result.error).toBeNull();
+    expect(r.createItemUpdate).toHaveBeenCalledWith(
+      "item-a@tl.org",
+      "GAP updated by staff@tl.org. Days per week: 3 → 2."
+    );
+    spy.mockRestore();
+  });
+
+  it("reads back only GAP entries, newest first", async () => {
+    const r = repo({
+      fetchSavedProfileByEmail: vi.fn().mockResolvedValue({ data: saved("a@tl.org"), error: null }),
+      fetchItemUpdates: vi.fn().mockResolvedValue({
+        data: [
+          { at: "2026-10-01T10:00:00Z", text: "GAP saved for the first time by a@tl.org." },
+          { at: "2026-10-05T10:00:00Z", text: "Called her about March" },
+          { at: "2026-10-20T10:00:00Z", text: "GAP confirmed with no changes by a@tl.org." },
+        ],
+        error: null,
+      }),
+    });
+    const { data } = await contractorAvailabilityService(r).fetchGapHistory("a@tl.org");
+    expect(data!.map((h) => h.at)).toEqual(["2026-10-20T10:00:00Z", "2026-10-01T10:00:00Z"]);
+  });
+});
+
+describe("markStaffViewed", () => {
+  it("stamps an existing item once a day and never creates one", async () => {
+    const service = (staffViewedOn: string | null, exists = true) => {
+      const r = repo({
+        fetchSavedProfileByEmail: vi
+          .fn()
+          .mockResolvedValue({ data: exists ? { ...saved("a@tl.org"), staffViewedOn } : null, error: null }),
+      });
+      return { r, s: contractorAvailabilityService(r) };
+    };
+    const fresh = service("2026-01-01");
+    expect((await fresh.s.markStaffViewed("a@tl.org")).data).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(fresh.r.updateStaffViewed).toHaveBeenCalledWith("item-a@tl.org", expect.any(String));
+
+    const today = (fresh.r.updateStaffViewed as any).mock.calls[0][1];
+    const again = service(today);
+    await again.s.markStaffViewed("a@tl.org");
+    expect(again.r.updateStaffViewed).not.toHaveBeenCalled();
+
+    const none = service(null, false);
+    expect((await none.s.markStaffViewed("a@tl.org")).data).toBeNull();
+    expect(none.r.updateStaffViewed).not.toHaveBeenCalled();
+    expect(none.r.createProfile).not.toHaveBeenCalled();
   });
 });

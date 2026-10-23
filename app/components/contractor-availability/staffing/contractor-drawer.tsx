@@ -5,6 +5,7 @@ import {
   monthlyTarget,
   tlDaysInMonth,
   todayIso,
+  todayIsoEastern,
   SEASON_LABELS,
   seasonOf,
   TRAVEL_REACH_LABELS,
@@ -18,6 +19,7 @@ import {
 } from "~/domains/contractor-availability/model";
 import { SESSION_PORTION_NOTE } from "~/domains/contractor-availability/sessions";
 import { BOOKOUT_COLORS, FIELD_CLASSES } from "../constants";
+import { GapHistory } from "../gap-history";
 import { ProfileAgeBadge } from "../profile-form";
 
 const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -92,12 +94,20 @@ export const ContractorDrawer = ({
   contractor,
   onClose,
   onSaveStaffNotes,
+  onViewed,
 }: {
   contractor: Contractor | null;
   onClose: () => void;
   onSaveStaffNotes: (email: string, notes: string) => Promise<string | null>;
+  onViewed: (email: string) => void;
 }) => {
   const c = contractor;
+
+  // Opening someone stamps "last viewed by staff" on their page, once a day
+  useEffect(() => {
+    if (c?.profileItemId && c.staffViewedOn !== todayIsoEastern()) onViewed(c.email);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per contractor opened
+  }, [c?.email]);
   const today = todayIso();
   const now = new Date();
   const months = [0, 1, 2].map((i) => {
@@ -164,6 +174,9 @@ export const ContractorDrawer = ({
               <Row label="Content areas">{c.contentAreas.join(", ") || "—"}</Row>
               <Row label="Notes">{c.profile.notes || "—"}</Row>
             </dl>
+            <div className="mt-2">
+              <GapHistory key={c.email} email={c.email} />
+            </div>
           </section>
 
           <section>

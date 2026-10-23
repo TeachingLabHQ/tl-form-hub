@@ -5,7 +5,8 @@ import { contractorAvailabilityRepository } from "~/domains/contractor-availabil
 import { contractorAvailabilityService } from "~/domains/contractor-availability/service";
 
 // Saves (or confirms unchanged) a contractor's availability profile. The
-// service drops unknown labels and stamps today as the confirmed date.
+// service drops unknown labels, stamps today as the confirmed date, and adds a
+// GAP history entry naming the signed-in user (the contractor, or staff).
 export const action = async ({ request }: ActionFunctionArgs) => {
   if (request.method !== "POST") {
     return json({ ok: false, error: "Method not allowed" }, { status: 405 });
@@ -25,7 +26,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
       return json({ ok: false, error: "Missing profile" }, { status: 400, headers });
     }
     const service = contractorAvailabilityService(contractorAvailabilityRepository());
-    const { data, error } = await service.saveProfile(email, profile);
+    const { data, error } = await service.saveProfile(email, profile, access.user.email);
     if (error) {
       console.error("Error saving availability profile:", error);
       return json({ ok: false, error: "Failed to save your profile" }, { status: 500, headers });

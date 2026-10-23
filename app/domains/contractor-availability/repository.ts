@@ -9,6 +9,7 @@ import {
   type BookoutType,
   type ContractorIntake,
   type DayPortion,
+  type GapHistoryEntry,
   type NewBookout,
   type SavedProfile,
   type TravelFormat,
@@ -47,7 +48,8 @@ const DETAILS_COLUMNS = [
 
 // Where CBS writes: "CBS Contractor Capacity (DEMO)". One item per contractor
 // profile; each bookout is a subitem. Column ids were set explicitly when the
-// board was created, so they read as what they hold.
+// board was created, so they read as what they hold. Each GAP save or confirm
+// is also posted as an update on the item, which is the GAP history.
 export const CBS_BOARD_ID = 18436481629;
 const PROFILE_COLUMNS = [
   "cbs_email",
@@ -65,6 +67,7 @@ const PROFILE_COLUMNS = [
   "cbs_months",
   "cbs_notes",
   "cbs_confirmed",
+  "cbs_staff_viewed",
 ];
 const BOOKOUT_COLUMNS = ["cbs_type", "cbs_dates", "cbs_portion", "cbs_note"];
 
@@ -179,6 +182,7 @@ const savedProfileFromItem = (item: any): SavedProfile => ({
   email: text(item, "cbs_email").toLowerCase(),
   profile: profileFromItem(item),
   staffNotes: text(item, "cbs_staff_notes"),
+  staffViewedOn: isIsoDate(text(item, "cbs_staff_viewed")) ? text(item, "cbs_staff_viewed") : null,
   bookouts: (item.subitems ?? [])
     .map(bookoutFromSubitem)
     .filter((b: Bookout | null): b is Bookout => b !== null),
@@ -228,6 +232,12 @@ export interface ContractorAvailabilityRepository {
   ): Promise<Errorable<string>>;
   deleteBookout(bookoutId: string): Promise<Errorable<string>>;
   updateStaffNotes(itemId: string, notes: string): Promise<Errorable<string>>;
+  /** Sets the date staff last opened the contractor (YYYY-MM-DD). */
+  updateStaffViewed(itemId: string, date: string): Promise<Errorable<string>>;
+  /** Posts an update on the contractor's CBS item; returns its id. */
+  createItemUpdate(itemId: string, body: string): Promise<Errorable<string>>;
+  /** The CBS item's updates, newest first. */
+  fetchItemUpdates(itemId: string): Promise<Errorable<GapHistoryEntry[]>>;
 }
 
 export function contractorAvailabilityRepository(): ContractorAvailabilityRepository {
@@ -406,6 +416,49 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
       } catch (e) {
         console.error(e);
         return { data: null, error: new Error("updateStaffNotes() went wrong") };
+      }
+    },
+
+    updateStaffViewed: async (itemId, date) => {
+      try {
+        return await mutate(
+          `mutation ($item: ID!, $cols: JSON!) { change_multiple_column_values (board_id: ${CBS_BOARD_ID}, item_id: $item, column_values: $cols) { id } }`,
+          { item: itemId, cols: JSON.stringify({ cbs_staff_viewed: { date } }) },
+          "change_multiple_column_values"
+        );
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("updateStaffViewed() went wrong") };
+      }
+    },
+
+    createItemUpdate: async (itemId, body) => {
+      try {
+        return await mutate(
+          `mutation ($item: ID!, $body: String!) { create_update (item_id: $item, body: $body) { id } }`,
+          { item: itemId, body },
+          "create_update"
+        );
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("createItemUpdate() went wrong") };
+      }
+    },
+
+    fetchItemUpdates: async (itemId) => {
+      try {
+        const res = await fetchMondayData(
+          `{ items(ids: [${JSON.stringify(itemId)}]) { updates(limit: 100) { created_at text_body } } }`
+        );
+        if (res?.errors) throw new Error(JSON.stringify(res.errors));
+        const updates: any[] = res?.data?.items?.[0]?.updates ?? [];
+        return {
+          data: updates.map((u) => ({ at: String(u.created_at), text: String(u.text_body ?? "").trim() })),
+          error: null,
+        };
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("fetchItemUpdates() went wrong") };
       }
     },
 

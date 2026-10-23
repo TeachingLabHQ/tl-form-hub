@@ -59,6 +59,7 @@ const contractor = (overrides: Partial<Contractor> = {}): Contractor => ({
   profileSource: "saved",
   bookouts: [],
   staffNotes: "",
+  staffViewedOn: null,
   ...overrides,
 });
 

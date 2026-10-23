@@ -1,9 +1,9 @@
 // TL facilitation and coaching sessions from the partnership logistics boards,
 // read from the daily FY27 session calendar and shown as read-only bookouts.
-import { addDays, dateRange } from "./availability";
-import type { Bookout, DayPortion } from "./model";
+import { addDays, dateRange, parseDate } from "./availability";
+import type { Bookout, DayPortion, SessionKind } from "./model";
 
-export type SessionKind = "facilitation" | "coaching";
+export type { SessionKind };
 
 // One calendar row, one person per row
 export interface SessionRow {
@@ -69,8 +69,52 @@ export function sessionBookouts(rows: SessionRow[], users: MondayUser[], fromDat
       portion: SESSION_DAY_PORTION[kind],
       note: [KIND_LABEL[kind], first && first + (rest.length ? ` +${rest.length} more` : "")].filter(Boolean).join(" · "),
       source: "logistics",
+      session: { kind, projects: [...projects] },
     };
     byEmail.set(email, [...(byEmail.get(email) ?? []), bookout]);
   }
   return byEmail;
+}
+
+export interface SessionWeek {
+  id: string;
+  start: string; // first session day that week
+  end: string; // last session day that week
+  days: Record<SessionKind, number>;
+  projects: string[];
+}
+
+/** Synced session days rolled up to one entry per Monday-to-Sunday week, in date order. */
+export function sessionWeeks(bookouts: Bookout[]): SessionWeek[] {
+  const weeks = new Map<string, SessionWeek>();
+  for (const b of [...bookouts].sort((x, y) => x.start.localeCompare(y.start))) {
+    if (!b.session) continue;
+    const monday = addDays(b.start, 1 - (parseDate(b.start).getDay() || 7));
+    const week = weeks.get(monday) ?? {
+      id: `week-${monday}`,
+      start: b.start,
+      end: b.end,
+      days: { facilitation: 0, coaching: 0 },
+      projects: [],
+    };
+    week.end = b.end > week.end ? b.end : week.end;
+    week.days[b.session.kind] += 1;
+    for (const p of b.session.projects) if (!week.projects.includes(p)) week.projects.push(p);
+    weeks.set(monday, week);
+  }
+  return [...weeks.values()];
+}
+
+/** "1 facilitation day, 3 coaching half days · D75 +1 more" */
+export function describeSessionWeek(week: SessionWeek): string {
+  const counts = (Object.keys(week.days) as SessionKind[])
+    .filter((kind) => week.days[kind] > 0)
+    .map((kind) => {
+      const n = week.days[kind];
+      const unit = SESSION_DAY_PORTION[kind] === "Full day" ? "day" : "half day";
+      return `${n} ${kind} ${unit}${n === 1 ? "" : "s"}`;
+    })
+    .join(", ");
+  const [first, ...rest] = week.projects;
+  return [counts, first && first + (rest.length ? ` +${rest.length} more` : "")].filter(Boolean).join(" · ");
 }

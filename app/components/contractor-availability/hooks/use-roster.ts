@@ -45,5 +45,17 @@ export function useRoster(enabled: boolean) {
     return null;
   };
 
-  return { contractors, loading, error, loadedAt, reload: load, saveStaffNotes };
+  // Records that staff opened this contractor; best effort, so failures are silent
+  const markViewed = async (email: string) => {
+    const { ok, data } = await postJson<{ viewedOn: string | null }>(
+      "/api/contractor-availability/mark-viewed",
+      { email }
+    );
+    if (!ok || !data.viewedOn) return;
+    setContractors((list) =>
+      list.map((c) => (c.email === email ? { ...c, staffViewedOn: data.viewedOn } : c))
+    );
+  };
+
+  return { contractors, loading, error, loadedAt, reload: load, saveStaffNotes, markViewed };
 }
