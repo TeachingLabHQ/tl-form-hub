@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   applyTravelReach,
   bookoutDaysByType,
-  confirmedThisQuarter,
-  contractorStatus,
+  doubleBookedDays,
+  gapStatus,
+  loadStatus,
+  matchesFilter,
+  staffingSnapshot,
+  weeklyLoad,
   seasonOf,
   monthsFor,
   nextWorkWeek,
@@ -175,26 +179,60 @@ describe("intake parsing", () => {
   });
 });
 
-describe("contractorStatus", () => {
-  const today = "2026-11-01";
+describe("loadStatus", () => {
+  // A Monday: the next four weeks run Nov 2-27. Target is min(3 d/wk × 4.3 ≈ 13,
+  // max 12) = 12 a month, so 12 × 4 / 4.3 ≈ 11.2 days; 80% of that is ≈ 8.9
+  const today = "2026-11-02";
+  const fac = (end: string) => [bookout({ type: "fac", start: "2026-11-02", end })];
 
-  it("is a stale GAP when never confirmed or confirmed over 90 days ago", () => {
-    expect(contractorStatus(profile({ confirmedOn: null }), [], today)).toBe("stale");
-    expect(contractorStatus(profile({ confirmedOn: "2026-07-01" }), [], today)).toBe("stale");
+  it("compares the next four weeks' TL days with the prorated target", () => {
+    expect(loadStatus(profile(), fac("2026-11-11"), today)).toBe("room"); // 8 days
+    expect(loadStatus(profile(), fac("2026-11-13"), today)).toBe("booked"); // 10 days
+    expect(loadStatus(profile(), fac("2026-11-17"), today)).toBe("over"); // 12 days
   });
 
-  // Target is min(3 d/wk × 4.3 ≈ 13, max 12) = 12, so 80% is 9.6 days
-  it("is mostly booked once this month's TL days reach 80% of the target", () => {
-    const tenDays = [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-13" })];
-    const nineDays = [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-12" })];
-    expect(contractorStatus(profile(), tenDays, today)).toBe("booked");
-    expect(contractorStatus(profile(), nineDays, today)).toBe("available");
-  });
-
-  it("ignores non-TL bookouts and profiles without a target", () => {
+  it("ignores non-TL bookouts and work past the window", () => {
     const nontl = [bookout({ type: "nontl", start: "2026-11-02", end: "2026-11-30" })];
-    expect(contractorStatus(profile(), nontl, today)).toBe("available");
-    expect(contractorStatus(profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }), [], today)).toBe("available");
+    expect(loadStatus(profile(), nontl, today)).toBe("room");
+    expect(loadStatus(profile(), [bookout({ type: "fac", start: "2026-11-30", end: "2026-12-31" })], today)).toBe("room");
+  });
+
+  it("has no load status without a target, whatever is booked", () => {
+    expect(loadStatus(profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }), fac("2026-11-30"), today)).toBe("unset");
+  });
+
+  it("doesn't let a stale GAP hide the load", () => {
+    const stale = profile({ confirmedOn: "2026-01-01" });
+    expect(gapStatus(stale, today)).toBe("stale");
+    expect(loadStatus(stale, fac("2026-11-17"), today)).toBe("over");
+  });
+});
+
+describe("gapStatus", () => {
+  it("is current within 90 days, then stale; never when unconfirmed", () => {
+    expect(gapStatus(profile({ confirmedOn: "2026-08-04" }), "2026-11-02")).toBe("current"); // 90 days
+    expect(gapStatus(profile({ confirmedOn: "2026-08-03" }), "2026-11-02")).toBe("stale");
+    expect(gapStatus(profile({ confirmedOn: null }), "2026-11-02")).toBe("never");
+  });
+});
+
+describe("doubleBookedDays", () => {
+  const days = ["2026-11-10", "2026-11-11"];
+
+  it("flags TL work on a non-TL bookout day", () => {
+    const b = [
+      bookout({ type: "nontl", start: "2026-11-10", end: "2026-11-11" }),
+      bookout({ id: "2", type: "fac", start: "2026-11-11", end: "2026-11-11", source: "logistics" }),
+    ];
+    expect(doubleBookedDays(b, days)).toEqual(["2026-11-11"]);
+  });
+
+  it("lets an AM and a PM share a day, but flags an untimed half day", () => {
+    const nontlAm = bookout({ type: "nontl", portion: "AM" });
+    expect(doubleBookedDays([nontlAm, bookout({ id: "2", type: "fac", portion: "PM" })], days)).toEqual([]);
+    expect(doubleBookedDays([nontlAm, bookout({ id: "2", type: "fac", portion: "Half day" })], days)).toEqual([
+      "2026-11-10",
+    ]);
   });
 });
 
@@ -259,10 +297,88 @@ describe("admin roll-ups", () => {
     expect(totals).toEqual({ fac: 2, nontl: 0.5, other: 0 });
   });
 
-  it("counts a GAP confirmed since the quarter began", () => {
-    expect(confirmedThisQuarter(profile({ confirmedOn: "2026-10-01" }), "2026-11-15")).toBe(true);
-    expect(confirmedThisQuarter(profile({ confirmedOn: "2026-09-30" }), "2026-11-15")).toBe(false);
-    expect(confirmedThisQuarter(profile({ confirmedOn: null }), "2026-11-15")).toBe(false);
+  it("matches the roster filters", () => {
+    const f = { load: "room" as const, gap: "stale" as const, doubleBooked: ["2026-11-10"] };
+    expect(matchesFilter(f, "gap:stale")).toBe(true);
+    expect(matchesFilter(f, "load:over")).toBe(false);
+    expect(matchesFilter(f, "attention")).toBe(true); // double-booked
+    expect(matchesFilter(f, "room")).toBe(false); // room, but the GAP is stale
+    expect(matchesFilter(f, "refresh")).toBe(true);
+  });
+
+  it("sums the next four weeks for the headline numbers", () => {
+    const today = "2026-11-02";
+    const snapshot = staffingSnapshot(
+      [
+        // Over target and double-booked
+        contractor({
+          email: "a@x.org",
+          bookouts: [
+            bookout({ type: "fac", start: "2026-11-02", end: "2026-11-17" }),
+            bookout({ id: "2", type: "nontl", start: "2026-11-03", end: "2026-11-03" }),
+          ],
+        }),
+        // Has room: 20 weekdays, 2 of them taken
+        contractor({ email: "b@x.org", bookouts: [bookout({ type: "other", start: "2026-11-05", end: "2026-11-06" })] }),
+        // Room on paper, but the GAP is stale, so not counted as room
+        contractor({ email: "c@x.org", profile: profile({ confirmedOn: null }) }),
+        // No target: left out of utilization
+        contractor({
+          email: "d@x.org",
+          profile: profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }),
+          bookouts: [bookout({ type: "fac", start: "2026-11-02", end: "2026-11-27" })],
+        }),
+      ],
+      today
+    );
+    expect(snapshot).toMatchObject({
+      start: "2026-11-02",
+      end: "2026-11-27",
+      tlBooked: 14,
+      withTarget: 3,
+      withRoom: 1,
+      openDaysWithRoom: 18,
+      load: { over: 1, booked: 0, room: 2, unset: 1 },
+      gap: { current: 3, stale: 0, never: 1 },
+      overTarget: 1,
+      doubleBooked: 1,
+      doubleBookedDays: 1,
+      attention: 1,
+    });
+    expect(snapshot.capacity).toBeCloseTo((3 * 12 * 4) / 4.3);
+  });
+
+  it("splits the next weeks by type, Monday to Friday, against the weekly target", () => {
+    const weeks = weeklyLoad(
+      [
+        contractor({
+          bookouts: [
+            bookout({ type: "fac", start: "2026-11-06", end: "2026-11-09" }), // Fri + Mon
+            bookout({ id: "2", type: "fac", start: "2026-11-09", end: "2026-11-09", portion: "AM" }),
+            bookout({ id: "3", type: "nontl", start: "2026-11-10", end: "2026-11-10", portion: "PM" }),
+          ],
+        }),
+      ],
+      "2026-11-07", // a Saturday starts with the coming week
+      2
+    );
+    expect(weeks.map((w) => w.start)).toEqual(["2026-11-09", "2026-11-16"]);
+    expect(weeks[0]!.days).toEqual({ fac: 1, nontl: 0.5, other: 0 });
+    expect(weeks[0]!.target).toBeCloseTo(12 / 4.3);
+  });
+
+  it("keeps TL days of contractors with no target out of the measured share", () => {
+    const [week] = weeklyLoad(
+      [
+        contractor({
+          profile: profile({ daysPerWeek: 0, maxDaysPerMonth: 0 }),
+          bookouts: [bookout({ type: "fac", start: "2026-11-09", end: "2026-11-10" })],
+        }),
+      ],
+      "2026-11-09",
+      1
+    );
+    expect(week).toMatchObject({ days: { fac: 0, nontl: 0, other: 0 }, untargeted: 2, target: 0 });
   });
 });
 

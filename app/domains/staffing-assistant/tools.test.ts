@@ -7,6 +7,7 @@ import {
   findAvailable,
   listContractors,
   monthSummary,
+  nextFourWeeks,
   staffingTools,
 } from "./tools";
 
@@ -199,6 +200,15 @@ describe("monthSummary", () => {
   });
 });
 
+describe("nextFourWeeks", () => {
+  it("labels the admin page's headline numbers", () => {
+    const summary = nextFourWeeks([contractor(), contractor({ email: "b@x.org", profile: profile({ confirmedOn: null }) })], TODAY);
+    expect(summary).toMatchObject({ activeContractors: 2, tlDaysBooked: 0, utilization: 0 });
+    expect(summary.gapCounts).toMatchObject({ "GAP current": 1, "GAP never confirmed": 1 });
+    expect(summary.loadCounts).toMatchObject({ "Has room": 2 });
+  });
+});
+
 describe("staffingTools", () => {
   it("exposes only read tools", () => {
     expect(Object.keys(staffingTools([], TODAY)).sort()).toEqual([
@@ -206,6 +216,7 @@ describe("staffingTools", () => {
       "findAvailable",
       "listContractors",
       "monthSummary",
+      "nextFourWeeks",
     ]);
   });
 });

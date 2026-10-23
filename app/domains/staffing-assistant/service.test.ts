@@ -66,8 +66,8 @@ describe("assistantInstructions", () => {
 
   it("defines the data's terms from the page's own thresholds", () => {
     const text = assistantInstructions("2026-11-02");
-    expect(text).toContain("over 90 days ago");
-    expect(text).toContain("80% of their monthly target");
+    expect(text).toContain("confirmed in the last 90 days");
+    expect(text).toContain('"Mostly booked" from 80%');
     expect(text).toContain('"TL facilitation / coaching"');
   });
 });

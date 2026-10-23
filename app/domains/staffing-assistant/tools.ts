@@ -1,19 +1,23 @@
 import { tool } from "ai";
 import { z } from "zod";
 import {
-  type ContractorStatus,
+  type GapStatus,
+  type LoadStatus,
   type TravelReach,
   addDays,
   bookoutDaysByType,
-  confirmedThisQuarter,
-  contractorStatus,
-  CONTRACTOR_STATUS_LABELS,
   dateRange,
   dayStatus,
+  GAP_STATUS_LABELS,
+  gapStatus,
   isWeekday,
+  LOAD_STATUS_LABELS,
+  loadStatus,
   openDaysLeftInMonth,
   parseDate,
   searchAvailability,
+  staffingFlags,
+  staffingSnapshot,
   tlDaysInMonth,
   toIsoDate,
   TRAVEL_REACH_LABELS,
@@ -35,6 +39,16 @@ import { MAX_SEARCH_DAYS } from "./model";
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD");
 
+// Load over the next four weeks, GAP freshness, and any double-booked days
+function statusSummary(c: Contractor, today: string) {
+  const f = staffingFlags(c, today);
+  return {
+    loadNext4Weeks: LOAD_STATUS_LABELS[f.load],
+    gap: GAP_STATUS_LABELS[f.gap],
+    ...(f.doubleBooked.length > 0 && { doubleBookedDays: f.doubleBooked }),
+  };
+}
+
 // Profile fields Claude needs to judge fit. Contractors typed the free text
 // themselves, so it's grouped under contractorWrote for the prompt to flag.
 export function contractorSummary(c: Contractor, today: string) {
@@ -44,7 +58,7 @@ export function contractorSummary(c: Contractor, today: string) {
     email: c.email,
     location: [c.city, c.state].filter(Boolean).join(", "),
     contentAreas: c.contentAreas,
-    status: CONTRACTOR_STATUS_LABELS[contractorStatus(p, c.bookouts, today)],
+    ...statusSummary(c, today),
     profileSource: c.profileSource === "saved" ? "Saved by contractor" : "From intake form (never confirmed)",
     confirmedOn: p.confirmedOn,
     travel: TRAVEL_REACH_LABELS[travelReach(p)],
@@ -170,7 +184,8 @@ export interface ListInput {
   travel?: TravelReach;
   workType?: string;
   minDaysPerWeek?: number;
-  status?: ContractorStatus;
+  load?: LoadStatus;
+  gap?: GapStatus;
   noOutsideWork?: boolean;
 }
 
@@ -181,7 +196,8 @@ export function listContractors(contractors: Contractor[], input: ListInput, tod
     if (input.travel && travelReach(p) !== input.travel) return false;
     if (input.workType && !p.support.includes(input.workType)) return false;
     if (input.minDaysPerWeek && p.daysPerWeek < input.minDaysPerWeek) return false;
-    if (input.status && contractorStatus(p, c.bookouts, today) !== input.status) return false;
+    if (input.load && loadStatus(p, c.bookouts, today) !== input.load) return false;
+    if (input.gap && gapStatus(p, today) !== input.gap) return false;
     if (input.noOutsideWork && p.outsideWork !== "None") return false;
     return true;
   });
@@ -192,14 +208,30 @@ export function listContractors(contractors: Contractor[], input: ListInput, tod
   };
 }
 
+/** The admin page's headline numbers: the next four weeks, as of today. */
+export function nextFourWeeks(contractors: Contractor[], today: string) {
+  const s = staffingSnapshot(contractors, today);
+  const label = <K extends string>(counts: Record<K, number>, labels: Record<K, string>) =>
+    Object.fromEntries(Object.entries<number>(counts).map(([k, n]) => [labels[k as K], n]));
+  return {
+    window: { start: s.start, end: s.end },
+    activeContractors: contractors.length,
+    tlDaysBooked: s.tlBooked,
+    targetDays: Math.round(s.capacity),
+    utilization: s.capacity ? Math.round((s.tlBooked / s.capacity) * 100) / 100 : null,
+    contractorsWithATarget: s.withTarget,
+    contractorsWithRoom: s.withRoom,
+    openDaysAmongThem: s.openDaysWithRoom,
+    loadCounts: label(s.load, LOAD_STATUS_LABELS),
+    gapCounts: label(s.gap, GAP_STATUS_LABELS),
+    doubleBookedContractors: s.doubleBooked,
+    doubleBookedDays: s.doubleBookedDays,
+  };
+}
+
 /** The admin page's roll-ups for one calendar month (month is 1-12). */
 export function monthSummary(contractors: Contractor[], year: number, month: number, today: string) {
   const byType = bookoutDaysByType(contractors, year, month - 1);
-  const statusCounts: Record<string, number> = {};
-  contractors.forEach((c) => {
-    const s = CONTRACTOR_STATUS_LABELS[contractorStatus(c.profile, c.bookouts, today)];
-    statusCounts[s] = (statusCounts[s] ?? 0) + 1;
-  });
   const now = parseDate(today);
   const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month - 1;
   const monthStart = toIsoDate(new Date(year, month - 1, 1));
@@ -212,8 +244,6 @@ export function monthSummary(contractors: Contractor[], year: number, month: num
     contractorsWithBookouts: contractors.filter((c) =>
       c.bookouts.some((b) => b.end >= monthStart && b.start <= monthEnd)
     ).length,
-    statusTodayCounts: statusCounts,
-    profilesConfirmedThisQuarter: contractors.filter((c) => confirmedThisQuarter(c.profile, today)).length,
     ...(isCurrentMonth && { openContractorDaysLeftThisMonth: openDaysLeftInMonth(contractors, today) }),
   };
 }
@@ -260,19 +290,29 @@ export function staffingTools(contractors: Contractor[], today: string) {
           .describe("any = will travel anywhere in the country"),
         workType: supportEnum.optional(),
         minDaysPerWeek: z.number().min(1).max(5).optional(),
-        status: z.enum(["available", "booked", "stale"]).optional().describe("stale = profile not confirmed in 90 days"),
+        load: z
+          .enum(["over", "booked", "room", "unset"])
+          .optional()
+          .describe("TL load over the next four weeks against their target; unset = no target"),
+        gap: z.enum(["current", "stale", "never"]).optional().describe("stale = profile not confirmed in 90 days"),
         noOutsideWork: z.boolean().optional().describe("Only those whose outside work is 'None'"),
       }),
       execute: async (input) => listContractors(contractors, input, today),
     }),
     monthSummary: tool({
       description:
-        "Totals for a calendar month: bookout days by type, TL days booked, contractor status counts, profiles confirmed this quarter.",
+        "Totals for a calendar month: bookout days by type, TL days booked, contractors with bookouts. For load, utilization, room or GAP counts use nextFourWeeks.",
       inputSchema: z.object({
         year: z.number().int().min(2024).max(2100),
         month: z.number().int().min(1).max(12),
       }),
       execute: async ({ year, month }) => monthSummary(contractors, year, month, today),
+    }),
+    nextFourWeeks: tool({
+      description:
+        "The admin page's headline numbers for the next four weeks: TL utilization against targets, contractors with room (current GAP, under target, an open day), load and GAP counts, double bookings.",
+      inputSchema: z.object({}),
+      execute: async () => nextFourWeeks(contractors, today),
     }),
   };
 }

@@ -269,18 +269,23 @@ export function searchAvailability(
     .sort((a, b) => b.openDays - a.openDays || a.contractor.name.localeCompare(b.contractor.name));
 }
 
-/** Weekday TL-committed days (facilitation + other TL) in a calendar month. */
-export function tlDaysInMonth(bookouts: Bookout[], year: number, month: number) {
-  const start = `${year}-${pad(month + 1)}-01`;
-  const end = toIsoDate(new Date(year, month + 1, 0));
+// A half day counts 0.5 in every total
+const portionDays = (b: Bookout) => (b.portion === "Full day" ? 1 : 0.5);
+
+/** Weekday TL-committed days (facilitation + other TL) from start to end, inclusive. */
+export function tlDaysBetween(bookouts: Bookout[], start: string, end: string) {
   let total = 0;
   for (const day of dateRange(start, end)) {
     if (!isWeekday(day)) continue;
     const hit = bookoutsOn(bookouts, day).find((b) => b.type !== "nontl");
-    if (hit) total += hit.portion === "Full day" ? 1 : 0.5;
+    if (hit) total += portionDays(hit);
   }
   return total;
 }
+
+/** Weekday TL-committed days (facilitation + other TL) in a calendar month. */
+export const tlDaysInMonth = (bookouts: Bookout[], year: number, month: number) =>
+  tlDaysBetween(bookouts, `${year}-${pad(month + 1)}-01`, toIsoDate(new Date(year, month + 1, 0)));
 
 /** Target TL days in a month, from the profile (0 when not set). */
 export const monthlyTarget = (profile: AvailabilityProfile) => {
@@ -308,7 +313,7 @@ export function bookoutDaysByType(contractors: Contractor[], year: number, month
       const from = b.start < start ? start : b.start;
       const to = b.end > end ? end : b.end;
       const weekdays = dateRange(from, to).filter(isWeekday).length;
-      totals[b.type] += weekdays * (b.portion === "Full day" ? 1 : 0.5);
+      totals[b.type] += weekdays * portionDays(b);
     }
   }
   return totals;
@@ -326,37 +331,195 @@ export function openDaysLeftInMonth(contractors: Contractor[], today = todayIso(
   return open;
 }
 
-/** Whether the profile was confirmed in the current calendar quarter. */
-export function confirmedThisQuarter(profile: AvailabilityProfile, today = todayIso()) {
-  if (!profile.confirmedOn) return false;
-  const now = parseDate(today);
-  const quarterStart = toIsoDate(new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1));
-  return profile.confirmedOn >= quarterStart && profile.confirmedOn <= today;
+// ---------------------------------------------------------------------------
+// Staffing status: two separate questions. Load is how much TL work a
+// contractor has over the next four weeks against their target; the GAP
+// status is whether their profile is recent enough to trust. A stale GAP
+// doesn't hide a heavy load.
+
+export const WINDOW_WEEKS = 4;
+// Average weeks in a month, for turning a monthly target into a weekly one
+const WEEKS_PER_MONTH = 4.3;
+
+/** The next `weeks` × 5 weekdays, starting today when it's a weekday. */
+export function weekdaysAhead(today: string, weeks = WINDOW_WEEKS) {
+  const out: string[] = [];
+  for (let d = today; out.length < weeks * 5; d = addDays(d, 1)) if (isWeekday(d)) out.push(d);
+  return out;
 }
 
-export type ContractorStatus = "available" | "booked" | "stale";
-export const CONTRACTOR_STATUS_LABELS: Record<ContractorStatus, string> = {
-  available: "Available",
+/** Target TL days over `weeks` weeks: the monthly target prorated (0 when not set). */
+export const windowTarget = (profile: AvailabilityProfile, weeks = WINDOW_WEEKS) =>
+  (monthlyTarget(profile) * weeks) / WEEKS_PER_MONTH;
+
+export type LoadStatus = "over" | "booked" | "room" | "unset";
+export const LOAD_STATUS_LABELS: Record<LoadStatus, string> = {
+  over: "Over target",
   booked: "Mostly booked",
-  stale: "Stale GAP",
+  room: "Has room",
+  unset: "No target set",
 };
 export const MOSTLY_BOOKED_SHARE = 0.8;
 
-/**
- * Staffing status: a stale (over 90 days) or never-confirmed profile first,
- * then mostly booked once this month's TL days reach 80% of the target.
- */
-export function contractorStatus(
-  profile: AvailabilityProfile,
-  bookouts: Bookout[],
-  today = todayIso()
-): ContractorStatus {
+export type GapStatus = "current" | "stale" | "never";
+export const GAP_STATUS_LABELS: Record<GapStatus, string> = {
+  current: "GAP current",
+  stale: "Stale GAP",
+  never: "GAP never confirmed",
+};
+
+/** Over target past 100% of the next four weeks' target, mostly booked from 80%. */
+export function loadStatus(profile: AvailabilityProfile, bookouts: Bookout[], today = todayIso()): LoadStatus {
+  const target = windowTarget(profile);
+  if (!target) return "unset";
+  const days = weekdaysAhead(today);
+  const load = tlDaysBetween(bookouts, days[0]!, days[days.length - 1]!);
+  if (load > target) return "over";
+  return load >= target * MOSTLY_BOOKED_SHARE ? "booked" : "room";
+}
+
+/** Current when confirmed in the last 90 days. */
+export function gapStatus(profile: AvailabilityProfile, today = todayIso()): GapStatus {
   const age = profileAgeDays(profile, today);
-  if (age === null || age > STALE_PROFILE_DAYS) return "stale";
-  const now = parseDate(today);
-  const target = monthlyTarget(profile);
-  const load = tlDaysInMonth(bookouts, now.getFullYear(), now.getMonth());
-  return target > 0 && load >= target * MOSTLY_BOOKED_SHARE ? "booked" : "available";
+  if (age === null) return "never";
+  return age > STALE_PROFILE_DAYS ? "stale" : "current";
+}
+
+// An AM and a PM booking share a day without clashing; anything else overlaps
+// ("Half day" sessions have no set time, so they're flagged to be checked)
+const clashes = (a: Bookout, b: Bookout) =>
+  !((a.portion === "AM" && b.portion === "PM") || (a.portion === "PM" && b.portion === "AM"));
+
+/** Days where TL work lands on a day the contractor marked as a non-TL bookout. */
+export const doubleBookedDays = (bookouts: Bookout[], days: string[]) =>
+  days.filter((d) => {
+    const hits = bookoutsOn(bookouts, d);
+    const nontl = hits.filter((b) => b.type === "nontl");
+    return hits.some((b) => b.type !== "nontl" && nontl.some((n) => clashes(b, n)));
+  });
+
+export interface StaffingFlags {
+  load: LoadStatus;
+  gap: GapStatus;
+  // Double-booked days in the next four weeks
+  doubleBooked: string[];
+}
+
+export function staffingFlags(c: Contractor, today = todayIso()): StaffingFlags {
+  return {
+    load: loadStatus(c.profile, c.bookouts, today),
+    gap: gapStatus(c.profile, today),
+    doubleBooked: doubleBookedDays(c.bookouts, weekdaysAhead(today)),
+  };
+}
+
+export const needsAttention = (f: StaffingFlags) => f.load === "over" || f.doubleBooked.length > 0;
+
+// One roster filter: "load:<LoadStatus>", "gap:<GapStatus>", "attention",
+// "room" (a current GAP and under target) or "refresh" (GAP stale or never set)
+export function matchesFilter(f: StaffingFlags, filter: string) {
+  if (filter === "attention") return needsAttention(f);
+  if (filter === "room") return f.gap === "current" && f.load === "room";
+  if (filter === "refresh") return f.gap !== "current";
+  const [kind, value] = filter.split(":");
+  return kind === "load" ? f.load === value : kind === "gap" ? f.gap === value : true;
+}
+
+/** The admin page's headline numbers, all over the next four weeks. */
+export function staffingSnapshot(contractors: Contractor[], today = todayIso()) {
+  const days = weekdaysAhead(today);
+  const load: Record<LoadStatus, number> = { over: 0, booked: 0, room: 0, unset: 0 };
+  const gap: Record<GapStatus, number> = { current: 0, stale: 0, never: 0 };
+  let tlBooked = 0;
+  let capacity = 0;
+  let withRoom = 0;
+  let openDaysWithRoom = 0;
+  let overTarget = 0;
+  let doubleBooked = 0;
+  let doubleBookedDayCount = 0;
+  let attention = 0;
+  for (const c of contractors) {
+    const f = staffingFlags(c, today);
+    load[f.load]++;
+    gap[f.gap]++;
+    // Utilization only counts contractors who gave a target to measure against
+    if (f.load !== "unset") {
+      tlBooked += tlDaysBetween(c.bookouts, days[0]!, days[days.length - 1]!);
+      capacity += windowTarget(c.profile);
+    }
+    if (f.load === "over") overTarget++;
+    if (f.doubleBooked.length) {
+      doubleBooked++;
+      doubleBookedDayCount += f.doubleBooked.length;
+    }
+    if (needsAttention(f)) attention++;
+    // Room we can count on: a current GAP, under target, and an open day
+    if (matchesFilter(f, "room")) {
+      const open = days.filter((d) => dayStatus(c.profile, c.bookouts, d, true).state === "free").length;
+      if (open) {
+        withRoom++;
+        openDaysWithRoom += open;
+      }
+    }
+  }
+  return {
+    start: days[0]!,
+    end: days[days.length - 1]!,
+    tlBooked,
+    capacity,
+    withTarget: contractors.length - load.unset,
+    withRoom,
+    openDaysWithRoom,
+    load,
+    gap,
+    overTarget,
+    doubleBooked,
+    doubleBookedDays: doubleBookedDayCount,
+    attention,
+  };
+}
+export type StaffingSnapshot = ReturnType<typeof staffingSnapshot>;
+
+export interface WeekLoad {
+  // Monday of the week
+  start: string;
+  // Bookout days of contractors who set a target, by type
+  days: Record<BookoutType, number>;
+  // TL days of contractors with no target, which nothing can be measured against
+  untargeted: number;
+  // Summed weekly targets of contractors who set one
+  target: number;
+}
+
+/**
+ * Bookout days for each of the next `weeks` work weeks (this week first,
+ * Monday to Friday), against the weekly TL target of those who set one.
+ */
+export function weeklyLoad(contractors: Contractor[], today = todayIso(), weeks = 8): WeekLoad[] {
+  const dow = parseDate(today).getDay();
+  // On a weekend, start with the coming week
+  const monday = addDays(today, dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow);
+  const target = contractors.reduce((sum, c) => sum + windowTarget(c.profile, 1), 0);
+  return Array.from({ length: weeks }, (_, w) => {
+    const start = addDays(monday, w * 7);
+    const days: Record<BookoutType, number> = { nontl: 0, fac: 0, other: 0 };
+    let untargeted = 0;
+    for (const c of contractors) {
+      const hasTarget = windowTarget(c.profile) > 0;
+      for (const d of dateRange(start, addDays(start, 4))) {
+        const hits = bookoutsOn(c.bookouts, d);
+        // One entry per type per day, so overlapping bookouts aren't double counted
+        for (const type of Object.keys(days) as BookoutType[]) {
+          const ofType = hits.filter((b) => b.type === type);
+          if (!ofType.length) continue;
+          const n = Math.max(...ofType.map(portionDays));
+          if (hasTarget || type === "nontl") days[type] += n;
+          else untargeted += n;
+        }
+      }
+    }
+    return { start, days, untargeted, target };
+  });
 }
 
 // ---------------------------------------------------------------------------

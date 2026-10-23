@@ -24,6 +24,7 @@ const TOOL_STATUS: Record<string, string> = {
   contractorSchedules: "Looking up schedules…",
   listContractors: "Reading profiles…",
   monthSummary: "Adding up the month…",
+  nextFourWeeks: "Adding up the next four weeks…",
 };
 
 // Panel size: "min" keeps only the header bar, "full" fills the window

@@ -2,13 +2,17 @@ import { Badge, Pagination, Select, Table, TextInput } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  type ContractorStatus,
+  type GapStatus,
+  type LoadStatus,
+  type StaffingFlags,
   type TravelReach,
   addDays,
-  CONTRACTOR_STATUS_LABELS,
-  contractorStatus,
   formatDate,
   formatRange,
+  GAP_STATUS_LABELS,
+  LOAD_STATUS_LABELS,
+  matchesFilter,
+  staffingFlags,
   todayIso,
   travelReach,
 } from "~/domains/contractor-availability/availability";
@@ -20,22 +24,43 @@ import { Panel } from "../panel";
 const PAGE_SIZE = 10;
 
 // Filled badge shades that pass AA on the dark glass (autoContrast picks the text)
-const STATUS_COLORS: Record<ContractorStatus, string> = {
-  available: "green.9",
-  booked: "orange.4",
-  stale: "gray.7",
+const LOAD_COLORS: Record<LoadStatus, string> = {
+  over: "orange.4",
+  booked: "yellow.3",
+  room: "green.9",
+  unset: "gray.7",
 };
 // Bar colors for the status breakdown, matching the badges
-export const STATUS_BAR: Record<ContractorStatus, string> = {
-  available: "bg-emerald-500",
-  booked: "bg-orange-400",
-  stale: "bg-gray-300",
+export const LOAD_BAR: Record<LoadStatus, string> = {
+  over: "bg-orange-400",
+  booked: "bg-yellow-300",
+  room: "bg-emerald-500",
+  unset: "bg-gray-300",
+};
+export const GAP_BAR: Record<GapStatus, string> = {
+  current: "bg-teal-300",
+  stale: "bg-amber-300",
+  never: "bg-gray-300",
 };
 
-const StatusBadge = ({ status }: { status: ContractorStatus }) => (
-  <Badge tt="none" color={STATUS_COLORS[status]} autoContrast className="whitespace-nowrap shrink-0">
-    {CONTRACTOR_STATUS_LABELS[status]}
-  </Badge>
+// Load is the badge; an out-of-date GAP and double bookings ride beside it,
+// so a stale profile never hides how booked someone is
+const StatusBadges = ({ flags }: { flags: StaffingFlags }) => (
+  <div className="flex flex-wrap items-center gap-1 shrink-0">
+    <Badge tt="none" color={LOAD_COLORS[flags.load]} autoContrast className="whitespace-nowrap">
+      {LOAD_STATUS_LABELS[flags.load]}
+    </Badge>
+    {flags.gap !== "current" && (
+      <Badge tt="none" variant="outline" color="gray.3" className="whitespace-nowrap text-white">
+        {flags.gap === "stale" ? "Stale GAP" : "No GAP"}
+      </Badge>
+    )}
+    {flags.doubleBooked.length > 0 && (
+      <Badge tt="none" variant="outline" color="orange.3" className="whitespace-nowrap text-orange-200">
+        {flags.doubleBooked.length} double-booked
+      </Badge>
+    )}
+  </div>
 );
 
 const REACH_SHORT: Record<TravelReach, string> = {
@@ -50,19 +75,32 @@ const RANGES = [
   { value: "90", label: "Next 90 days" },
 ];
 
-const options = (record: Record<string, string>) =>
-  Object.entries(record).map(([value, label]) => ({ value, label }));
+const options = (record: Record<string, string>, prefix = "") =>
+  Object.entries(record).map(([value, label]) => ({ value: prefix + value, label }));
+
+const STATUS_FILTERS = [
+  {
+    group: "Staffing",
+    items: [
+      { value: "attention", label: "Needs attention" },
+      { value: "room", label: "Has room, current GAP" },
+      { value: "refresh", label: "GAP needs refresh" },
+    ],
+  },
+  { group: "Load, next 4 weeks", items: options(LOAD_STATUS_LABELS, "load:") },
+  { group: "GAP", items: options(GAP_STATUS_LABELS, "gap:") },
+];
 
 type Props = {
   contractors: Contractor[];
   contentAreas: string[];
-  status: string | null;
-  onStatusChange: (status: string | null) => void;
+  filter: string | null;
+  onFilterChange: (filter: string | null) => void;
   onOpen: (email: string) => void;
 };
 
 /** "Contractor-level detail": filterable, paged list; a row opens the drawer. */
-export const ContractorTable = ({ contractors, contentAreas, status, onStatusChange, onOpen }: Props) => {
+export const ContractorTable = ({ contractors, contentAreas, filter, onFilterChange, onOpen }: Props) => {
   const [name, setName] = useState("");
   const [area, setArea] = useState<string | null>(null);
   const [reach, setReach] = useState<string | null>(null);
@@ -76,23 +114,23 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
       contractors
         .map((c) => ({
           c,
-          status: contractorStatus(c.profile, c.bookouts, today),
+          flags: staffingFlags(c, today),
           upcoming: c.bookouts.filter((b) => b.end >= today && (!until || b.start <= until)),
         }))
-        .filter(({ c, status: s, upcoming }) => {
+        .filter(({ c, flags, upcoming }) => {
           if (name && !c.name.toLowerCase().includes(name.toLowerCase())) return false;
           if (area && !c.contentAreas.includes(area)) return false;
           if (reach && travelReach(c.profile) !== reach) return false;
-          if (status && s !== status) return false;
+          if (filter && !matchesFilter(flags, filter)) return false;
           // A date range shows who has something booked in it
           if (until && upcoming.length === 0) return false;
           return true;
         }),
-    [contractors, name, area, reach, status, today, until]
+    [contractors, name, area, reach, filter, today, until]
   );
 
   // Back to the first page whenever the filters change
-  useEffect(() => setPage(1), [name, area, reach, status, range]);
+  useEffect(() => setPage(1), [name, area, reach, filter, range]);
   const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
   const visible = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
@@ -118,16 +156,16 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
         <Select placeholder="Any date range" data={RANGES} value={range} onChange={setRange} clearable />
         <Select
           placeholder="Any status"
-          data={options(CONTRACTOR_STATUS_LABELS)}
-          value={status}
-          onChange={onStatusChange}
+          data={STATUS_FILTERS}
+          value={filter}
+          onChange={onFilterChange}
           clearable
         />
       </div>
 
       {/* Phones: one compact card per contractor instead of a sideways-scrolling table */}
       <ul className="sm:hidden flex flex-col gap-1.5">
-        {visible.map(({ c, status: s, upcoming }) => (
+        {visible.map(({ c, flags, upcoming }) => (
           <li key={c.email}>
             <button
               type="button"
@@ -141,7 +179,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
                     {[c.city, c.state].filter(Boolean).join(", ") || "—"} · {REACH_SHORT[travelReach(c.profile)]}
                   </div>
                 </div>
-                <StatusBadge status={s} />
+                <StatusBadges flags={flags} />
               </div>
               <div className="mt-1 text-xs text-white/90">
                 GAP {c.profile.confirmedOn ? formatDate(c.profile.confirmedOn) : "never updated"} ·{" "}
@@ -175,7 +213,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {visible.map(({ c, status: s, upcoming }) => (
+            {visible.map(({ c, flags, upcoming }) => (
               <Table.Tr
                 key={c.email}
                 className="cursor-pointer outline-none focus-visible:bg-white/10 focus-visible:shadow-[inset_3px_0_0_white]"
@@ -224,7 +262,7 @@ export const ContractorTable = ({ contractors, contentAreas, status, onStatusCha
                   )}
                 </Table.Td>
                 <Table.Td>
-                  <StatusBadge status={s} />
+                  <StatusBadges flags={flags} />
                 </Table.Td>
               </Table.Tr>
             ))}

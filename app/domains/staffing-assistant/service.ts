@@ -1,7 +1,8 @@
 import type { UIMessage } from "ai";
 import {
-  CONTRACTOR_STATUS_LABELS,
   formatDateWithDay,
+  GAP_STATUS_LABELS,
+  LOAD_STATUS_LABELS,
   MOSTLY_BOOKED_SHARE,
   STALE_PROFILE_DAYS,
   TRAVEL_REACH_LABELS,
@@ -17,7 +18,9 @@ import { staffingTools } from "./tools";
 // definitions can't drift from the code that computes them
 const DATA_GLOSSARY = `What the data means:
 - Contractors are active 1099 coaches/facilitators. Each has a General Availability Profile (GAP: standing preferences) and bookouts (specific dates).
-- status: "${CONTRACTOR_STATUS_LABELS.stale}" = profile never confirmed or confirmed over ${STALE_PROFILE_DAYS} days ago (checked first). "${CONTRACTOR_STATUS_LABELS.booked}" = this month's TL days have reached ${MOSTLY_BOOKED_SHARE * 100}% of their monthly target. Otherwise "${CONTRACTOR_STATUS_LABELS.available}".
+- loadNext4Weeks compares TL days booked in the next four weeks with their target over those weeks: "${LOAD_STATUS_LABELS.over}" past 100%, "${LOAD_STATUS_LABELS.booked}" from ${MOSTLY_BOOKED_SHARE * 100}%, otherwise "${LOAD_STATUS_LABELS.room}"; "${LOAD_STATUS_LABELS.unset}" when they never gave a target.
+- gap is separate from load: "${GAP_STATUS_LABELS.current}" = confirmed in the last ${STALE_PROFILE_DAYS} days, "${GAP_STATUS_LABELS.stale}" = older, "${GAP_STATUS_LABELS.never}" = never confirmed. A stale GAP means their preferences may be out of date, not that they're free.
+- doubleBookedDays are days where TL work lands on a day they marked as a non-TL bookout; staff should check them.
 - Monthly target = daysPerWeek x 4.3, capped by maxDaysPerMonth. "Not set" means the contractor never gave a number; that's unknown, not zero.
 - profileSource "From intake form" = the contractor hasn't saved a GAP yet; values come from their original intake answers, so many fields are blank.
 - Bookout types: ${BOOKOUT_TYPES.map((t) => `"${t.label}"`).join(", ")}. Non-TL bookouts are days they can't take TL work; the TL types are days already committed to Teaching Lab. A portion of AM, PM or Half day is a half day (0.5 in totals).
