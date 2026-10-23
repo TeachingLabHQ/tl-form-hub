@@ -22,8 +22,28 @@ import { CapacityGrid } from "./capacity-grid";
 import { ContractorDrawer } from "./contractor-drawer";
 import { ContractorTable, STATUS_BAR } from "./contractor-table";
 
-const Stat = ({ label, value, sub }: { label: string; value: string; sub: string }) => (
-  <div className={cn(PANEL, "p-4 md:p-4")}>
+// Each tile picks up the color its subject has elsewhere on the page: open days
+// match "Open" in the capacity grid, GAPs the teal "Updated" badge, and
+// availability the blue of TL work. The headcount stays neutral.
+const STAT_TONE = {
+  neutral: "",
+  teal: "bg-teal-400/[0.09] border-l-teal-300",
+  emerald: "bg-emerald-400/[0.09] border-l-emerald-400",
+  sky: "bg-sky-400/[0.09] border-l-sky-300",
+};
+
+const Stat = ({
+  label,
+  value,
+  sub,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  sub: string;
+  tone?: keyof typeof STAT_TONE;
+}) => (
+  <div className={cn(PANEL, "p-4 md:p-4 border-l-[3px] border-l-white/40", STAT_TONE[tone])}>
     <div className="text-xs font-medium text-white/90">{label}</div>
     <div className="text-2xl font-semibold tabular-nums leading-tight mt-1">{value}</div>
     <div className="text-xs text-white/90 mt-0.5">{sub}</div>
@@ -141,16 +161,19 @@ export const StaffingView = ({
         <Stat label="Active contractors" value={String(n)} sub="FY27 contract signed or sent" />
         <Stat
           label="GAPs updated this quarter"
+          tone="teal"
           value={n ? `${Math.round((stats.confirmed / n) * 100)}%` : "—"}
           sub={`${stats.confirmed} of ${n} contractors`}
         />
         <Stat
           label={`Open days left in ${monthLabel}`}
+          tone="emerald"
           value={stats.open.toLocaleString()}
           sub="contractor-days with nothing booked"
         />
         <Stat
           label="Avg days/week available"
+          tone="sky"
           value={stats.avgDays === null ? "—" : stats.avgDays.toFixed(1)}
           sub={`${stats.withTarget} of ${n} have set this`}
         />

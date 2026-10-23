@@ -29,16 +29,19 @@ const Page = ({ bubble, children }: { bubble?: React.ReactNode; children: React.
 const Header = ({
   title,
   subtitle,
+  inline,
   children,
 }: {
   title: string;
   subtitle: string;
+  // Subtitle beside the title instead of under it
+  inline?: boolean;
   children?: React.ReactNode;
 }) => (
   <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-    <div className="min-w-0">
+    <div className={cn("min-w-0", inline && "flex flex-wrap items-baseline gap-x-6 gap-y-1")}>
       <h1 className="text-2xl md:text-3xl font-semibold">{title}</h1>
-      <p className="text-sm text-white/90 mt-1">{subtitle}</p>
+      <p className={cn("text-sm text-white/90", !inline && "mt-1")}>{subtitle}</p>
     </div>
     {children}
   </div>
@@ -144,6 +147,7 @@ export const ContractorAvailability = () => {
         <>
           <Header
             title="Bookout admin"
+            inline
             subtitle="Everything contractors submit, at the individual and aggregate level."
           >
             {switcher}
