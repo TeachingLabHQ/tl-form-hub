@@ -46,6 +46,8 @@ const repo = (overrides: Partial<ContractorAvailabilityRepository> = {}) =>
     createBookout: vi.fn().mockResolvedValue({ data: "sub-1", error: null }),
     deleteBookout: vi.fn().mockResolvedValue({ data: "sub-1", error: null }),
     updateStaffNotes: vi.fn().mockResolvedValue({ data: "item-a@tl.org", error: null }),
+    fetchSessionCalendar: vi.fn().mockResolvedValue({ data: [], error: null }),
+    fetchMondayUsers: vi.fn().mockResolvedValue({ data: [], error: null }),
     ...overrides,
   }) as unknown as ContractorAvailabilityRepository;
 
@@ -56,6 +58,39 @@ describe("mergeRoster", () => {
       ["Ann", "intake", null],
       ["Bo", "saved", "item-b@tl.org"],
     ]);
+  });
+});
+
+describe("synced sessions", () => {
+  const session = { date: "2099-01-05", endDate: "2099-01-05", person: "Ann", kind: "facilitation", project: "PL" };
+  const synced = () =>
+    repo({
+      fetchSessionCalendar: vi.fn().mockResolvedValue({ data: [session], error: null }),
+      fetchMondayUsers: vi.fn().mockResolvedValue({ data: [{ name: "Ann", email: "a@tl.org" }], error: null }),
+    });
+
+  it("adds a contractor's sessions to their bookouts on the roster and their page", async () => {
+    const service = contractorAvailabilityService(synced());
+    const roster = await service.fetchRoster();
+    expect(roster.data![0]!.bookouts).toEqual([expect.objectContaining({ start: "2099-01-05", source: "logistics" })]);
+    const page = await service.fetchContractorWithSessions("a@tl.org");
+    expect(page.data!.bookouts).toHaveLength(1);
+  });
+
+  it("still loads the roster when the calendar can't be read", async () => {
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const r = repo({ fetchSessionCalendar: vi.fn().mockResolvedValue({ data: null, error: new Error("down") }) });
+    const roster = await contractorAvailabilityService(r).fetchRoster();
+    expect(roster.error).toBeNull();
+    expect(roster.data![0]!.bookouts).toEqual([]);
+    spy.mockRestore();
+  });
+
+  it("never deletes a synced session", async () => {
+    const r = synced();
+    const result = await contractorAvailabilityService(r).removeBookout("a@tl.org", "logistics-a@tl.org-2099-01-05");
+    expect(result.error?.message).toBe("Bookout not found");
+    expect(r.deleteBookout).not.toHaveBeenCalled();
   });
 });
 

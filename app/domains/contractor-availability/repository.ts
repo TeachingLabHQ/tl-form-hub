@@ -1,6 +1,8 @@
+import { parquetReadObjects } from "hyparquet";
 import { Errorable } from "~/utils/errorable";
 import { fetchMondayData, insertMondayData } from "~/domains/utils";
 import { isIsoDate, profileFromIntake } from "./availability";
+import type { MondayUser, SessionRow } from "./sessions";
 import {
   type AvailabilityProfile,
   type Bookout,
@@ -192,6 +194,13 @@ const STAFF_PROFILE_FIELDS = PROFILE_FIELDS.replace(
   JSON.stringify([...PROFILE_COLUMNS, "cbs_staff_notes"])
 );
 
+// Every FY27 PL facilitation and coaching session, one person per row, rebuilt
+// from the logistics boards on the L&R hub (18416005880) whenever one changes
+// and daily. Served by the TL data service; the coach log reads it too.
+const SESSION_CALENDAR_URL = "https://tl-data.teachinglab.org/monday-webhook/calendar_fy27";
+
+const ymd = (v: unknown) => (v instanceof Date ? v.toISOString() : String(v ?? "")).slice(0, 10);
+
 export interface ContractorAvailabilityRepository {
   /** Active 1099 contractors from the Coach/Facilitator Details board. */
   fetchContractors(): Promise<Errorable<ContractorIntake[]>>;
@@ -207,6 +216,10 @@ export interface ContractorAvailabilityRepository {
     profile: AvailabilityProfile
   ): Promise<Errorable<string>>;
   updateProfile(itemId: string, profile: AvailabilityProfile): Promise<Errorable<string>>;
+  /** Every session on the FY27 session calendar (read-only). */
+  fetchSessionCalendar(): Promise<Errorable<SessionRow[]>>;
+  /** Monday account names and emails, to match calendar names to contractors. */
+  fetchMondayUsers(): Promise<Errorable<MondayUser[]>>;
   /** Adds a bookout subitem under the contractor's CBS item; returns its id. */
   createBookout(
     profileItemId: string,
@@ -393,6 +406,53 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
       } catch (e) {
         console.error(e);
         return { data: null, error: new Error("updateStaffNotes() went wrong") };
+      }
+    },
+
+    fetchSessionCalendar: async () => {
+      try {
+        const token = (process.env.CALENDAR_API_TOKEN ?? "").trim().replace(/^"|"$/g, "");
+        const res = await fetch(`${SESSION_CALENDAR_URL}?token=${encodeURIComponent(token)}&format=parquet`);
+        if (!res.ok) throw new Error(`Session calendar fetch failed: ${res.status}`);
+        const buffer = await res.arrayBuffer();
+        const rows = (await parquetReadObjects({
+          file: { byteLength: buffer.byteLength, slice: (start, end) => buffer.slice(start, end) },
+        })) as Record<string, unknown>[];
+        const sessions = rows
+          .map((r): SessionRow => {
+            const date = ymd(r.session_date);
+            const end = ymd(r.session_end_date);
+            return {
+              date,
+              endDate: isIsoDate(end) && end > date ? end : date,
+              person: String(r.coach_facilitator ?? "").trim(),
+              // Coaching boards' rows are titled "Coaching"; PL boards use session names
+              kind: /coaching/i.test(String(r.title ?? "")) ? "coaching" : "facilitation",
+              project: String(r.project ?? "").trim(),
+            };
+          })
+          .filter((s) => isIsoDate(s.date) && s.person);
+        return { data: sessions, error: null };
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("fetchSessionCalendar() went wrong") };
+      }
+    },
+
+    fetchMondayUsers: async () => {
+      try {
+        const users: MondayUser[] = [];
+        for (let page = 1; ; page++) {
+          const res = await fetchMondayData(`{ users(limit: 500, page: ${page}) { name email } }`);
+          if (res?.errors) throw new Error(JSON.stringify(res.errors));
+          const batch: MondayUser[] = res?.data?.users ?? [];
+          users.push(...batch);
+          if (batch.length < 500) break;
+        }
+        return { data: users, error: null };
+      } catch (e) {
+        console.error(e);
+        return { data: null, error: new Error("fetchMondayUsers() went wrong") };
       }
     },
   };

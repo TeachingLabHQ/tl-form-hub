@@ -1,7 +1,8 @@
 import { Errorable } from "~/utils/errorable";
-import { formatRange, isIsoDate, todayIso } from "./availability";
+import { formatRange, isIsoDate, todayIso, todayIsoEastern } from "./availability";
 import {
   type AvailabilityProfile,
+  type Bookout,
   type Contractor,
   type ContractorIntake,
   type NewBookout,
@@ -18,6 +19,7 @@ import {
   WEEKDAYS,
 } from "./model";
 import { ContractorAvailabilityRepository } from "./repository";
+import { sessionBookouts } from "./sessions";
 
 const clampNumber = (v: unknown, max: number) => {
   const n = Number(v);
@@ -94,9 +96,21 @@ export function mergeRoster(intake: ContractorIntake[], saved: SavedProfile[]): 
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** Adds each contractor's synced sessions to their bookouts, by email. */
+export function withSessions(contractors: Contractor[], sessions: Map<string, Bookout[]>): Contractor[] {
+  return contractors.map((c) => {
+    const synced = sessions.get(c.email);
+    return synced
+      ? { ...c, bookouts: [...c.bookouts, ...synced].sort((a, b) => a.start.localeCompare(b.start)) }
+      : c;
+  });
+}
+
 export interface ContractorAvailabilityService extends ContractorAvailabilityRepository {
   fetchRoster(): Promise<Errorable<Contractor[]>>;
   fetchContractor(email: string): Promise<Errorable<Contractor | null>>;
+  /** fetchContractor plus their synced sessions, for showing their page. */
+  fetchContractorWithSessions(email: string): Promise<Errorable<Contractor | null>>;
   saveProfile(email: string, profile: AvailabilityProfile): Promise<Errorable<Contractor>>;
   addBookout(email: string, bookout: NewBookout): Promise<Errorable<string>>;
   removeBookout(email: string, bookoutId: string): Promise<Errorable<string>>;
@@ -107,14 +121,26 @@ export interface ContractorAvailabilityService extends ContractorAvailabilityRep
 export function contractorAvailabilityService(
   repository: ContractorAvailabilityRepository
 ): ContractorAvailabilityService {
+  // Sessions from this month on, by email. The calendar is supplementary, so
+  // if it or the user list can't be read, CBS still works without it.
+  const fetchSessions = async (): Promise<Map<string, Bookout[]>> => {
+    const [calendar, users] = await Promise.all([repository.fetchSessionCalendar(), repository.fetchMondayUsers()]);
+    if (calendar.error || users.error) {
+      console.error("Skipping synced sessions:", calendar.error ?? users.error);
+      return new Map();
+    }
+    return sessionBookouts(calendar.data, users.data, `${todayIsoEastern().slice(0, 8)}01`);
+  };
+
   const fetchRoster = async (): Promise<Errorable<Contractor[]>> => {
-    const [intake, saved] = await Promise.all([
+    const [intake, saved, sessions] = await Promise.all([
       repository.fetchContractors(),
       repository.fetchSavedProfiles(),
+      fetchSessions(),
     ]);
     if (intake.error) return intake;
     if (saved.error) return saved;
-    return { data: mergeRoster(intake.data, saved.data), error: null };
+    return { data: withSessions(mergeRoster(intake.data, saved.data), sessions), error: null };
   };
 
   // Two filtered reads instead of the whole roster
@@ -147,9 +173,17 @@ export function contractorAvailabilityService(
     createBookout: repository.createBookout,
     deleteBookout: repository.deleteBookout,
     updateStaffNotes: repository.updateStaffNotes,
+    fetchSessionCalendar: repository.fetchSessionCalendar,
+    fetchMondayUsers: repository.fetchMondayUsers,
 
     fetchRoster,
     fetchContractor,
+
+    fetchContractorWithSessions: async (email) => {
+      const [found, sessions] = await Promise.all([fetchContractor(email), fetchSessions()]);
+      if (found.error || !found.data) return found;
+      return { data: withSessions([found.data], sessions)[0]!, error: null };
+    },
 
     saveProfile: async (email, profile) => {
       const found = await fetchContractor(email);
@@ -186,7 +220,7 @@ export function contractorAvailabilityService(
       const found = await fetchContractor(email);
       if (found.error) return found;
       if (!found.data) return { data: null, error: new Error("Contractor not found") };
-      if (!found.data.bookouts.some((b) => b.id === bookoutId)) {
+      if (!found.data.bookouts.some((b) => b.id === bookoutId && !b.source)) {
         return { data: null, error: new Error("Bookout not found") };
       }
       return repository.deleteBookout(bookoutId);

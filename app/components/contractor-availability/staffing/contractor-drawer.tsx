@@ -16,6 +16,7 @@ import {
   MONTH_LABELS,
   STATES,
 } from "~/domains/contractor-availability/model";
+import { SESSION_PORTION_NOTE } from "~/domains/contractor-availability/sessions";
 import { BOOKOUT_COLORS, FIELD_CLASSES } from "../constants";
 import { ProfileAgeBadge } from "../profile-form";
 
@@ -203,9 +204,15 @@ export const ContractorDrawer = ({
                         {b.portion !== "Full day" ? `${b.portion} · ` : ""}
                         {b.note}
                       </span>
+                      {b.source === "logistics" && (
+                        <span className="text-xs text-white/90">From logistics board</span>
+                      )}
                     </li>
                   ))}
               </ul>
+            )}
+            {c.bookouts.some((b) => b.source === "logistics") && (
+              <p className="mt-2 text-xs text-white/90">{SESSION_PORTION_NOTE}</p>
             )}
           </section>
 

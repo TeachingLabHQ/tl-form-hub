@@ -5,7 +5,8 @@
 export type TravelFormat = "virtual" | "local" | "short" | "any";
 export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri";
 export type BookoutType = "nontl" | "fac" | "other";
-export type DayPortion = "Full day" | "AM" | "PM";
+// "Half day" is only used for sessions synced from the logistics boards
+export type DayPortion = "Full day" | "AM" | "PM" | "Half day";
 
 export interface AvailabilityProfile {
   formats: TravelFormat[];
@@ -34,6 +35,8 @@ export interface Bookout {
   end: string; // YYYY-MM-DD, inclusive
   portion: DayPortion;
   note: string;
+  // "logistics" = synced from the session calendar; read-only in CBS
+  source?: "logistics";
 }
 
 export type NewBookout = Omit<Bookout, "id">;

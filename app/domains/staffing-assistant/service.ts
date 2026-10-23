@@ -6,6 +6,7 @@ import {
   STALE_PROFILE_DAYS,
   TRAVEL_REACH_LABELS,
 } from "~/domains/contractor-availability/availability";
+import { SESSION_DAY_PORTION } from "~/domains/contractor-availability/sessions";
 import { type Contractor, BOOKOUT_TYPES } from "~/domains/contractor-availability/model";
 import { Errorable } from "~/utils/errorable";
 import { DAILY_QUESTION_LIMIT, MAX_CHAT_MESSAGES, MAX_QUESTION_CHARS } from "./model";
@@ -19,7 +20,8 @@ const DATA_GLOSSARY = `What the data means:
 - status: "${CONTRACTOR_STATUS_LABELS.stale}" = profile never confirmed or confirmed over ${STALE_PROFILE_DAYS} days ago (checked first). "${CONTRACTOR_STATUS_LABELS.booked}" = this month's TL days have reached ${MOSTLY_BOOKED_SHARE * 100}% of their monthly target. Otherwise "${CONTRACTOR_STATUS_LABELS.available}".
 - Monthly target = daysPerWeek x 4.3, capped by maxDaysPerMonth. "Not set" means the contractor never gave a number; that's unknown, not zero.
 - profileSource "From intake form" = the contractor hasn't saved a GAP yet; values come from their original intake answers, so many fields are blank.
-- Bookout types: ${BOOKOUT_TYPES.map((t) => `"${t.label}"`).join(", ")}. Non-TL bookouts are days they can't take TL work; the TL types are days already committed to Teaching Lab. A portion of AM or PM is a half day (0.5 in totals).
+- Bookout types: ${BOOKOUT_TYPES.map((t) => `"${t.label}"`).join(", ")}. Non-TL bookouts are days they can't take TL work; the TL types are days already committed to Teaching Lab. A portion of AM, PM or Half day is a half day (0.5 in totals).
+- Bookouts with fromLogisticsBoard come from the partnership logistics boards' session calendar, not the contractor. Session times aren't tracked, so a facilitation day is assumed to be a ${SESSION_DAY_PORTION.facilitation.toLowerCase()} and a coaching day a ${SESSION_DAY_PORTION.coaching.toLowerCase()}; say so when it affects an answer.
 - travel: ${Object.values(TRAVEL_REACH_LABELS).map((l) => `"${l}"`).join(", ")}. Every in-person option includes virtual work. Regional travelers go only to their travelRegions; local means no overnight travel from their home state.
 - months lists the months they take work ("Year-round" = all). usualWeekdays are the days they normally work; other weekdays count as unavailable.
 - In searches, a day is open only when it is a weekday, in their months and usual weekdays, and has no bookout. Weekends are never counted. Totals count weekdays only.

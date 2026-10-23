@@ -152,7 +152,14 @@ export function contractorSchedules(
           offWeekdays: statuses.filter((s) => s === "off").length,
           bookouts: c.bookouts
             .filter((b) => b.end >= input.start && b.start <= input.end)
-            .map((b) => ({ type: bookoutTypeLabel(b.type), start: b.start, end: b.end, portion: b.portion, note: b.note })),
+            .map((b) => ({
+              type: bookoutTypeLabel(b.type),
+              start: b.start,
+              end: b.end,
+              portion: b.portion,
+              note: b.note,
+              ...(b.source === "logistics" && { fromLogisticsBoard: true }),
+            })),
         };
       }),
     };

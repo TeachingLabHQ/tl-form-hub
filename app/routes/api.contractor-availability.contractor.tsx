@@ -16,7 +16,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     const { headers } = access.user;
 
     const service = contractorAvailabilityService(contractorAvailabilityRepository());
-    const { data, error } = await service.fetchContractor(email);
+    const { data, error } = await service.fetchContractorWithSessions(email);
     if (error) {
       console.error("Error fetching contractor:", error);
       return json({ ok: false, error: "Failed to load your profile" }, { status: 500, headers });

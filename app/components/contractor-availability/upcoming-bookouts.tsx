@@ -4,6 +4,7 @@ import { IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
 import { formatRange, todayIso } from "~/domains/contractor-availability/availability";
 import { type Bookout, bookoutTypeLabel } from "~/domains/contractor-availability/model";
+import { SESSION_PORTION_NOTE } from "~/domains/contractor-availability/sessions";
 import { BOOKOUT_COLORS } from "./constants";
 import { Panel } from "./panel";
 
@@ -12,7 +13,7 @@ type Props = {
   onRemove: (id: string) => Promise<string | null>;
 };
 
-/** The contractor's bookouts from today on, each removable (two-step confirm). */
+/** The contractor's bookouts from today on. Their own are removable (two-step confirm); synced sessions aren't. */
 export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
   const today = todayIso();
   const upcoming = bookouts.filter((b) => b.end >= today);
@@ -55,7 +56,9 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
               <Badge tt="none" color={BOOKOUT_COLORS[b.type]} variant="filled" size="sm" className="shrink-0">
                 {bookoutTypeLabel(b.type)}
               </Badge>
-              {confirming === b.id ? (
+              {b.source === "logistics" ? (
+                <span className="shrink-0 text-xs text-white/90">From logistics board</span>
+              ) : confirming === b.id ? (
                 <Button
                   size="compact-xs"
                   color="red"
@@ -82,6 +85,9 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
             </li>
           ))}
         </ul>
+      )}
+      {upcoming.some((b) => b.source === "logistics") && (
+        <p className="mt-2 text-xs text-white/90">{SESSION_PORTION_NOTE}</p>
       )}
     </Panel>
   );
