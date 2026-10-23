@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { TextInput } from "@mantine/core";
+import { Portal, TextInput } from "@mantine/core";
 import {
   type DayStatus,
   addDays,
@@ -29,19 +29,19 @@ const cellClass = (st: DayStatus) =>
   st.state === "off"
     ? "bg-white/15"
     : st.state === "partial"
-      ? "bg-amber-300"
-      : st.state === "booked" && st.bookout
-        ? BOOKOUT_CHIP[st.bookout.type]
-        : "bg-emerald-400/80";
+    ? "bg-amber-300"
+    : st.state === "booked" && st.bookout
+    ? BOOKOUT_CHIP[st.bookout.type]
+    : "bg-emerald-400/80";
 
 const stateLabel = (st: DayStatus) =>
   st.state === "free"
     ? "Open"
     : st.state === "partial"
-      ? "Half day open"
-      : st.state === "booked" && st.bookout
-        ? bookoutTypeLabel(st.bookout.type)
-        : "Not a working day";
+    ? "Half day open"
+    : st.state === "booked" && st.bookout
+    ? bookoutTypeLabel(st.bookout.type)
+    : "Not a working day";
 
 const formatDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
@@ -101,7 +101,7 @@ export const CapacityGrid = ({
       </div>
       <div className="overflow-auto max-h-[480px] rounded-lg" onScroll={() => setHover(null)}>
         <table className="w-full min-w-[720px] border-separate border-spacing-[2px] text-xs">
-          <thead className="sticky top-0 z-10">
+          <thead className="sticky top-0 z-30">
             <tr>
               <th className="sticky left-0 z-20 w-px bg-[#1c3355]" />
               {days.map((d, i) => (
@@ -151,7 +151,7 @@ export const CapacityGrid = ({
             ))}
           </tbody>
           {rows.length > 0 && (
-            <tfoot className="sticky bottom-0 z-10">
+            <tfoot className="sticky bottom-0 z-30">
               <tr>
                 <th className="sticky left-0 z-20 bg-[#1c3355] pr-3 pt-1 text-left font-medium whitespace-nowrap">
                   Open that day
@@ -174,24 +174,27 @@ export const CapacityGrid = ({
         </table>
         {rows.length === 0 && <p className="text-sm text-white/90 py-2">No contractors match.</p>}
       </div>
+      {/* Portaled: the page card's backdrop blur would otherwise anchor `fixed` to the card */}
       {hover && hovered && (
-        <div
-          role="tooltip"
-          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-lg bg-[#082040] px-3 py-2 text-xs text-white shadow-lg ring-1 ring-white/25"
-          style={{ left: hover.x, top: hover.y - 6 }}
-        >
-          <div className="text-sm font-semibold">{stateLabel(hovered.st)}</div>
-          <div className="text-white/90">
-            {hovered.c.name} · {formatDateWithDay(days[hover.col]!)}
+        <Portal>
+          <div
+            role="tooltip"
+            className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-lg bg-[#082040] px-3 py-2 text-xs text-white shadow-lg ring-1 ring-white/25"
+            style={{ left: hover.x, top: hover.y - 6 }}
+          >
+            <div className="text-sm font-semibold">{stateLabel(hovered.st)}</div>
+            <div className="text-white/90">
+              {hovered.c.name} · {formatDateWithDay(days[hover.col]!)}
+            </div>
+            {hovered.st.reason !== stateLabel(hovered.st) && (
+              <div className="max-w-64 text-white/90">{hovered.st.reason}</div>
+            )}
+            <div className="mt-1 border-t border-white/20 pt-1 text-white/90">
+              <span className="font-semibold text-white">{formatDays(openByDay[hover.col]!)}</span> of {rows.length}{" "}
+              listed open that day
+            </div>
           </div>
-          {hovered.st.reason !== stateLabel(hovered.st) && (
-            <div className="max-w-64 text-white/90">{hovered.st.reason}</div>
-          )}
-          <div className="mt-1 border-t border-white/20 pt-1 text-white/90">
-            <span className="font-semibold text-white">{formatDays(openByDay[hover.col]!)}</span> of {rows.length}{" "}
-            listed open that day
-          </div>
-        </div>
+        </Portal>
       )}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/90">
         {LEGEND.map(([cls, label]) => (
