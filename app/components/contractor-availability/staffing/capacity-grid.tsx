@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { Portal, TextInput } from "@mantine/core";
 import {
   type DayStatus,
@@ -48,6 +48,47 @@ const formatDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1
 // The hovered cell, with where to draw the readout (viewport coordinates)
 type Hover = { row: number; col: number; x: number; y: number };
 
+// The ~5k squares, kept out of hover renders: hovering only rewrites the
+// highlight <style> below, keyed off each square's data-r/data-c
+const GridBody = memo(function GridBody({
+  rows,
+  statuses,
+  days,
+  weekStarts,
+  onOpen,
+  onHover,
+}: {
+  rows: Contractor[];
+  statuses: DayStatus[][];
+  days: string[];
+  weekStarts: boolean[];
+  onOpen: (email: string) => void;
+  onHover: (e: React.MouseEvent | null) => void;
+}) {
+  return (
+    <tbody onMouseOver={onHover} onMouseLeave={() => onHover(null)}>
+      {rows.map((c, r) => (
+        <tr key={c.email}>
+          <th data-name={r} className="sticky left-0 z-10 bg-[#1c3355] pr-3 text-left font-medium whitespace-nowrap">
+            <button type="button" className="hover:underline" onClick={() => onOpen(c.email)}>
+              {c.name}
+            </button>
+          </th>
+          {days.map((d, i) => (
+            <td key={d} className={cn(weekStarts[i] && "pl-1.5")}>
+              <div
+                data-r={r}
+                data-c={i}
+                className={cn("h-5 min-w-3 w-full rounded-[3px]", cellClass(statuses[r]![i]!))}
+              />
+            </td>
+          ))}
+        </tr>
+      ))}
+    </tbody>
+  );
+});
+
 /**
  * Contractor × weekday grid for the next 8 weeks. Hovering a square
  * highlights its row and day and shows what's booked plus how many of the
@@ -83,7 +124,20 @@ export const CapacityGrid = ({
       ),
     [statuses, days]
   );
-  const weekStart = (i: number) => i > 0 && parseDate(days[i]!).getDay() === 1;
+  const weekStarts = useMemo(() => days.map((d, i) => i > 0 && parseDate(d).getDay() === 1), [days]);
+  const weekStart = (i: number) => weekStarts[i]!;
+  // One delegated listener for every square; bails out while still on the same one
+  const onHover = useCallback((e: React.MouseEvent | null) => {
+    const cell = e && (e.target as HTMLElement).closest<HTMLElement>("[data-c]");
+    if (!cell) return setHover(null);
+    const row = Number(cell.dataset.r);
+    const col = Number(cell.dataset.c);
+    setHover((h) => {
+      if (h?.row === row && h.col === col) return h;
+      const rect = cell.getBoundingClientRect();
+      return { row, col, x: rect.left + rect.width / 2, y: rect.top };
+    });
+  }, []);
   const hovered = hover && rows[hover.row] ? { c: rows[hover.row]!, st: statuses[hover.row]![hover.col]! } : null;
 
   return (
@@ -100,7 +154,15 @@ export const CapacityGrid = ({
         />
       </div>
       <div className="overflow-auto max-h-[480px] rounded-lg" onScroll={() => setHover(null)}>
-        <table className="w-full min-w-[720px] border-separate border-spacing-[2px] text-xs">
+        {hover && (
+          <style>{`
+            [data-capacity-grid] [data-c] { opacity: 0.6 }
+            [data-capacity-grid] [data-r="${hover.row}"], [data-capacity-grid] [data-c="${hover.col}"] { opacity: 1 }
+            [data-capacity-grid] [data-r="${hover.row}"][data-c="${hover.col}"] { box-shadow: 0 0 0 2px #fff }
+            [data-capacity-grid] [data-name="${hover.row}"] { color: #fde68a }
+          `}</style>
+        )}
+        <table data-capacity-grid className="w-full min-w-[720px] border-separate border-spacing-[2px] text-xs">
           <thead className="sticky top-0 z-30">
             <tr>
               <th className="sticky left-0 z-20 w-px bg-[#1c3355]" />
@@ -118,38 +180,14 @@ export const CapacityGrid = ({
               ))}
             </tr>
           </thead>
-          <tbody onMouseLeave={() => setHover(null)}>
-            {rows.map((c, r) => (
-              <tr key={c.email}>
-                <th
-                  className={cn(
-                    "sticky left-0 z-10 bg-[#1c3355] pr-3 text-left font-medium whitespace-nowrap",
-                    hover?.row === r && "text-amber-200"
-                  )}
-                >
-                  <button type="button" className="hover:underline" onClick={() => onOpen(c.email)}>
-                    {c.name}
-                  </button>
-                </th>
-                {days.map((d, i) => (
-                  <td key={d} className={cn(weekStart(i) && "pl-1.5")}>
-                    <div
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        setHover({ row: r, col: i, x: rect.left + rect.width / 2, y: rect.top });
-                      }}
-                      className={cn(
-                        "h-5 min-w-3 w-full rounded-[3px] transition-opacity",
-                        cellClass(statuses[r]![i]!),
-                        hover && hover.row !== r && hover.col !== i && "opacity-60",
-                        hover?.row === r && hover.col === i && "ring-2 ring-white"
-                      )}
-                    />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
+          <GridBody
+            rows={rows}
+            statuses={statuses}
+            days={days}
+            weekStarts={weekStarts}
+            onOpen={onOpen}
+            onHover={onHover}
+          />
           {rows.length > 0 && (
             <tfoot className="sticky bottom-0 z-30">
               <tr>
