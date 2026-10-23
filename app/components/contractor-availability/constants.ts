@@ -25,6 +25,7 @@ export const FOCUS_RING =
 export const FIELD_CLASSES = {
   label: "text-white text-sm font-medium mb-1",
   description: "text-white/90",
+  error: "text-red-200",
 };
 
 // Mantine shades dark enough for white badge text (WCAG AA), matching BOOKOUT_CHIP

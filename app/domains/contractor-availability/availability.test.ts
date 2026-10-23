@@ -7,6 +7,7 @@ import {
   seasonOf,
   monthsFor,
   nextWorkWeek,
+  notesSource,
   todayIsoEastern,
   travelReach,
   dayStatus,
@@ -60,6 +61,7 @@ const contractor = (overrides: Partial<Contractor> = {}): Contractor => ({
   bookouts: [],
   staffNotes: "",
   staffViewedOn: null,
+  intakeNotes: "",
   ...overrides,
 });
 
@@ -261,5 +263,14 @@ describe("admin roll-ups", () => {
     expect(confirmedThisQuarter(profile({ confirmedOn: "2026-10-01" }), "2026-11-15")).toBe(true);
     expect(confirmedThisQuarter(profile({ confirmedOn: "2026-09-30" }), "2026-11-15")).toBe(false);
     expect(confirmedThisQuarter(profile({ confirmedOn: null }), "2026-11-15")).toBe(false);
+  });
+});
+
+describe("notesSource", () => {
+  it("says whether the notes are the onboarding answer, edited, or removed", () => {
+    expect(notesSource("Out Fridays", "")).toBeNull();
+    expect(notesSource(" Out Fridays ", "Out Fridays")).toBe("From your onboarding form, not changed since");
+    expect(notesSource("Out Fridays and Mondays", "Out Fridays")).toBe("Edited from your onboarding form answer");
+    expect(notesSource("", "Out Fridays")).toBe("Onboarding form answer removed");
   });
 });

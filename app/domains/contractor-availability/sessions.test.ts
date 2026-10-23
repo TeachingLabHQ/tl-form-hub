@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import { tlDaysInMonth } from "./availability";
 import {
   type SessionRow,
-  describeSessionWeek,
   SESSION_DAY_PORTION,
   sessionBookouts,
+  sessionDayLabel,
+  sessionWeekCounts,
   sessionWeeks,
 } from "./sessions";
 
@@ -94,9 +95,13 @@ describe("sessionWeeks", () => {
       ["2026-11-09", "2026-11-12"],
       ["2026-11-16", "2026-11-16"],
     ]);
-    expect(describeSessionWeek(weeks[0]!)).toBe(
-      "1 facilitation day, 2 coaching half days · District A Coaching +2 more"
-    );
-    expect(describeSessionWeek(weeks[1]!)).toBe("1 coaching half day · District A Coaching");
+    expect(sessionWeekCounts(weeks[0]!)).toBe("1 facilitation day, 2 coaching half days");
+    expect(weeks[0]!.projects).toEqual(["District A Coaching", "District B", "PL Site"]);
+    expect(weeks[0]!.sessions.map((d) => [d.day, sessionDayLabel(d.kind)])).toEqual([
+      ["2026-11-09", "Coaching half day"],
+      ["2026-11-10", "Coaching half day"],
+      ["2026-11-12", "Facilitation day"],
+    ]);
+    expect(sessionWeekCounts(weeks[1]!)).toBe("1 coaching half day");
   });
 });

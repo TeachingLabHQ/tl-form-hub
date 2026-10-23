@@ -10,6 +10,7 @@ import {
   formatDate,
   GAP_FIELDS,
   monthsFor,
+  notesSource,
   profileAgeDays,
   SEASON_LABELS,
   seasonOf,
@@ -72,6 +73,11 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
   const form = useForm<AvailabilityProfile>({
     mode: "controlled",
     initialValues: contractor.profile,
+    // Checked when saving a change; confirming an unchanged GAP doesn't validate
+    validate: {
+      daysPerWeek: (v) => (v > 0 ? null : "Pick how many days a week you're available"),
+      support: (v) => (v.length > 0 ? null : "Pick at least one project type"),
+    },
   });
   // Kept apart from months so "Specific months" stays picked while empty
   const [season, setSeason] = useState<Season>(() => seasonOf(contractor.profile.months));
@@ -120,6 +126,11 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
               <div key={f.label} className={cn("min-w-0", f.freeText && "sm:col-span-2")}>
                 <dt className="text-xs text-white/90">{f.label}</dt>
                 <dd className="font-medium break-words">{f.show(contractor.profile)}</dd>
+                {f.label === "Notes" && (
+                  <dd className="text-xs text-white/90">
+                    {notesSource(contractor.profile.notes, contractor.intakeNotes)}
+                  </dd>
+                )}
               </div>
             ))}
           </dl>
@@ -156,15 +167,17 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
               allowDeselect={false}
               onChange={(v) => v && form.setValues(applyTravelReach(values, v as TravelReach))}
             />
-            <Select
-              label="Max trip length"
-              classNames={FIELD_CLASSES}
-              data={LONGEST_TRIP_OPTIONS}
-              placeholder="Select one"
-              disabled={!travels}
-              {...form.getInputProps("longestTrip")}
-              value={travels ? values.longestTrip || null : "Day trips only"}
-            />
+            {/* Local and virtual mean day trips, so trip length only matters for travelers */}
+            {travels && (
+              <Select
+                label="Max trip length"
+                classNames={FIELD_CLASSES}
+                data={LONGEST_TRIP_OPTIONS}
+                placeholder="Select one"
+                {...form.getInputProps("longestTrip")}
+                value={values.longestTrip || null}
+              />
+            )}
             {reach === "regional" && (
               <MultiSelect
                 className="sm:col-span-2"
@@ -178,6 +191,8 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
             )}
             <Select
               label="Days per week available"
+              withAsterisk
+              error={form.errors.daysPerWeek}
               classNames={FIELD_CLASSES}
               data={DAYS_PER_WEEK}
               placeholder="Select one"
@@ -206,6 +221,8 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
             />
             <MultiSelect
               label="Preferred project types"
+              withAsterisk
+              error={form.errors.support}
               classNames={FIELD_CLASSES}
               data={SUPPORT_OPTIONS}
               placeholder={values.support.length ? undefined : "Pick any"}
@@ -254,6 +271,7 @@ export const ProfileForm = ({ contractor, onSave }: Props) => {
           />
           <Textarea
             label="Notes"
+            description={notesSource(values.notes, contractor.intakeNotes)}
             classNames={FIELD_CLASSES}
             autosize
             minRows={2}

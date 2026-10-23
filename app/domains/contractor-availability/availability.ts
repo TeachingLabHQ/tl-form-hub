@@ -459,3 +459,12 @@ export const GAP_FIELDS: { label: string; show: (p: AvailabilityProfile) => stri
   { label: "Conflicts of interest", show: (p) => p.conflicts, freeText: true },
   { label: "Notes", show: (p) => p.notes, freeText: true },
 ];
+
+/** Where a GAP's notes came from, relative to the contractor's onboarding answer. */
+export function notesSource(notes: string, intakeNotes: string): string | null {
+  const now = notes.trim();
+  const then = intakeNotes.trim();
+  if (!then) return null;
+  if (now === then) return "From your onboarding form, not changed since";
+  return now ? "Edited from your onboarding form answer" : "Onboarding form answer removed";
+}

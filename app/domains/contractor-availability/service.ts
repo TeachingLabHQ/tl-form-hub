@@ -101,6 +101,7 @@ export function mergeRoster(intake: ContractorIntake[], saved: SavedProfile[]): 
         bookouts: (s?.bookouts ?? []).sort((a, b) => a.start.localeCompare(b.start)),
         staffNotes: s?.staffNotes ?? "",
         staffViewedOn: s?.staffViewedOn ?? null,
+        intakeNotes: intakeProfile.notes,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));

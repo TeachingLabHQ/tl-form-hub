@@ -82,6 +82,8 @@ export interface SessionWeek {
   end: string; // last session day that week
   days: Record<SessionKind, number>;
   projects: string[];
+  // Each session day that week, for the expanded row
+  sessions: { day: string; kind: SessionKind; projects: string[] }[];
 }
 
 /** Synced session days rolled up to one entry per Monday-to-Sunday week, in date order. */
@@ -96,25 +98,29 @@ export function sessionWeeks(bookouts: Bookout[]): SessionWeek[] {
       end: b.end,
       days: { facilitation: 0, coaching: 0 },
       projects: [],
+      sessions: [],
     };
     week.end = b.end > week.end ? b.end : week.end;
     week.days[b.session.kind] += 1;
+    week.sessions.push({ day: b.start, kind: b.session.kind, projects: b.session.projects });
     for (const p of b.session.projects) if (!week.projects.includes(p)) week.projects.push(p);
     weeks.set(monday, week);
   }
   return [...weeks.values()];
 }
 
-/** "1 facilitation day, 3 coaching half days · D75 +1 more" */
-export function describeSessionWeek(week: SessionWeek): string {
-  const counts = (Object.keys(week.days) as SessionKind[])
+const unitOf = (kind: SessionKind) => (SESSION_DAY_PORTION[kind] === "Full day" ? "day" : "half day");
+
+/** "1 facilitation day, 3 coaching half days" */
+export function sessionWeekCounts(week: SessionWeek): string {
+  return (Object.keys(week.days) as SessionKind[])
     .filter((kind) => week.days[kind] > 0)
     .map((kind) => {
       const n = week.days[kind];
-      const unit = SESSION_DAY_PORTION[kind] === "Full day" ? "day" : "half day";
-      return `${n} ${kind} ${unit}${n === 1 ? "" : "s"}`;
+      return `${n} ${kind} ${unitOf(kind)}${n === 1 ? "" : "s"}`;
     })
     .join(", ");
-  const [first, ...rest] = week.projects;
-  return [counts, first && first + (rest.length ? ` +${rest.length} more` : "")].filter(Boolean).join(" · ");
 }
+
+/** "Coaching half day" */
+export const sessionDayLabel = (kind: SessionKind) => `${KIND_LABEL[kind]} ${unitOf(kind)}`;

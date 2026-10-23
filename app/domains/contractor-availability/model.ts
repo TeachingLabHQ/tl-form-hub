@@ -77,6 +77,8 @@ export interface Contractor extends Omit<ContractorIntake, "intakeProfile"> {
   bookouts: Bookout[];
   staffNotes: string;
   staffViewedOn: string | null;
+  // Their schedule notes from the onboarding form, to say where the GAP's notes came from
+  intakeNotes: string;
 }
 
 // One save or confirm of a contractor's GAP, kept as a Monday item update

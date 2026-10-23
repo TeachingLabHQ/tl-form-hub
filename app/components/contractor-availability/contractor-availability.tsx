@@ -44,6 +44,18 @@ const Header = ({
   </div>
 );
 
+// Marks the parts of the contractor view that contractors never see
+const STAFF_ONLY = "rounded-xl border border-dashed border-amber-300/80";
+
+const StaffOnly = ({ children }: { children: React.ReactNode }) => (
+  <div className={cn(STAFF_ONLY, "relative px-4 pt-5 pb-4 mb-3")}>
+    <span className="absolute -top-2.5 left-3 rounded-full bg-amber-300 px-2 text-[11px] font-semibold text-[#082040]">
+      Staff only
+    </span>
+    {children}
+  </div>
+);
+
 const timeAgo = (date: Date | null) => {
   if (!date) return "";
   const minutes = Math.round((Date.now() - date.getTime()) / 60000);
@@ -146,23 +158,30 @@ export const ContractorAvailability = () => {
         </>
       ) : (
         <>
-          <Header
-            title={viewAsName ? `Viewing as ${viewAsName}` : "Contractor view"}
-            subtitle="The page each contractor sees. Changes you make here save to their profile."
-          >
-            {switcher}
-          </Header>
-          <Select
-            label="Contractor"
-            classNames={FIELD_CLASSES}
-            className="max-w-sm mb-6"
-            placeholder={roster.loading ? "Loading contractors…" : "Pick a contractor"}
-            data={roster.contractors.map((c) => ({ value: c.email, label: c.name }))}
-            value={viewAs}
-            onChange={setViewAs}
-            searchable
-            disabled={roster.loading && roster.contractors.length === 0}
-          />
+          <StaffOnly>
+            <Header
+              title={viewAsName ? `Viewing as ${viewAsName}` : "Contractor view"}
+              subtitle="The page each contractor sees. Changes you make here save to their profile."
+            >
+              {switcher}
+            </Header>
+            <Select
+              label="Contractor"
+              classNames={FIELD_CLASSES}
+              className="max-w-sm"
+              placeholder={roster.loading ? "Loading contractors…" : "Pick a contractor"}
+              data={roster.contractors.map((c) => ({ value: c.email, label: c.name }))}
+              value={viewAs}
+              onChange={setViewAs}
+              searchable
+              disabled={roster.loading && roster.contractors.length === 0}
+            />
+          </StaffOnly>
+          <p className="flex items-center gap-2 text-xs text-white/90 mb-5">
+            <span aria-hidden className={cn(STAFF_ONLY, "inline-block h-3 w-5 rounded")} />
+            Only staff see what's inside a dashed outline, along with the refresh button.{" "}
+            {viewAsName ? `Everything else is exactly what ${viewAsName} sees.` : ""}
+          </p>
           {viewAs && <MyAvailability key={viewAs} email={viewAs} />}
         </>
       )}

@@ -53,6 +53,7 @@ const contractor = (overrides: Partial<Contractor> = {}): Contractor => ({
   bookouts: [],
   staffNotes: "",
   staffViewedOn: null,
+  intakeNotes: "",
   ...overrides,
 });
 

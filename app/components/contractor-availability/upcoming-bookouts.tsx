@@ -1,13 +1,14 @@
 import { ActionIcon, Button, Tooltip } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconTrash } from "@tabler/icons-react";
+import { IconChevronDown, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { formatRange, todayIso } from "~/domains/contractor-availability/availability";
+import { formatDateWithDay, formatRange, todayIso } from "~/domains/contractor-availability/availability";
 import { type Bookout, bookoutTypeLabel } from "~/domains/contractor-availability/model";
 import {
-  describeSessionWeek,
   SESSION_PORTION_NOTE,
+  sessionDayLabel,
   type SessionWeek,
+  sessionWeekCounts,
   sessionWeeks,
 } from "~/domains/contractor-availability/sessions";
 import { cn } from "~/utils/utils";
@@ -43,6 +44,7 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
   ].sort((a, b) => a.start.localeCompare(b.start));
   const [showAll, setShowAll] = useState(false);
   const shown = showAll ? rows : rows.slice(0, VISIBLE_ROWS);
+  const [expanded, setExpanded] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
 
@@ -69,12 +71,44 @@ export const UpcomingBookouts = ({ bookouts, onRemove }: Props) => {
         <ul className="flex flex-col divide-y divide-white/25 -my-1">
           {shown.map(({ bookout: b, week }) =>
             week ? (
-              <li key={week.id} className="flex items-center gap-3 py-1.5 text-sm min-h-[40px]">
-                <Swatch type="fac" />
-                <div className="flex-1 min-w-0">
-                  <span className="font-medium tabular-nums">{formatRange(week.start, week.end)}</span>
-                  <span className="block truncate text-xs text-white/90">{describeSessionWeek(week)}</span>
-                </div>
+              <li key={week.id} className="py-1.5 text-sm">
+                {/* A week with several days opens to show each day's session */}
+                <button
+                  type="button"
+                  disabled={week.sessions.length < 2}
+                  aria-expanded={week.sessions.length > 1 ? expanded === week.id : undefined}
+                  onClick={() => setExpanded((id) => (id === week.id ? null : week.id))}
+                  className="flex w-full items-center gap-3 text-left min-h-[28px] enabled:cursor-pointer"
+                >
+                  <Swatch type="fac" />
+                  <div className="flex-1 min-w-0">
+                    <span className="font-medium tabular-nums">{formatRange(week.start, week.end)}</span>
+                    <span className="block text-xs text-white/90">{week.projects.join(", ")}</span>
+                  </div>
+                  <span className="shrink-0 text-right text-xs text-white/90">{sessionWeekCounts(week)}</span>
+                  <IconChevronDown
+                    size={15}
+                    aria-hidden
+                    className={cn(
+                      "shrink-0 transition-transform",
+                      week.sessions.length < 2 && "invisible",
+                      expanded === week.id && "rotate-180"
+                    )}
+                  />
+                </button>
+                {expanded === week.id && (
+                  <ul className="mt-1 ml-[22px] flex flex-col gap-0.5 text-xs text-white/90">
+                    {week.sessions.map((d) => (
+                      <li key={d.day} className="flex gap-3">
+                        <span className="w-20 shrink-0 tabular-nums">{formatDateWithDay(d.day)}</span>
+                        <span className="flex-1 min-w-0">
+                          {sessionDayLabel(d.kind)}
+                          {d.projects.length > 0 && ` · ${d.projects.join(", ")}`}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </li>
             ) : (
               <li key={b.id} className="flex items-center gap-3 py-1.5 text-sm min-h-[40px]">
