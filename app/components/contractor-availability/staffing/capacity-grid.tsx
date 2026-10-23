@@ -10,7 +10,7 @@ import {
   parseDate,
   todayIso,
 } from "~/domains/contractor-availability/availability";
-import { type Contractor, bookoutTypeLabel } from "~/domains/contractor-availability/model";
+import { type Contractor, bookoutTypeLabel, MONTH_LABELS } from "~/domains/contractor-availability/model";
 import { cn } from "~/utils/utils";
 import { BOOKOUT_CHIP } from "../constants";
 
@@ -45,6 +45,13 @@ const stateLabel = (st: DayStatus) =>
 
 const formatDays = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
+const DAY_LETTER = ["S", "M", "T", "W", "T", "F", "S"];
+
+// A thin spacer column before each Monday, so weeks read as blocks while every
+// day column stays the same width
+const withWeekGaps = (days: string[], weekStarts: boolean[], cell: (i: number) => React.ReactNode, gap: string) =>
+  days.flatMap((d, i) => [weekStarts[i] ? <td key={`gap-${d}`} aria-hidden className={gap} /> : null, cell(i)]);
+
 // The hovered cell, with where to draw the readout (viewport coordinates)
 type Hover = { row: number; col: number; x: number; y: number };
 
@@ -70,19 +77,25 @@ const GridBody = memo(function GridBody({
       {rows.map((c, r) => (
         <tr key={c.email}>
           <th data-name={r} className="sticky left-0 z-10 bg-[#1c3355] pr-3 text-left font-medium whitespace-nowrap">
-            <button type="button" className="hover:underline" onClick={() => onOpen(c.email)}>
+            <button
+              type="button"
+              title={c.name}
+              className="block max-w-full truncate hover:underline"
+              onClick={() => onOpen(c.email)}
+            >
               {c.name}
             </button>
           </th>
-          {days.map((d, i) => (
-            <td key={d} className={cn(weekStarts[i] && "pl-1.5")}>
-              <div
-                data-r={r}
-                data-c={i}
-                className={cn("h-5 min-w-3 w-full rounded-[3px]", cellClass(statuses[r]![i]!))}
-              />
-            </td>
-          ))}
+          {withWeekGaps(
+            days,
+            weekStarts,
+            (i) => (
+              <td key={days[i]}>
+                <div data-r={r} data-c={i} className={cn("h-5 w-full rounded-[3px]", cellClass(statuses[r]![i]!))} />
+              </td>
+            ),
+            ""
+          )}
         </tr>
       ))}
     </tbody>
@@ -125,7 +138,6 @@ export const CapacityGrid = ({
     [statuses, days]
   );
   const weekStarts = useMemo(() => days.map((d, i) => i > 0 && parseDate(d).getDay() === 1), [days]);
-  const weekStart = (i: number) => weekStarts[i]!;
   // One delegated listener for every square; bails out while still on the same one
   const onHover = useCallback((e: React.MouseEvent | null) => {
     const cell = e && (e.target as HTMLElement).closest<HTMLElement>("[data-c]");
@@ -162,22 +174,49 @@ export const CapacityGrid = ({
             [data-capacity-grid] [data-name="${hover.row}"] { color: #fde68a }
           `}</style>
         )}
-        <table data-capacity-grid className="w-full min-w-[720px] border-separate border-spacing-[2px] text-xs">
-          <thead className="sticky top-0 z-30">
+        <table
+          data-capacity-grid
+          className="w-full min-w-[900px] table-fixed border-separate border-spacing-[2px] text-xs"
+        >
+          <colgroup>
+            <col className="w-[180px]" />
+            {days.flatMap((d, i) => [weekStarts[i] ? <col key={`gap-${d}`} className="w-1" /> : null, <col key={d} />])}
+          </colgroup>
+          <thead className="sticky top-0 z-30 bg-[#1c3355]">
             <tr>
-              <th className="sticky left-0 z-20 w-px bg-[#1c3355]" />
-              {days.map((d, i) => (
-                <th
-                  key={d}
-                  className={cn(
-                    "font-normal text-[10px] text-white/90 leading-3 bg-[#1c3355] whitespace-pre",
-                    weekStart(i) && "pl-1.5",
-                    hover?.col === i && "text-white font-semibold"
-                  )}
-                >
-                  {weekStart(i) || i === 0 ? formatDate(d).replace(" ", "\n") : ""}
-                </th>
-              ))}
+              <th rowSpan={2} className="sticky left-0 z-20 bg-[#1c3355]" />
+              {withWeekGaps(
+                days,
+                weekStarts,
+                (i) => (
+                  // Month name where it starts (and on the first column), overflowing to the right
+                  <th key={days[i]} className="overflow-visible whitespace-nowrap text-left text-[10px] font-semibold">
+                    {i === 0 || parseDate(days[i]!).getDate() < parseDate(days[i - 1]!).getDate()
+                      ? MONTH_LABELS[parseDate(days[i]!).getMonth()]
+                      : ""}
+                  </th>
+                ),
+                ""
+              )}
+            </tr>
+            <tr>
+              {withWeekGaps(
+                days,
+                weekStarts,
+                (i) => (
+                  <th
+                    key={days[i]}
+                    className={cn(
+                      "pb-1 text-center text-[10px] font-normal leading-3 tabular-nums text-white/90",
+                      hover?.col === i && "text-white font-semibold"
+                    )}
+                  >
+                    <span className="block text-white/60">{DAY_LETTER[parseDate(days[i]!).getDay()]}</span>
+                    {parseDate(days[i]!).getDate()}
+                  </th>
+                ),
+                ""
+              )}
             </tr>
           </thead>
           <GridBody
@@ -194,18 +233,22 @@ export const CapacityGrid = ({
                 <th className="sticky left-0 z-20 bg-[#1c3355] pr-3 pt-1 text-left font-medium whitespace-nowrap">
                   Open that day
                 </th>
-                {openByDay.map((n, i) => (
-                  <td
-                    key={days[i]}
-                    className={cn(
-                      "bg-[#1c3355] pt-1 text-center text-[10px] tabular-nums text-white/90",
-                      weekStart(i) && "pl-1.5",
-                      hover?.col === i && "text-white font-semibold"
-                    )}
-                  >
-                    {formatDays(n)}
-                  </td>
-                ))}
+                {withWeekGaps(
+                  days,
+                  weekStarts,
+                  (i) => (
+                    <td
+                      key={days[i]}
+                      className={cn(
+                        "bg-[#1c3355] pt-1 text-center text-[10px] tabular-nums text-white/90",
+                        hover?.col === i && "text-white font-semibold"
+                      )}
+                    >
+                      {formatDays(openByDay[i]!)}
+                    </td>
+                  ),
+                  "bg-[#1c3355]"
+                )}
               </tr>
             </tfoot>
           )}
