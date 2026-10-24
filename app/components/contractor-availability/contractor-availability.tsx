@@ -1,0 +1,254 @@
+import { SegmentedControl, Select, Tooltip } from "@mantine/core";
+import { IconRefresh } from "@tabler/icons-react";
+import { useSearchParams } from "@remix-run/react";
+import { useMemo, useState } from "react";
+import { useSession } from "~/components/auth/hooks/useSession";
+import { cn } from "~/utils/utils";
+import { CARD, FIELD_CLASSES, FOCUS_RING, SEGMENTED_CLASSES } from "./constants";
+import { useNycWork } from "./hooks/use-nyc-work";
+import { useRoster } from "./hooks/use-roster";
+import { MyAvailability } from "./my-availability";
+import { NycMapBubble } from "./staffing/nyc-map-bubble";
+import { StaffingView } from "./staffing/staffing-view";
+
+const COLUMN = "col-span-12 mx-4 md:mx-0 md:col-start-2 md:col-span-10 min-w-0";
+
+// The bubble sits above the card on phones and beside its top-right corner on
+// wider screens, in the grid's free last column.
+const Page = ({ bubble, children }: { bubble?: React.ReactNode; children: React.ReactNode }) => (
+  <div className="w-full h-full grid grid-cols-12 gap-x-8 gap-y-3 py-8">
+    {bubble && (
+      <div className="col-span-12 mx-4 flex justify-end row-start-1 md:mx-0 md:col-start-12 md:col-span-1 md:justify-start md:sticky md:top-6 md:self-start">
+        {bubble}
+      </div>
+    )}
+    <div className={cn(COLUMN, CARD, "h-fit p-4 md:p-8", bubble && "row-start-2 md:row-start-1")}>
+      {children}
+    </div>
+  </div>
+);
+
+const Header = ({
+  title,
+  subtitle,
+  inline,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  // Subtitle beside the title instead of under it
+  inline?: boolean;
+  children?: React.ReactNode;
+}) => (
+  <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
+    <div className={cn("min-w-0", inline && "flex flex-wrap items-baseline gap-x-6 gap-y-1")}>
+      <h1 className="text-2xl md:text-3xl font-semibold">{title}</h1>
+      <p className={cn("text-sm text-white/90", !inline && "mt-1")}>{subtitle}</p>
+    </div>
+    {children}
+  </div>
+);
+
+// Marks the parts of the contractor view that contractors never see
+const STAFF_ONLY = "rounded-xl border border-dashed border-amber-300/80";
+
+const StaffOnly = ({ children }: { children: React.ReactNode }) => (
+  <div className={cn(STAFF_ONLY, "relative px-4 pt-5 pb-4 mb-3")}>
+    <span className="absolute -top-2.5 left-3 rounded-full bg-amber-300 px-2 text-[11px] font-semibold text-[#082040]">
+      Staff only
+    </span>
+    {children}
+  </div>
+);
+
+const timeAgo = (date: Date | null) => {
+  if (!date) return "";
+  const minutes = Math.round((Date.now() - date.getTime()) / 60000);
+  return minutes < 1 ? "just now" : `${minutes} min ago`;
+};
+
+// Round glass bubble beside the main card: reloads the roster from Monday
+const RefreshBubble = ({
+  loading,
+  loadedAt,
+  onReload,
+}: {
+  loading: boolean;
+  loadedAt: Date | null;
+  onReload: () => void;
+}) => (
+  <div className="flex items-center gap-2 md:flex-col md:gap-1">
+    <Tooltip
+      label={`Refresh from Monday${loadedAt ? ` · loaded ${timeAgo(loadedAt)}` : ""}`}
+      withArrow
+      position="left"
+    >
+      <button
+        type="button"
+        onClick={onReload}
+        disabled={loading}
+        aria-label="Refresh contractors and bookouts from Monday"
+        className={cn(
+          "grid place-items-center h-11 w-11 rounded-full bg-[#082040]/65 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.35)] backdrop-blur-sm hover:bg-[#082040]/80 disabled:opacity-80",
+          FOCUS_RING
+        )}
+      >
+        <IconRefresh size={20} className={cn(loading && "animate-spin")} />
+      </button>
+    </Tooltip>
+    <span className="rounded-full bg-[#082040]/65 px-2 py-0.5 text-[11px] font-medium text-white whitespace-nowrap backdrop-blur-sm">
+      {loading ? "Refreshing…" : loadedAt ? timeAgo(loadedAt) : ""}
+    </span>
+  </div>
+);
+
+/**
+ * Contractor Bookout System. Contractors see only their own availability;
+ * staff get the admin view plus a "view as" contractor page.
+ */
+export const ContractorAvailability = () => {
+  const { mondayProfile } = useSession();
+  const isContractor = mondayProfile?.businessFunction === "contractor";
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab");
+  const view = tab === "contractor" || tab === "nyc" ? tab : "staffing";
+  const roster = useRoster(!isContractor);
+  // Loaded the first time the NYC tab opens, then kept
+  const [nycOpened, setNycOpened] = useState(false);
+  if (view === "nyc" && !nycOpened) setNycOpened(true);
+  const nycWork = useNycWork(!isContractor && nycOpened);
+  const [nycDistrict, setNycDistrict] = useState<number | null>(null);
+  const [viewAs, setViewAs] = useState<string | null>(null);
+
+  const nycContractors = useMemo(() => roster.contractors.filter((c) => c.nyc), [roster.contractors]);
+  const nycShown = useMemo(
+    () => (nycDistrict ? nycContractors.filter((c) => c.nyc?.district === nycDistrict) : nycContractors),
+    [nycContractors, nycDistrict]
+  );
+
+  if (isContractor) {
+    const firstName = mondayProfile!.name?.split(" ")[0];
+    return (
+      <Page>
+        <Header
+          title={firstName ? `Welcome back, ${firstName}` : "Welcome back"}
+          subtitle="Keep your availability profile current and submit a bookout for any day you can't take Teaching Lab work."
+        />
+        <MyAvailability email={mondayProfile!.email} />
+      </Page>
+    );
+  }
+
+  const viewAsName = roster.contractors.find((c) => c.email === viewAs)?.name;
+  const switcher = (
+    <SegmentedControl
+      value={view}
+      onChange={(v) => setSearchParams(v === "staffing" ? {} : { tab: v }, { replace: true })}
+      data={[
+        { value: "staffing", label: "Admin view" },
+        { value: "nyc", label: "NYC admin view" },
+        { value: "contractor", label: "Contractor view" },
+      ]}
+      radius="xl"
+      classNames={SEGMENTED_CLASSES}
+    />
+  );
+
+  return (
+    <Page
+      bubble={
+        <RefreshBubble
+          loading={roster.loading || (view === "nyc" && nycWork.loading)}
+          loadedAt={roster.loadedAt}
+          onReload={() => {
+            roster.reload();
+            if (view === "nyc") nycWork.reload();
+          }}
+        />
+      }
+    >
+      {view === "nyc" ? (
+        <>
+          <Header
+            title={nycDistrict ? `NYC bookout admin · District ${nycDistrict}` : "NYC bookout admin"}
+            inline
+            subtitle={
+              roster.loading && !roster.contractors.length
+                ? "Contractors who live in or near New York City."
+                : `The ${nycContractors.length} contractors who live in or near New York City. Open the NYC map to see them by school district.`
+            }
+          >
+            {switcher}
+          </Header>
+          <StaffingView
+            contractors={nycShown}
+            loading={roster.loading}
+            error={roster.error}
+            onSaveStaffNotes={roster.saveStaffNotes}
+            onViewed={roster.markViewed}
+            extras={(onOpen) => (
+              <NycMapBubble
+                contractors={nycContractors}
+                work={nycWork.work}
+                loading={nycWork.loading}
+                error={nycWork.error}
+                district={nycDistrict}
+                onDistrictChange={setNycDistrict}
+                onOpen={(email) => {
+                  // A dot outside the filtered district widens the page to everyone first
+                  if (nycDistrict && !nycShown.some((c) => c.email === email)) setNycDistrict(null);
+                  onOpen(email);
+                }}
+              />
+            )}
+          />
+        </>
+      ) : view === "staffing" ? (
+        <>
+          <Header
+            title="Bookout admin"
+            inline
+            subtitle="Everything contractors submit, at the individual and aggregate level."
+          >
+            {switcher}
+          </Header>
+          <StaffingView
+            contractors={roster.contractors}
+            loading={roster.loading}
+            error={roster.error}
+            onSaveStaffNotes={roster.saveStaffNotes}
+            onViewed={roster.markViewed}
+          />
+        </>
+      ) : (
+        <>
+          <StaffOnly>
+            <Header
+              title={viewAsName ? `Viewing as ${viewAsName}` : "Contractor view"}
+              subtitle="The page each contractor sees. Changes you make here save to their profile."
+            >
+              {switcher}
+            </Header>
+            <Select
+              label="Contractor"
+              classNames={FIELD_CLASSES}
+              className="max-w-sm"
+              placeholder={roster.loading ? "Loading contractors…" : "Pick a contractor"}
+              data={roster.contractors.map((c) => ({ value: c.email, label: c.name }))}
+              value={viewAs}
+              onChange={setViewAs}
+              searchable
+              disabled={roster.loading && roster.contractors.length === 0}
+            />
+          </StaffOnly>
+          <p className="flex items-center gap-2 text-xs text-white/90 mb-5">
+            <span aria-hidden className={cn(STAFF_ONLY, "inline-block h-3 w-5 rounded")} />
+            Only staff see what's inside a dashed outline, along with the refresh button.{" "}
+            {viewAsName ? `Everything else is exactly what ${viewAsName} sees.` : ""}
+          </p>
+          {viewAs && <MyAvailability key={viewAs} email={viewAs} />}
+        </>
+      )}
+    </Page>
+  );
+};

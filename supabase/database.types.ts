@@ -34,6 +34,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      staffing_assistant_questions: {
+        Row: {
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          finish_reason: string | null
+          id: number
+          input_tokens: number | null
+          output_tokens: number | null
+          question: string
+          tools_used: string[]
+          user_email: string
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finish_reason?: string | null
+          id?: never
+          input_tokens?: number | null
+          output_tokens?: number | null
+          question: string
+          tools_used?: string[]
+          user_email: string
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finish_reason?: string | null
+          id?: never
+          input_tokens?: number | null
+          output_tokens?: number | null
+          question?: string
+          tools_used?: string[]
+          user_email?: string
+        }
+        Relationships: []
+      }
       vendor_payment_email_logs: {
         Row: {
           cf_email: string | null

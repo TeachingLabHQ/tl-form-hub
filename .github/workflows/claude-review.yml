@@ -24,9 +24,10 @@ permissions:
 
 jobs:
   claude-review:
+    # PR #194 (contractor bookout) is opted out of Claude review entirely.
     if: |
-      (github.event_name == 'pull_request' && github.event.pull_request.draft == false) ||
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude'))
+      (github.event_name == 'pull_request' && github.event.pull_request.draft == false && github.event.pull_request.number != 194) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') && github.event.issue.number != 194)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

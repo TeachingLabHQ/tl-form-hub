@@ -25,7 +25,7 @@ Path alias: `~/*` → `app/*`.
 ## Architecture
 
 ### Domain-driven layering (`app/domains/<domain>/`)
-Each feature domain (`coach-log`, `vendor-payment`, `employee`, `project`, `coachFacilitator`) splits into:
+Each feature domain (`coach-log`, `vendor-payment`, `employee`, `project`, `coachFacilitator`, `contractor-availability`) splits into:
 - **`model.ts`** — types only (and small pure helpers/keys).
 - **`repository.ts`** — external data access: Monday GraphQL (via the shared helpers below) and Google Sheets (`googleapis` JWT service account). Returns `Errorable<T>` (`{ data, error: null } | { data: null, error }`, from `~/utils/errorable`). Every function that hits an external system must be a method on the domain's `XRepository` interface, implemented inside the `xRepository()` factory — never a bare exported function sitting alongside the factory. This holds even for small one-off lookups (e.g. resolving a Monday user id by email).
 - **`service.ts`** — business logic over the repository (sort/filter/transform/dedupe). Every repository method gets a matching entry in the `xService(repo)` factory (even pure passthroughs, e.g. `fetchThing: repo.fetchThing`). Callers (routes, hooks, components) call the service, not the repository, and not repository functions imported directly: `coachLogService(coachLogRepository())`. Construct the service once per call site and reuse it across branches rather than re-instantiating per branch.

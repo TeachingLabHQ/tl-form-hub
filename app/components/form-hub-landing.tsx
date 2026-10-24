@@ -15,6 +15,7 @@ import {
   IconArrowRight,
   IconReceipt,
   IconSchool,
+  IconCalendarEvent,
 } from "@tabler/icons-react";
 import TLLogo from "../assets/tllogo.png";
 
@@ -194,6 +195,41 @@ export const FormHubLanding: React.FC<FormHubLandingProps> = ({ userName }) => {
                 color="#0053B3"
               >
                 Submit Coach Log or Roster
+              </Button>
+            </Flex>
+          </Card>
+        </Grid.Col>
+
+        <Grid.Col span={{ base: 12, md: 6 }}>
+          <Card
+            shadow="sm"
+            p="xl"
+            radius="md"
+            withBorder
+            className="h-full bg-white/80 backdrop-blur-sm"
+          >
+            <Flex direction="column" style={{ height: "100%" }}>
+              <IconCalendarEvent
+                size={48}
+                color="#0053B3"
+                style={{ marginBottom: 16 }}
+              />
+              <Title order={3} mb="xs">
+                Contractor Availability
+              </Title>
+              <Text mb="md" style={{ flex: 1 }}>
+                Contractors keep their availability profile current and log
+                bookouts. Staffing can see who is free for a set of dates and
+                track team capacity.
+              </Text>
+              <Button
+                component={Link}
+                to="/contractor-availability"
+                prefetch="intent"
+                rightSection={<IconArrowRight size={16} />}
+                color="#0053B3"
+              >
+                Open Availability
               </Button>
             </Flex>
           </Card>
