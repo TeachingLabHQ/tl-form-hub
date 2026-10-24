@@ -15,6 +15,7 @@ const row = (overrides: Partial<SessionRow>): SessionRow => ({
   person: "Ann Lee",
   kind: "coaching",
   project: "District A Coaching",
+  site: "XX_District A",
   ...overrides,
 });
 

@@ -12,6 +12,8 @@ export interface SessionRow {
   person: string; // the Monday user's display name
   kind: SessionKind;
   project: string;
+  // The learning relationship the session belongs to, e.g. "NY_D11"
+  site: string;
 }
 
 export interface MondayUser {

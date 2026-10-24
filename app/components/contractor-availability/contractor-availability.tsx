@@ -1,12 +1,14 @@
 import { SegmentedControl, Select, Tooltip } from "@mantine/core";
 import { IconRefresh } from "@tabler/icons-react";
 import { useSearchParams } from "@remix-run/react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSession } from "~/components/auth/hooks/useSession";
 import { cn } from "~/utils/utils";
 import { CARD, FIELD_CLASSES, FOCUS_RING, SEGMENTED_CLASSES } from "./constants";
+import { useNycWork } from "./hooks/use-nyc-work";
 import { useRoster } from "./hooks/use-roster";
 import { MyAvailability } from "./my-availability";
+import { NycMapBubble } from "./staffing/nyc-map-bubble";
 import { StaffingView } from "./staffing/staffing-view";
 
 const COLUMN = "col-span-12 mx-4 md:mx-0 md:col-start-2 md:col-span-10 min-w-0";
@@ -108,9 +110,21 @@ export const ContractorAvailability = () => {
   const { mondayProfile } = useSession();
   const isContractor = mondayProfile?.businessFunction === "contractor";
   const [searchParams, setSearchParams] = useSearchParams();
-  const view = searchParams.get("tab") === "contractor" ? "contractor" : "staffing";
+  const tab = searchParams.get("tab");
+  const view = tab === "contractor" || tab === "nyc" ? tab : "staffing";
   const roster = useRoster(!isContractor);
+  // Loaded the first time the NYC tab opens, then kept
+  const [nycOpened, setNycOpened] = useState(false);
+  if (view === "nyc" && !nycOpened) setNycOpened(true);
+  const nycWork = useNycWork(!isContractor && nycOpened);
+  const [nycDistrict, setNycDistrict] = useState<number | null>(null);
   const [viewAs, setViewAs] = useState<string | null>(null);
+
+  const nycContractors = useMemo(() => roster.contractors.filter((c) => c.nyc), [roster.contractors]);
+  const nycShown = useMemo(
+    () => (nycDistrict ? nycContractors.filter((c) => c.nyc?.district === nycDistrict) : nycContractors),
+    [nycContractors, nycDistrict]
+  );
 
   if (isContractor) {
     const firstName = mondayProfile!.name?.split(" ")[0];
@@ -129,9 +143,10 @@ export const ContractorAvailability = () => {
   const switcher = (
     <SegmentedControl
       value={view}
-      onChange={(v) => setSearchParams(v === "contractor" ? { tab: "contractor" } : {}, { replace: true })}
+      onChange={(v) => setSearchParams(v === "staffing" ? {} : { tab: v }, { replace: true })}
       data={[
         { value: "staffing", label: "Admin view" },
+        { value: "nyc", label: "NYC admin view" },
         { value: "contractor", label: "Contractor view" },
       ]}
       radius="xl"
@@ -141,9 +156,54 @@ export const ContractorAvailability = () => {
 
   return (
     <Page
-      bubble={<RefreshBubble loading={roster.loading} loadedAt={roster.loadedAt} onReload={roster.reload} />}
+      bubble={
+        <RefreshBubble
+          loading={roster.loading || (view === "nyc" && nycWork.loading)}
+          loadedAt={roster.loadedAt}
+          onReload={() => {
+            roster.reload();
+            if (view === "nyc") nycWork.reload();
+          }}
+        />
+      }
     >
-      {view === "staffing" ? (
+      {view === "nyc" ? (
+        <>
+          <Header
+            title={nycDistrict ? `NYC bookout admin · District ${nycDistrict}` : "NYC bookout admin"}
+            inline
+            subtitle={
+              roster.loading && !roster.contractors.length
+                ? "Contractors who live in or near New York City."
+                : `The ${nycContractors.length} contractors who live in or near New York City. Open the NYC map to see them by school district.`
+            }
+          >
+            {switcher}
+          </Header>
+          <StaffingView
+            contractors={nycShown}
+            loading={roster.loading}
+            error={roster.error}
+            onSaveStaffNotes={roster.saveStaffNotes}
+            onViewed={roster.markViewed}
+            extras={(onOpen) => (
+              <NycMapBubble
+                contractors={nycContractors}
+                work={nycWork.work}
+                loading={nycWork.loading}
+                error={nycWork.error}
+                district={nycDistrict}
+                onDistrictChange={setNycDistrict}
+                onOpen={(email) => {
+                  // A dot outside the filtered district widens the page to everyone first
+                  if (nycDistrict && !nycShown.some((c) => c.email === email)) setNycDistrict(null);
+                  onOpen(email);
+                }}
+              />
+            )}
+          />
+        </>
+      ) : view === "staffing" ? (
         <>
           <Header
             title="Bookout admin"

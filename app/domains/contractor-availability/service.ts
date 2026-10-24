@@ -1,5 +1,6 @@
 import { Errorable } from "~/utils/errorable";
 import {
+  addDays,
   EMAIL_PATTERN,
   formatRange,
   GAP_FIELDS,
@@ -27,6 +28,8 @@ import {
   TRAVEL_FORMATS,
   WEEKDAYS,
 } from "./model";
+import { type NycWorkDay, nycWork } from "./nyc";
+import { nycHome } from "./nyc-geo";
 import { ContractorAvailabilityRepository } from "./repository";
 import { sessionBookouts } from "./sessions";
 
@@ -86,14 +89,18 @@ export function validateBookout(input: Partial<NewBookout>): Errorable<NewBookou
   };
 }
 
-/** Joins the intake roster with saved CBS profiles (matched by email). */
+/**
+ * Joins the intake roster with saved CBS profiles (matched by email). Home
+ * coordinates become an NYC district here and go no further.
+ */
 export function mergeRoster(intake: ContractorIntake[], saved: SavedProfile[]): Contractor[] {
   const byEmail = new Map(saved.map((s) => [s.email, s]));
   return intake
-    .map(({ intakeProfile, ...c }): Contractor => {
+    .map(({ intakeProfile, home, ...c }): Contractor => {
       const s = byEmail.get(c.email);
       return {
         ...c,
+        nyc: nycHome(home, c.city, c.state),
         profileItemId: s?.itemId ?? null,
         profile: s ? s.profile : intakeProfile,
         // An item created only to hold bookouts has never been confirmed
@@ -157,6 +164,8 @@ export interface ContractorAvailabilityService extends ContractorAvailabilityRep
   removeBookout(email: string, bookoutId: string): Promise<Errorable<string>>;
   /** Saves internal staffing notes on the contractor's CBS item (staff only). */
   saveStaffNotes(email: string, notes: string): Promise<Errorable<string>>;
+  /** TL session work in NYC by day and district, for the next `weeks` weeks. */
+  fetchNycWork(weeks?: number): Promise<Errorable<NycWorkDay[]>>;
 }
 
 export function contractorAvailabilityService(
@@ -302,6 +311,13 @@ export function contractorAvailabilityService(
       if (saved.data.staffViewedOn === today) return { data: today, error: null };
       const result = await repository.updateStaffViewed(saved.data.itemId, today);
       return result.error ? result : { data: today, error: null };
+    },
+
+    fetchNycWork: async (weeks = 8) => {
+      const calendar = await repository.fetchSessionCalendar();
+      if (calendar.error) return calendar;
+      const today = todayIsoEastern();
+      return { data: nycWork(calendar.data, today, addDays(today, weeks * 7 - 1)), error: null };
     },
 
     saveStaffNotes: async (email, notes) => {

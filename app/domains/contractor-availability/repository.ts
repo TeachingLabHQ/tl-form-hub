@@ -156,6 +156,14 @@ const isContractorItem = (item: any) =>
   CONTRACTOR_STATUSES.includes(text(item, "color_mm4b5hep").toLowerCase()) &&
   Boolean(text(item, "text60"));
 
+// A location column's value holds the geocoded point of the address
+function homePoint(item: any): ContractorIntake["home"] {
+  const value = parseJson(col(item, "location_mkt63brt")?.value);
+  const lat = Number(value?.lat);
+  const lng = Number(value?.lng);
+  return value && Number.isFinite(lat) && Number.isFinite(lng) && (lat || lng) ? { lat, lng } : null;
+}
+
 function contractorFromItem(item: any): ContractorIntake {
   const state = stateCodeFromName(text(item, "dropdown_mkw5q2x0"));
   return {
@@ -165,6 +173,7 @@ function contractorFromItem(item: any): ContractorIntake {
     // Location text is a full address; keep the first part (city)
     city: (text(item, "location_mkt63brt").split(",")[0] ?? "").trim(),
     state,
+    home: homePoint(item),
     timeZone: text(item, "status877"),
     contentAreas: list(item, "dropdown44"),
     intakeProfile: profileFromIntake({
@@ -188,7 +197,7 @@ const savedProfileFromItem = (item: any): SavedProfile => ({
     .filter((b: Bookout | null): b is Bookout => b !== null),
 });
 
-const DETAILS_FIELDS = `id name column_values(ids: ${JSON.stringify(DETAILS_COLUMNS)}) { id text }`;
+const DETAILS_FIELDS = `id name column_values(ids: ${JSON.stringify(DETAILS_COLUMNS)}) { id text value }`;
 const PROFILE_FIELDS = `id name column_values(ids: ${JSON.stringify(PROFILE_COLUMNS)}) { id text }
   subitems { id name column_values(ids: ${JSON.stringify(BOOKOUT_COLUMNS)}) { id text value } }`;
 // Staff notes are internal, so only the staff roster read selects them. The
@@ -482,6 +491,7 @@ export function contractorAvailabilityRepository(): ContractorAvailabilityReposi
               // Coaching boards' rows are titled "Coaching"; PL boards use session names
               kind: /coaching/i.test(String(r.title ?? "")) ? "coaching" : "facilitation",
               project: String(r.project ?? "").trim(),
+              site: String(r.lr_name ?? "").trim(),
             };
           })
           .filter((s) => isIsoDate(s.date) && s.person);

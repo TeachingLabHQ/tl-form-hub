@@ -17,6 +17,7 @@ const intake = (email: string, name: string): ContractorIntake => ({
   email,
   city: "",
   state: "NY",
+  home: null,
   timeZone: "",
   contentAreas: [],
   intakeProfile: profileFromIntake({ travel: "Virtual", weekdays: "", support: "", scheduleNotes: "", state: "NY" }),

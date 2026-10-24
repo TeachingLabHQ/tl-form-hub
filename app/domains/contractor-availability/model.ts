@@ -51,10 +51,23 @@ export interface ContractorIntake {
   email: string;
   city: string;
   state: string; // two-letter code, "" if unknown
+  // Coordinates of their home address. Server only: the roster swaps them for
+  // `nyc` so no one's address reaches the browser.
+  home: { lat: number; lng: number } | null;
   timeZone: string;
   contentAreas: string[];
   // The profile implied by their intake-form answers, used until they save one
   intakeProfile: AvailabilityProfile;
+}
+
+export type Borough = "Manhattan" | "Bronx" | "Brooklyn" | "Queens" | "Staten Island";
+
+// Where an NYC-area contractor lives, at school-district grain
+export interface NycHome {
+  // Community school district (1-32); null when we only know the borough, or
+  // they live just outside the city
+  district: number | null;
+  borough: Borough | null;
 }
 
 // One item on the CBS board (a saved profile, with bookouts as subitems)
@@ -69,7 +82,9 @@ export interface SavedProfile {
   staffViewedOn: string | null;
 }
 
-export interface Contractor extends Omit<ContractorIntake, "intakeProfile"> {
+export interface Contractor extends Omit<ContractorIntake, "intakeProfile" | "home"> {
+  // null when they don't live in or near New York City
+  nyc: NycHome | null;
   profileItemId: string | null;
   profile: AvailabilityProfile;
   // "intake" until the contractor saves their own profile in CBS

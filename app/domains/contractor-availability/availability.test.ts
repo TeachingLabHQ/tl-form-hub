@@ -62,6 +62,7 @@ const contractor = (overrides: Partial<Contractor> = {}): Contractor => ({
   state: "NY",
   timeZone: "EST",
   contentAreas: ["Math"],
+  nyc: null,
   profileItemId: null,
   profile: profile(),
   profileSource: "saved",

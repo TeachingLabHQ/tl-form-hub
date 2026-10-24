@@ -219,12 +219,15 @@ export const StaffingView = ({
   error,
   onSaveStaffNotes,
   onViewed,
+  extras,
 }: {
   contractors: Contractor[];
   loading: boolean;
   error: string | null;
   onSaveStaffNotes: (email: string, notes: string) => Promise<string | null>;
   onViewed: (email: string) => void;
+  // More floating tools beside Ask AI, given a way to open a contractor's drawer
+  extras?: (onOpen: (email: string) => void) => React.ReactNode;
 }) => {
   const [openEmail, setOpenEmail] = useState<string | null>(null);
   // A roster filter (see matchesFilter), set by the tiles, the status bars or the table
@@ -376,6 +379,7 @@ export const StaffingView = ({
       />
 
       <AskAiBubble contractors={contractors} onOpen={setOpenEmail} />
+      {extras?.(setOpenEmail)}
     </div>
   );
 };
