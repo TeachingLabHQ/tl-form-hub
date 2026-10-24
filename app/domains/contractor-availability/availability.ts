@@ -305,7 +305,11 @@ export function tlDaysBetween(bookouts: Bookout[], start: string, end: string) {
 export const tlDaysInMonth = (bookouts: Bookout[], year: number, month: number) =>
   tlDaysBetween(bookouts, `${year}-${pad(month + 1)}-01`, toIsoDate(new Date(year, month + 1, 0)));
 
-/** Target TL days in a month, from the profile (0 when not set). */
+/**
+ * Stated capacity: the TL days a month the contractor said they want, from
+ * their GAP (0 when not set). Called a target in code; the page says
+ * "stated capacity" so it doesn't read as something staff assigned.
+ */
 export const monthlyTarget = (profile: AvailabilityProfile) => {
   const fromWeekly = Math.round(profile.daysPerWeek * 4.3);
   if (!profile.maxDaysPerMonth) return fromWeekly;
@@ -372,10 +376,10 @@ export const windowTarget = (profile: AvailabilityProfile, weeks = WINDOW_WEEKS)
 
 export type LoadStatus = "over" | "booked" | "room" | "unset";
 export const LOAD_STATUS_LABELS: Record<LoadStatus, string> = {
-  over: "Over target",
+  over: "Over capacity",
   booked: "Mostly booked",
   room: "Has room",
-  unset: "No target set",
+  unset: "No capacity set",
 };
 export const MOSTLY_BOOKED_SHARE = 0.8;
 

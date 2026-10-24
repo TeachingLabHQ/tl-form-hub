@@ -74,18 +74,18 @@ const Stat = ({
   );
 };
 
-// Work by contractors with no target is shown, but kept out of the percent
+// Work by contractors with no stated capacity is shown, but kept out of the percent
 const UNTARGETED = "bg-white/45";
 const LOAD_LEGEND = [
   [BOOKOUT_CHIP.fac, bookoutTypeLabel("fac")],
   [BOOKOUT_CHIP.other, bookoutTypeLabel("other")],
-  [UNTARGETED, "TL work, no target set"],
+  [UNTARGETED, "TL work, no capacity set"],
 ] as const;
 
 const days = (n: number) => (Number.isInteger(n) ? String(n) : n.toFixed(1));
 
-// TL days booked each week against the roster's target, one row per week.
-// The white tick is the target; past it the row's percent turns amber.
+// TL days booked each week against the roster's stated capacity, one row per
+// week. The white tick is the capacity; past it the row's percent turns amber.
 const WeeklyLoad = ({ weeks }: { weeks: WeekLoad[] }) => {
   const max = Math.max(1, ...weeks.map((w) => Math.max(w.target, w.days.fac + w.days.other + w.untargeted)));
   return (
@@ -99,7 +99,7 @@ const WeeklyLoad = ({ weeks }: { weeks: WeekLoad[] }) => {
         ))}
         <span className="inline-flex items-center gap-1.5">
           <span className="h-3 w-0.5 bg-white" />
-          Target
+          Stated capacity
         </span>
       </div>
       <div className="flex flex-col gap-1">
@@ -116,15 +116,15 @@ const WeeklyLoad = ({ weeks }: { weeks: WeekLoad[] }) => {
                   <div className="font-semibold">Week of {formatDate(w.start)}</div>
                   <div>{bookoutTypeLabel("fac")}: {days(w.days.fac)} days</div>
                   <div>{bookoutTypeLabel("other")}: {days(w.days.other)} days</div>
-                  <div>Target: {Math.round(w.target)} days</div>
-                  <div>TL work, no target set: {days(w.untargeted)} days</div>
+                  <div>Stated capacity: {Math.round(w.target)} days</div>
+                  <div>TL work, no capacity set: {days(w.untargeted)} days</div>
                   <div>{bookoutTypeLabel("nontl")}: {days(w.days.nontl)} days</div>
                 </div>
               }
             >
               <div
                 tabIndex={0}
-                aria-label={`Week of ${formatDate(w.start)}: ${days(tl)} TL days of a ${Math.round(w.target)} day target`}
+                aria-label={`Week of ${formatDate(w.start)}: ${days(tl)} TL days of ${Math.round(w.target)} days stated capacity`}
                 className={cn(
                   "grid grid-cols-[52px_minmax(0,1fr)_auto] sm:grid-cols-[60px_minmax(0,1fr)_150px] items-center gap-3 rounded-md px-1.5 py-1 text-sm hover:bg-white/10",
                   FOCUS_RING
@@ -262,7 +262,7 @@ export const StaffingView = ({
           label="TL utilization, next 4 weeks"
           tone="sky"
           value={capacity ? `${Math.round((snapshot.tlBooked / capacity) * 100)}%` : "—"}
-          sub={`${days(snapshot.tlBooked)} of ${Math.round(capacity)} target days · ${snapshot.withTarget} of ${n} have a target`}
+          sub={`${days(snapshot.tlBooked)} of ${Math.round(capacity)} days of stated capacity · ${snapshot.withTarget} of ${n} gave one`}
         />
         <Stat
           label="Contractors with room"
@@ -285,7 +285,7 @@ export const StaffingView = ({
           tone={snapshot.attention ? "amber" : "neutral"}
           icon={snapshot.attention ? <IconAlertTriangle size={14} className="text-amber-300" /> : undefined}
           value={String(snapshot.attention)}
-          sub={`${snapshot.overTarget} over target · ${snapshot.doubleBookedDays} double-booked ${
+          sub={`${snapshot.overTarget} over capacity · ${snapshot.doubleBookedDays} double-booked ${
             snapshot.doubleBookedDays === 1 ? "day" : "days"
           }`}
           active={filter === "attention"}
@@ -296,18 +296,21 @@ export const StaffingView = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <Panel
           title="TL load by week"
-          meta={<span className="text-xs text-white/90">Percent of the target, from those who set one</span>}
+          meta={<span className="text-xs text-white/90">Percent of stated capacity, from those who gave one</span>}
         >
           <WeeklyLoad weeks={weeks} />
         </Panel>
         <Panel title="Contractor status" meta={<span className="text-xs text-white/90">Click to filter the table</span>}>
           <div className="flex flex-col gap-3">
             <div>
-              <h3 className="text-xs font-medium text-white/90 px-1.5 mb-1">Load, next 4 weeks</h3>
+              <h3 className="text-xs font-medium text-white/90 px-1.5 mb-1">
+                Load, next 4 weeks · the {snapshot.withTarget} who stated capacity
+              </h3>
+              {/* Those with no stated capacity are the never-confirmed GAPs below; counting them twice would swamp these bars */}
               <Bars
                 unit={String}
                 onSelect={(key) => toggle(`load:${key}`)}
-                bars={(Object.keys(LOAD_STATUS_LABELS) as LoadStatus[]).map((s) => ({
+                bars={(["over", "booked", "room"] as LoadStatus[]).map((s) => ({
                   key: s,
                   label: LOAD_STATUS_LABELS[s],
                   value: snapshot.load[s],

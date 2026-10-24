@@ -161,7 +161,7 @@ export const ContractorDrawer = ({
                 {c.profile.longestTrip ? ` · ${c.profile.longestTrip.toLowerCase()}` : ""}
               </Row>
               <Row label="Usual days">{c.profile.weekdays.join(", ") || "Any weekday"}</Row>
-              <Row label="Target">
+              <Row label="Stated capacity">
                 {c.profile.daysPerWeek ? `${c.profile.daysPerWeek} days/week` : "Not set"}
                 {c.profile.maxDaysPerMonth ? `, max ${c.profile.maxDaysPerMonth}/month` : ""}
               </Row>
@@ -189,7 +189,7 @@ export const ContractorDrawer = ({
                 return (
                   <Row key={`${year}-${month}`} label={`${MONTH_LABELS[month]} ${year}`}>
                     <span className="tabular-nums">
-                      {load} {target ? `of ${target} target days` : "days"}
+                      {load} {target ? `of ${target} days stated capacity` : "days"}
                     </span>
                   </Row>
                 );

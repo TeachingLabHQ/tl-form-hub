@@ -218,9 +218,9 @@ export function nextFourWeeks(contractors: Contractor[], today: string) {
     window: { start: s.start, end: s.end },
     activeContractors: contractors.length,
     tlDaysBooked: s.tlBooked,
-    targetDays: Math.round(s.capacity),
+    statedCapacityDays: Math.round(s.capacity),
     utilization: s.capacity ? Math.round((s.tlBooked / s.capacity) * 100) / 100 : null,
-    contractorsWithATarget: s.withTarget,
+    contractorsWithStatedCapacity: s.withTarget,
     contractorsWithRoom: s.withRoom,
     openDaysAmongThem: s.openDaysWithRoom,
     loadCounts: label(s.load, LOAD_STATUS_LABELS),
@@ -294,7 +294,7 @@ export function staffingTools(contractors: Contractor[], today: string) {
         load: z
           .enum(["over", "booked", "room", "unset"])
           .optional()
-          .describe("TL load over the next four weeks against their target; unset = no target"),
+          .describe("TL load over the next four weeks against their stated capacity; unset = no capacity set"),
         gap: z.enum(["current", "stale", "never"]).optional().describe("stale = profile not confirmed in 90 days"),
         noOutsideWork: z.boolean().optional().describe("Only those whose outside work is 'None'"),
       }),
@@ -311,7 +311,7 @@ export function staffingTools(contractors: Contractor[], today: string) {
     }),
     nextFourWeeks: tool({
       description:
-        "The admin page's headline numbers for the next four weeks: TL utilization against targets, contractors with room (current GAP, under target, an open day), load and GAP counts, double bookings.",
+        "The admin page's headline numbers for the next four weeks: TL utilization against stated capacity, contractors with room (current GAP, under capacity, an open day), load and GAP counts, double bookings.",
       inputSchema: z.object({}),
       execute: async () => nextFourWeeks(contractors, today),
     }),

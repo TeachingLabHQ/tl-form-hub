@@ -45,7 +45,7 @@ export const GAP_BAR: Record<GapStatus, string> = {
 };
 
 // Load is the badge; an out-of-date GAP and double bookings ride beside it,
-// so a stale profile never hides how booked someone is. With no target there's
+// so a stale profile never hides how booked someone is. With no stated capacity there's
 // no load to show, and the GAP badge says why, so it stands alone.
 const StatusBadges = ({ flags }: { flags: StaffingFlags }) => (
   <div className="flex flex-wrap items-center gap-1 shrink-0">
@@ -143,7 +143,7 @@ const SORTS: Record<
 };
 const DEFAULT_SORT: Sort = { key: "status", reversed: false };
 const STATUS_ORDER_HINT =
-  "Needs attention, then current GAP with room (most open days first), then mostly booked, then no target or stale GAP";
+  "Needs attention, then current GAP with room (most open days first), then mostly booked, then no capacity set or stale GAP";
 
 type Props = {
   contractors: Contractor[];
